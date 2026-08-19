@@ -1,0 +1,1023 @@
+<script lang="ts" setup>
+import { displayTabooList } from '@/arkham/taboo';
+import { ref, computed, inject, onUnmounted } from 'vue';
+import { fetchGame, upgradeDeck } from '@/arkham/api';
+import { imgsrc, localizeArkhamDBBaseUrl, processArkhamBuildDeck } from '@/arkham/helpers';
+import { ArkhamDbDecklist } from '@/arkham/types/Deck';
+import { Game } from '@/arkham/types/Game';
+import { Investigator } from '@/arkham/types/Investigator';
+import { baseKey } from '@/arkham/types/Log';
+import Prompt from '@/components/Prompt.vue';
+import XpBreakdown from '@/arkham/components/XpBreakdown.vue';
+import type { XpBreakdownStep } from '@/arkham/types/Xp';
+import Question from '@/arkham/components/Question.vue';
+import { isUsableDecklist, loadUpgradeDeckFromJsonText } from '@/arkham/upgradeDeckUpload';
+import { deckRestrictionError, normalizeCardCode } from '@/arkham/deckRestrictions';
+import { useI18n } from 'vue-i18n';
+
+// TODO should we pass in the investigator
+export interface Props {
+  game: Game
+  playerId: string
+}
+
+const { t } = useI18n()
+
+const question = computed(() => props.game.question[props.playerId])
+const questionLabel = computed(() => {
+  if (question.value)
+    return question.value.tag === 'QuestionLabel' ? question.value.label : null
+})
+const model = defineModel()
+const fetching = ref(false)
+// Anything the server or ArkhamDB refused. Kept separate from the `error` computed below,
+// which is client-side deck validation. A failed upgrade changes nothing server-side, so
+// the player must be told rather than left looking at an unchanged screen (#5256).
+const submitError = ref<string | null>(null)
+const props = defineProps<Props>()
+const emit = defineEmits<{ choose: [value: number]; update: [game: Game] }>()
+const choose = (idx: number) => emit('choose', idx)
+const waiting = ref(false)
+let waitingPoll: ReturnType<typeof setTimeout> | null = null
+
+function hasUpgradeQuestions(game: Game): boolean {
+  return Object.values(game.question).some((question) =>
+    question.tag === 'ChooseUpgradeDeck'
+      || (question.tag === 'QuestionLabel' && question.question.tag === 'ChooseUpgradeDeck')
+  )
+}
+
+async function pollWaitingGame() {
+  try {
+    const { game } = await fetchGame(props.game.id)
+    emit('update', game)
+    if (hasUpgradeQuestions(game)) {
+      waitingPoll = setTimeout(pollWaitingGame, 1000)
+    } else {
+      waiting.value = false
+      waitingPoll = null
+    }
+  } catch {
+    waitingPoll = setTimeout(pollWaitingGame, 2000)
+  }
+}
+
+function waitForOtherPlayers() {
+  waiting.value = true
+  if (waitingPoll === null) waitingPoll = setTimeout(pollWaitingGame, 500)
+}
+
+onUnmounted(() => {
+  if (waitingPoll !== null) clearTimeout(waitingPoll)
+})
+const deck = ref<string | null>(null)
+const deckUrl = ref<string | null>(null)
+const deckList = ref<ArkhamDbDecklist | null>(null)
+const solo = inject('solo', false)
+const deckInvestigator = ref<string | null>(null)
+const investigator = computed(() => {
+  return Object.values(props.game.investigators).find((i) => {
+    return i.playerId === props.playerId
+  })
+})
+const investigatorId = computed(() => !solo && deckInvestigator.value ? `c${deckInvestigator.value}` : investigator.value?.id)
+const originalInvestigatorId = computed(() => investigator.value?.id)
+const xp = computed(() => {
+  const inv = investigator.value
+  if (!inv) return undefined
+  return inv.xp - inv.spentXp
+})
+const skipping = ref(false)
+
+const killedInvestigators = computed(() => {
+  const {campaign} = props.game
+  if (!campaign) { return [] }
+  const {recordedSets} = campaign.log
+  const toInvestigators = (k: string) => {
+    return (recordedSets[baseKey(k)] ?? []).flatMap((r) =>
+      typeof r === 'object' && r !== null && 'contents' in r && typeof r.contents === 'string' ? [r.contents] : []
+    )
+  }
+  return [...toInvestigators('KilledInvestigators'), ...toInvestigators('DrivenInsaneInvestigators')]
+})
+
+const error = computed(() => {
+  if(deckInvestigator.value) {
+    const alreadyTaken = Object.values(props.game.investigators).some((i) => {
+      return i.id === `c${deckInvestigator.value}` && i.playerId !== props.playerId
+    })
+
+    if (alreadyTaken) {
+      return 'This investigator is already taken'
+    }
+
+    const killedOrInsane = killedInvestigators.value.includes(`c${deckInvestigator.value}`)
+
+    if (killedOrInsane) {
+      return 'This investigator was killed or driven insane'
+    }
+  }
+
+  if (deckList.value) {
+    // The required investigator was already validated when the scenario
+    // started, so upgrading another player's deck must not be blocked for not
+    // being the challenge investigator. Pass the rest of the group and treat
+    // this as a non-final choice so only this deck's own restrictions apply.
+    const otherInvestigatorCodes = Object.values(props.game.investigators)
+      .filter((i) => i.playerId !== props.playerId)
+      .map((i) => i.cardCode)
+    const restrictionError = deckRestrictionError(props.game.scenario?.id, deckList.value, otherInvestigatorCodes, {
+      campaignId: props.game.campaign?.id,
+      campaignLog: props.game.campaign?.log,
+    }, t, { isLastPlayer: false })
+    if (restrictionError) return restrictionError
+  }
+
+  return null
+})
+
+const currentDeckUrl = computed(() => {
+  if (!investigator.value) { return null }
+  return investigator.value.deckUrl
+})
+
+const isArkhamDBDeck = computed(() => {
+  if (!currentDeckUrl.value) { return false }
+  return currentDeckUrl.value.startsWith('https://arkhamdb.com') || currentDeckUrl.value.startsWith(localizeArkhamDBBaseUrl())
+})
+
+const isArkhamBuildDeck = computed(() => {
+  if (!currentDeckUrl.value) { return false }
+  return currentDeckUrl.value.startsWith('https://api.arkham.build')
+})
+
+const deckSource = computed(() => {
+  return isArkhamDBDeck.value ? 'ArkhamDB' : (isArkhamBuildDeck.value ? 'arkham.build' : null)
+})
+
+function viewDeck() {
+  if (currentDeckUrl.value) {
+    const arkhamDbApiRegex = /https:\/\/(?:[a-zA-Z0-9-]+\.)?arkhamdb\.com\/api\/public\/deck\/([^/]+)/
+    const matches = currentDeckUrl.value.match(arkhamDbApiRegex)
+    if (matches) {
+      window.open(`${localizeArkhamDBBaseUrl()}/deck/view/${matches[1]}`)
+      return
+    }
+
+    const arkhamDbDecklistRegex = /https:\/\/(?:[a-zA-Z0-9-]+\.)?arkhamdb\.com\/api\/public\/decklist\/([^/]+)/
+    const dlmatches = currentDeckUrl.value.match(arkhamDbDecklistRegex)
+    if (dlmatches) {
+      window.open(`${localizeArkhamDBBaseUrl()}/decklist/view/${dlmatches[1]}`)
+      return
+    }
+
+    const arkhamBuildApiRegex = /https:\/\/api.arkham\.build\/v1\/public\/share\/([^/]+)/
+    const abmatches = currentDeckUrl.value.match(arkhamBuildApiRegex)
+    if (abmatches) {
+      window.open(`https://arkham.build/deck/view/${abmatches[1]}?upgrade_xp=${xp.value}`)
+      return
+    }
+  }
+}
+
+// Reads the errorMsg the API returns for a rejected upgrade (Api.Handler.Arkham.Decks
+// answers with a JSONError), falling back to a generic message.
+function submitErrorMessage(e: unknown, fallback: string): string {
+  const msg = (e as { response?: { data?: { errorMsg?: string } } })?.response?.data?.errorMsg
+  return msg ?? fallback
+}
+
+type ChainDeck = ArkhamDbDecklist & { next_deck?: string | number | null }
+
+const arkhamBuildShareUrl = (id: string | number) => `https://api.arkham.build/v1/public/share/${id}`
+const arkhamDbDeckUrl = (id: string | number) => `${localizeArkhamDBBaseUrl()}/api/public/deck/${id}`
+
+// Fetches one deck, refusing anything that isn't a usable decklist. `fetch` resolves for a
+// 404, and processArkhamBuildDeck turns an error body into {message, slots: {}} -- which used
+// to be sent as the upgrade and come back as an opaque 400 (#5257). Sets submitError and
+// returns null on every failure.
+async function fetchDeckAt(url: string, isArkhamBuild: boolean): Promise<ChainDeck | null> {
+  const source = isArkhamBuild ? 'arkham.build' : 'ArkhamDB'
+  let response: Response
+  try {
+    response = await fetch(url)
+  } catch {
+    submitError.value = t('upgrade.fetchFailed', { deckSource: source })
+    return null
+  }
+
+  let body: unknown = null
+  try {
+    body = await response.json()
+  } catch { /* keep null; handled below */ }
+
+  if (!response.ok) {
+    const message = (body as { message?: string } | null)?.message
+    // arkham.build only knows Share ids, so this is what a private deck link looks like.
+    if (isArkhamBuild && response.status === 404) {
+      submitError.value = t('upgrade.arkhamBuildShareNotFound')
+    } else if (message) {
+      submitError.value = t('upgrade.fetchRejected', { deckSource: source, message })
+    } else {
+      submitError.value = t('upgrade.fetchFailed', { deckSource: source })
+    }
+    return null
+  }
+
+  const processed = isArkhamBuild
+    ? processArkhamBuildDeck(body as ArkhamDbDecklist, url)
+    : { ...(body as ArkhamDbDecklist), url }
+
+  if (!isUsableDecklist(processed)) {
+    submitError.value = t('upgrade.fetchUnusable', { deckSource: source })
+    return null
+  }
+
+  return processed as ChainDeck
+}
+
+// Walks next_deck to the end of the chain. Any failure fails the WHOLE pull: applying the last
+// link that happened to load would silently upgrade to a stale version, which is exactly how a
+// pull could "succeed" while adding no new cards (#5257).
+async function followUpgradeChain(
+  startUrl: string,
+  urlFor: (id: string | number) => string,
+  isArkhamBuild: boolean,
+): Promise<ChainDeck | null> {
+  let url: string | null = startUrl
+  let last: ChainDeck | null = null
+  const seen = new Set<string>()
+
+  while (url) {
+    if (seen.has(url)) break
+    seen.add(url)
+    const fetched = await fetchDeckAt(url, isArkhamBuild)
+    if (!fetched) return null
+    last = fetched
+    url = fetched.next_deck != null ? urlFor(fetched.next_deck) : null
+  }
+
+  return last
+}
+
+async function syncUpgrade() {
+  if(error.value) return
+  const startUrl = investigator.value?.deckUrl
+  if (!startUrl) return;
+  submitError.value = null
+
+  const isArkhamDb = /https:\/\/(?:[a-zA-Z0-9-]+\.)?arkhamdb\.com\/api\/public\/deck\/([^/]+)/.test(startUrl)
+  const isArkhamBuild = /https:\/\/api\.arkham\.build\/v1\/public\/share\/([^/]+)/.test(startUrl)
+  if (!isArkhamDb && !isArkhamBuild) return
+
+  fetching.value = true
+  const content = await followUpgradeChain(
+    startUrl,
+    isArkhamBuild ? arkhamBuildShareUrl : arkhamDbDeckUrl,
+    isArkhamBuild,
+  )
+
+  if (!content || !content.url) {
+    // followUpgradeChain has already said why; just release the "Fetching..." panel.
+    fetching.value = false
+    return
+  }
+
+  model.value = content;
+  deckList.value = content;
+  deck.value = content.url;
+  deckUrl.value = content.url;
+  upgrade();
+}
+
+async function loadDeck() {
+  if (!deck.value) return
+  model.value = null
+  deckList.value = null
+  submitError.value = null
+
+  const arkhamDbRegex = /https:\/\/(?:[a-zA-Z0-9-]+\.)?arkhamdb\.com\/(deck(list)?)(\/view)?\/([^/]+)/
+  const arkhamBuildRegex = /https:\/\/arkham\.build\/(?:deck\/view|share)\/([^/?]+)/
+  const arkhamBuildDecklistRegex = /https:\/\/arkham\.build\/decklist(?:\/view)?\/([^/?]+)/
+
+  let matches
+  let isArkhamBuild = false
+  if ((matches = deck.value.match(arkhamDbRegex))) {
+    deckUrl.value = `${localizeArkhamDBBaseUrl()}/api/public/${matches[1]}/${matches[4]}`
+  } else if ((matches = deck.value.match(arkhamBuildRegex))) {
+    deckUrl.value = `https://api.arkham.build/v1/public/share/${matches[1]}`
+    isArkhamBuild = true
+  } else if ((matches = deck.value.match(arkhamBuildDecklistRegex))) {
+    deckUrl.value = `https://api.arkham.build/v1/public/share/${matches[1]}?type=decklist`
+    isArkhamBuild = true
+  } else {
+    submitError.value = t('upgrade.unrecognizedUrl')
+    return
+  }
+
+  // Reports its own failure via submitError rather than leaving the field looking accepted.
+  const processed = await fetchDeckAt(deckUrl.value, isArkhamBuild)
+  if (!processed) {
+    deckUrl.value = null
+    return
+  }
+
+  model.value = processed
+  deckList.value = processed
+  deckInvestigator.value = processed.investigator_code
+}
+
+function pasteDeck(evt: ClipboardEvent) {
+  if (evt.clipboardData) {
+    deck.value = evt.clipboardData.getData('text');
+    loadDeck();
+  }
+}
+
+function loadDeckFromFile(e: Event) {
+  const files = (e.target as HTMLInputElement).files || (e as DragEvent).dataTransfer?.files || [];
+  const file = files[0]
+  if (!file) return
+  const reader = new FileReader()
+  reader.onloadend = (e1: ProgressEvent<FileReader>) => {
+    if (!e1?.target?.result) return
+    submitError.value = null
+    // A rejected file used to do nothing at all, which read as "the upload is broken".
+    const result = loadUpgradeDeckFromJsonText(e1.target.result.toString(), {
+      setModel: (data) => { model.value = data },
+      setDeckList: (data) => { deckList.value = data },
+      setDeckUrl: (url) => { deckUrl.value = url },
+      setDeck: (url) => { deck.value = url },
+      setDeckInvestigator: (investigatorCode) => { deckInvestigator.value = investigatorCode },
+      upgrade,
+    })
+    if (!result.ok) {
+      submitError.value = result.reason === 'invalidJson'
+        ? t('upgrade.uploadInvalidJson')
+        : t('upgrade.uploadNotADecklist')
+    }
+  }
+  reader.readAsText(file)
+  ;(e.target as HTMLInputElement).value = ''
+}
+
+/* The cards this decklist would ADD to the campaign deck -- the same notion of an upgrade the
+ * engine uses (UpgradeDeck's deckDiff). Empty means the pull changed nothing. */
+function campaignDeck() {
+  const iid = originalInvestigatorId.value
+  return (iid ? props.game.campaign?.decks[iid] : undefined) ?? []
+}
+
+function addedCardCodes(list: ArkhamDbDecklist | null): string[] {
+  if (!list?.slots) return []
+
+  const owned = new Map<string, number>()
+  for (const card of campaignDeck()) {
+    const code = normalizeCardCode(card.cardCode)
+    owned.set(code, (owned.get(code) ?? 0) + 1)
+  }
+
+  return Object.entries(list.slots).flatMap(([rawCode, count]) => {
+    const code = normalizeCardCode(rawCode)
+    // The random basic weakness placeholder is stripped by UpgradeDeck, never "added".
+    if (code === '01000') return []
+    return count > (owned.get(code) ?? 0) ? [code] : []
+  })
+}
+
+function customizationCheckmarks(value: string): Map<number, number> {
+  const result = new Map<number, number>()
+  for (const entry of value.split(',')) {
+    const [rawIndex, rawCount] = entry.split('|')
+    const index = Number(rawIndex)
+    const count = Number(rawCount)
+    if (Number.isInteger(index) && Number.isInteger(count) && count > 0) result.set(index, count)
+  }
+  return result
+}
+
+function hasCustomizationXpChanges(list: ArkhamDbDecklist): boolean {
+  let meta: Record<string, unknown>
+  try {
+    meta = typeof list.meta === 'string' ? JSON.parse(list.meta) : (list.meta ?? {})
+  } catch {
+    return false
+  }
+
+  const current = new Map<string, Map<number, number>>()
+  for (const card of campaignDeck()) {
+    if (!card.customizations) continue
+    current.set(normalizeCardCode(card.cardCode), new Map(
+      card.customizations
+        .filter(([, [count]]) => count > 0)
+        .map(([index, [count]]) => [index, count]),
+    ))
+  }
+
+  const incoming = new Map<string, Map<number, number>>()
+  for (const [key, value] of Object.entries(meta)) {
+    if (!key.startsWith('cus_') || typeof value !== 'string') continue
+    incoming.set(normalizeCardCode(key.slice(4)), customizationCheckmarks(value))
+  }
+
+  const codes = new Set([...current.keys(), ...incoming.keys()])
+  return [...codes].some((code) => {
+    const before = current.get(code) ?? new Map<number, number>()
+    const after = incoming.get(code) ?? new Map<number, number>()
+    const indexes = new Set([...before.keys(), ...after.keys()])
+    return [...indexes].some((index) => before.get(index) !== after.get(index))
+  })
+}
+
+/* arkham.build (and ArkhamDB) create the upgraded version the moment you click Upgrade,
+ * BEFORE any XP is spent, so pulling too early applies a deck with no changes and closes the
+ * upgrade window for good -- the whole of #5257. Confirm instead of silently consuming it.
+ * Only when XP is actually unspent and neither cards nor customization XP changed. */
+const pendingNoChangeUpgrade = ref(false)
+
+const unspentXp = computed(() => xp.value ?? 0)
+
+function wouldChangeNothing(): boolean {
+  if (!deckList.value) return false
+  return unspentXp.value > 0
+    && addedCardCodes(deckList.value).length === 0
+    && !hasCustomizationXpChanges(deckList.value)
+}
+
+async function upgrade(force = false) {
+  if(error.value) return
+  if (!force && wouldChangeNothing()) {
+    fetching.value = false
+    pendingNoChangeUpgrade.value = true
+    return
+  }
+  if ((deckUrl.value || deckList.value) && originalInvestigatorId.value) {
+   submitError.value = null
+   fetching.value = true
+   upgradeDeck(props.game.id, originalInvestigatorId.value, deckUrl.value ?? undefined, deckList.value).then(() => {
+      if(!solo) {
+        waitForOtherPlayers()
+      }
+    }).catch((e) => {
+      // A rejected upgrade left the game untouched, so keep the form usable and say why.
+      submitError.value = submitErrorMessage(e, t('upgrade.upgradeFailed'))
+    }).finally(() => {
+      fetching.value = false;
+    });
+    deckUrl.value = null;
+    deck.value = null;
+    deckList.value = null;
+  }
+}
+
+async function skip() {
+  if (!investigatorId.value) { return }
+  submitError.value = null
+  upgradeDeck(props.game.id, investigatorId.value).then(() => {
+    if(!solo) {
+      waitForOtherPlayers()
+    }
+    skipping.value = false
+  }).catch((e) => {
+    skipping.value = false
+    waiting.value = false
+    submitError.value = submitErrorMessage(e, t('upgrade.upgradeFailed'))
+  });
+}
+
+const allGameInvestigators = computed(() => ({
+  ...props.game.investigators,
+  ...props.game.killedInvestigators,
+}))
+
+function breakdownInvestigators(breakdown: XpBreakdownStep): Investigator[] {
+  return breakdown.investigators
+    .map(iid => allGameInvestigators.value[iid])
+    .filter(Boolean) as Investigator[]
+}
+
+const breakdowns = computed<XpBreakdownStep[]>(() => {
+  if (props.game.campaign) {
+    return props.game.campaign.xpBreakdown
+  }
+
+  return []
+})
+
+const tabooList = function (investigator: Investigator) {
+  return investigator.taboo ? displayTabooList(investigator.taboo) : null
+}
+</script>
+
+<template>
+  <div id="upgrade-deck">
+    <h2 class="title">{{ $t('upgrade.title', {xp: xp}) }}</h2>
+
+    <div v-if="!waiting" class="panel">
+      <template v-if="question && investigator && question.tag !== 'ChooseUpgradeDeck'">
+        <img v-if="investigatorId" class="portrait" :src="imgsrc(`portraits/${investigatorId.replace('c', '')}.jpg`)" />
+        <div v-if="question && playerId == investigator.playerId" class="content question-pane">
+          <h3 v-if="questionLabel" class="question-label">{{ questionLabel }}</h3>
+          <Question :game="game" :playerId="playerId" @choose="choose" />
+        </div>
+        <div v-else class="content">
+          <div v-if="tabooList(investigator)" class="taboo-list">
+            Taboo List: {{tabooList(investigator)}}
+          </div>
+        </div>
+      </template>
+      <template v-else>
+        <template v-if="investigatorId && killedInvestigators.includes(investigatorId)">
+          <img class="portrait killed" :src="imgsrc(`portraits/${investigatorId.replace('c', '')}.jpg`)" />
+          <div class="content">
+            <p class="killed-prompt">{{ $t('upgrade.killed') }}</p>
+            <p v-if="error" class="error">{{ error }}</p>
+            <p v-if="submitError" class="error">{{ submitError }}</p>
+            <div class="input-row">
+              <input
+                type="url"
+                v-model="deck"
+                @change="loadDeck"
+                @paste.prevent="pasteDeck($event)"
+                v-bind:placeholder="$t('upgrade.deckUrlPlaceholder')"
+              />
+              <button class="primary" :class="{disable: error != null || deckInvestigator == null}" :disabled="error != null" @click.prevent="upgrade()">{{ $t('upgrade.newInvestigator') }}</button>
+            </div>
+            <label class="file-upload">
+              <span class="file-upload-text">{{ $t('upgrade.orUploadJson') }}</span>
+              <input type="file" accept=".json,application/json" @change="loadDeckFromFile" />
+            </label>
+          </div>
+        </template>
+        <template v-else>
+          <img v-if="investigatorId" class="portrait" :src="imgsrc(`portraits/${investigatorId.replace('c', '')}.jpg`)" />
+          <div class="content">
+            <p v-if="error" class="error">{{ error }}</p>
+            <p v-if="submitError" class="error">{{ submitError }}</p>
+            <template v-if="fetching">
+              <p class="info">{{ $t('upgrade.fetching', {deckSource: deckSource}) }}</p>
+            </template>
+            <template v-else-if="question">
+              <template v-if="investigatorId == originalInvestigatorId && deckSource">
+                <p class="info">{{ $t('upgrade.directlyUpdateContent', {deckSource: deckSource}) }}</p>
+                <div class="step-buttons">
+                  <button class="step secondary" @click.prevent="viewDeck">
+                    <span class="step-number">1</span>
+                    <span class="step-label">{{ $t('upgrade.openDeck', {deckSource: deckSource}) }}</span>
+                  </button>
+                  <span class="step-arrow" aria-hidden="true">→</span>
+                  <button class="step primary" @click.prevent="syncUpgrade">
+                    <span class="step-number">2</span>
+                    <span class="step-label">{{ $t('upgrade.pullUpdate', {deckSource: deckSource}) }}</span>
+                  </button>
+                </div>
+                <span class="separator">{{ $t('upgrade.OR') }}</span>
+              </template>
+              <div class="input-row">
+                <input
+                  type="url"
+                  v-model="deck"
+                  @change="loadDeck"
+                  @paste.prevent="pasteDeck($event)"
+                  v-bind:placeholder="$t('upgrade.deckUrlPlaceholder')"
+                />
+                <button class="primary" @click.prevent="upgrade()">{{ originalInvestigatorId && killedInvestigators.includes(originalInvestigatorId) ? $t('upgrade.newInvestigator') : $t('upgrade.Upgrade') }}</button>
+              </div>
+              <label class="file-upload">
+                <span class="file-upload-text">{{ $t('upgrade.orUploadJson') }}</span>
+                <input type="file" accept=".json,application/json" @change="loadDeckFromFile" />
+              </label>
+              <div v-if="investigatorId == originalInvestigatorId" class="footer">
+                <button class="skip" @click.prevent="skipping = true">{{ $t('upgrade.continueWithoutUpgrading') }}</button>
+              </div>
+            </template>
+            <p v-else class="info">{{ $t('upgrade.waitingOtherPlayer') }}</p>
+          </div>
+        </template>
+      </template>
+    </div>
+    <div v-else class="panel waiting">
+      {{ $t('upgrade.waitingOtherPlayer') }}
+    </div>
+
+    <div v-for="(breakdown, idx) in breakdowns" :key="idx" class="breakdowns">
+      <XpBreakdown :game="game" :step="breakdown.step" :entries="breakdown.entries" :playerId="playerId" :showAll="false" :investigators="breakdownInvestigators(breakdown)" />
+    </div>
+  </div>
+
+
+  <Prompt
+    v-if="skipping"
+    v-bind:prompt= "$t('upgrade.skippingPrompt')"
+    :yes="skip"
+    :no="() => skipping = false"
+  />
+
+  <Prompt
+    v-if="pendingNoChangeUpgrade"
+    v-bind:prompt="$t('upgrade.noChangesPrompt', { xp: unspentXp })"
+    :yes="() => { pendingNoChangeUpgrade = false; upgrade(true) }"
+    :no="() => { pendingNoChangeUpgrade = false }"
+  />
+</template>
+
+<style scoped>
+#upgrade-deck {
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  color: var(--title);
+  font-size: 1em;
+  padding: 32px 24px 48px;
+  gap: 24px;
+}
+
+h2 {
+  color: var(--title);
+}
+
+.title {
+  width: min(1100px, 92vw);
+  text-align: left;
+}
+
+.panel {
+  border-radius: 12px;
+  background: var(--box-background);
+  border: 1px solid var(--box-border);
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 24px;
+  width: min(1100px, 92vw);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.panel.waiting {
+  justify-content: center;
+  text-align: center;
+  padding: 32px 24px;
+  font-style: italic;
+  color: #ccc;
+}
+
+@media (max-width: 800px) and (orientation: portrait) {
+  .panel {
+    flex-direction: column;
+    align-items: center;
+    padding: 18px;
+    gap: 18px;
+  }
+}
+
+.portrait {
+  width: 180px;
+  border-radius: 10px;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.45);
+  flex-shrink: 0;
+}
+
+.killed {
+  filter: grayscale(1) brightness(0.5) sepia(1) hue-rotate(-90deg) saturate(10);
+}
+
+.content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+}
+
+.content p {
+  margin: 0;
+  padding: 0;
+  text-align: center;
+}
+
+.info {
+  color: #d8d8d8;
+  font-size: 0.95em;
+  line-height: 1.55;
+  text-align: left;
+}
+
+.question-label {
+  margin: 0 0 4px;
+  font-size: 1.05em;
+  font-weight: 600;
+  color: var(--title);
+}
+
+.question-pane {
+  :deep(button) {
+    margin-left: 0px;
+  }
+  :deep(.amount-contents) {
+    form {
+      display: flex;
+      gap: 10px;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    border-radius: 15px;
+  }
+}
+
+input[type=url] {
+  outline: 0;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  padding: 10px 14px;
+  color: #f2f2f2;
+  background: var(--background-dark);
+  width: 100%;
+  font-size: 0.95em;
+  margin: 0;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+
+  &::placeholder {
+    color: #777;
+  }
+
+  &:focus {
+    border-color: rgba(110, 134, 64, 0.7);
+    box-shadow: 0 0 0 3px rgba(110, 134, 64, 0.18);
+  }
+}
+
+.input-row {
+  display: flex;
+  align-items: stretch;
+
+  input {
+    flex: 1;
+    min-width: 0;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    border-right: 0;
+
+    &:focus {
+      box-shadow: none;
+    }
+  }
+
+  button {
+    flex: 0 0 auto;
+    width: auto;
+    padding: 0 16px;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+  }
+}
+
+@media (max-width: 600px) {
+  .input-row {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .input-row input {
+    border-radius: 6px;
+    border-right: 1px solid rgba(255, 255, 255, 0.12);
+  }
+  .input-row button {
+    width: 100%;
+    border-radius: 6px;
+  }
+}
+
+.buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.step-buttons {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.step {
+  display: inline-flex;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+  flex: 1;
+  text-align: left;
+}
+
+.step-number {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  padding: 0 10px;
+  background: rgba(0, 0, 0, 0.3);
+  border-right: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 0.95em;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1;
+}
+
+.step.primary .step-number {
+  background: rgba(0, 0, 0, 0.25);
+  border-right-color: rgba(255, 255, 255, 0.18);
+}
+
+.step-label {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 14px;
+  white-space: normal;
+  line-height: 1.25;
+}
+
+.step-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #888;
+  font-size: 1.05em;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+button {
+  text-transform: uppercase;
+  font-size: 0.78em;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+  padding: 0 18px;
+  min-height: 38px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  background-color: var(--button-1);
+  color: #f4f4f4;
+  cursor: pointer;
+  transition: background 160ms ease, transform 120ms ease, box-shadow 160ms ease;
+  flex: 1;
+
+  &:hover:not(.disable):not(:disabled) {
+    background-color: var(--button-1-highlight);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.3);
+  }
+
+  &:active:not(.disable):not(:disabled) {
+    transform: translateY(0);
+    box-shadow: none;
+  }
+}
+
+button.secondary {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #ddd;
+
+  &:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.1);
+  }
+}
+
+button.skip {
+  background-color: darkgoldenrod;
+
+  &:hover:not(:disabled) {
+    background-color: #c8810a;
+  }
+}
+
+.disable {
+  opacity: 0.4;
+  cursor: not-allowed;
+  &:hover {
+    transform: none;
+    box-shadow: none;
+  }
+}
+
+.separator {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  font-size: 0.72em;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #888;
+  margin: 2px 0;
+}
+
+.separator::before,
+.separator::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.separator:not(:empty)::before {
+  margin-right: 0.85em;
+}
+
+.separator:not(:empty)::after {
+  margin-left: 0.85em;
+}
+
+.file-upload {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 6px;
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.02);
+  color: #888;
+  font-size: 0.72em;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  cursor: pointer;
+  transition: border-color 150ms ease, background 150ms ease, color 150ms ease;
+
+  &:hover {
+    border-color: rgba(255, 255, 255, 0.22);
+    background: rgba(255, 255, 255, 0.04);
+    color: #aaa;
+  }
+}
+
+.file-upload-text {
+  flex-shrink: 0;
+}
+
+.file-upload input[type=file] {
+  flex: 1;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  color: #888;
+  font-size: 1em;
+  width: auto;
+
+  &::file-selector-button {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 4px;
+    color: #ccc;
+    padding: 4px 10px;
+    font-size: 1em;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    margin-right: 10px;
+    transition: background 150ms ease;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.14);
+    }
+  }
+}
+
+.footer {
+  display: flex;
+  margin-top: 8px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.killed-prompt {
+  padding: 12px 16px;
+  background-color: rgba(160, 0, 0, 0.18);
+  border: 1px solid rgba(220, 60, 60, 0.25);
+  border-radius: 8px;
+  color: #f0c0c0;
+  font-size: 0.95em;
+  line-height: 1.5;
+}
+
+.error {
+  padding: 10px 14px;
+  background: rgba(160, 0, 0, 0.2);
+  border: 1px solid rgba(220, 60, 60, 0.3);
+  border-radius: 6px;
+  color: #f0c0c0;
+  font-size: 0.88em;
+}
+
+.taboo-list {
+  font-size: 0.9em;
+  color: #aaa;
+}
+
+.breakdowns {
+  width: min(1100px, 92vw);
+}
+</style>

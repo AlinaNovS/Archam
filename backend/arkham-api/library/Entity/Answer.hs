@@ -1,0 +1,689 @@
+{-# LANGUAGE AllowAmbiguousTypes #-}
+
+module Entity.Answer where
+
+import Import.NoFoundation hiding (get)
+
+import Arkham.Campaign.Option
+import Arkham.CampaignLog
+import Arkham.CampaignLogKey
+import Arkham.CampaignStep qualified as CS
+import Arkham.Campaigns.EdgeOfTheEarth.Key
+import Arkham.Campaigns.EdgeOfTheEarth.Partner
+import Arkham.Campaigns.TheCircleUndone.Memento
+import Arkham.Campaigns.TheInnsmouthConspiracy.Memory
+import Arkham.Card
+import Arkham.Classes.Entity
+import Arkham.Cost
+import Arkham.Decklist
+import Arkham.Entities
+import Arkham.Game
+import Arkham.Id
+import Arkham.Investigator.Types (InvestigatorAttrs (investigatorPlayerId))
+import Arkham.Message
+import Arkham.Source
+import Arkham.Target
+import Arkham.Token
+import Arkham.Window qualified as Window
+import Control.Exception (evaluate, try)
+import Data.Aeson
+import Data.Map.Strict qualified as Map
+import Data.Text qualified as T
+import Data.These
+import Data.UUID (UUID)
+import Foundation
+import Json
+
+data Answer
+  = Answer QuestionResponse
+  | Raw Message
+  | PaymentAmountsAnswer PaymentAmountsResponse
+  | AmountsAnswer AmountsResponse
+  | StandaloneSettingsAnswer [StandaloneSetting]
+  | CampaignSettingsAnswer CampaignSettings
+  | DeckAnswer {deckId :: ArkhamDeckId, playerId :: PlayerId}
+  | DeckListAnswer {deckList :: ArkhamDBDecklist, playerId :: PlayerId}
+  | PickDestinyAnswer [DestinyDrawing]
+  | CampaignSpecificAnswer Text Value
+  | ScenarioSpecificAnswer Text Value
+  | ExchangeAmountsAnswer
+      { source :: Source
+      , fromInvestigator :: InvestigatorId
+      , toInvestigator :: InvestigatorId
+      , token :: Token
+      , amount :: Int
+      }
+  | CampaignStepAnswer CS.CampaignStep
+  deriving stock (Show, Generic)
+  deriving anyclass FromJSON
+
+data QuestionResponse = QuestionResponse
+  { qrChoice :: Int
+  , qrPlayerId :: Maybe PlayerId
+  , qrQuestionVersion :: Maybe Int
+  }
+  deriving stock (Show, Generic)
+
+data PaymentAmountsResponse = PaymentAmountsResponse
+  { parAmounts :: Map UUID Int
+  , parQuestionVersion :: Maybe Int
+  , parPlayerId :: Maybe PlayerId
+  }
+  deriving stock (Show, Generic)
+
+data AmountsResponse = AmountsResponse
+  { arAmounts :: Map UUID Int
+  , arQuestionVersion :: Maybe Int
+  , arPlayerId :: Maybe PlayerId
+  }
+  deriving stock (Show, Generic)
+
+data PartnerDetailsResponse = PartnerDetailsResponse
+  { damage :: Int
+  , horror :: Int
+  , status :: PartnerStatus
+  }
+  deriving stock (Show, Generic)
+  deriving anyclass FromJSON
+
+instance FromJSON QuestionResponse where
+  parseJSON = withObject "QuestionResponse" \o -> do
+    qrChoice <- o .: "choice"
+    qrPlayerId <- o .:? "playerId"
+    qrQuestionVersion <- o .:? "questionVersion"
+    pure QuestionResponse {..}
+
+instance FromJSON PaymentAmountsResponse where
+  parseJSON = withObject "PaymentAmountsResponse" \o -> do
+    parAmounts <- o .: "amounts"
+    parQuestionVersion <- o .:? "questionVersion"
+    parPlayerId <- o .:? "playerId"
+    pure PaymentAmountsResponse {..}
+
+instance FromJSON AmountsResponse where
+  parseJSON = withObject "AmountsResponse" \o -> do
+    arAmounts <- o .: "amounts"
+    arQuestionVersion <- o .:? "questionVersion"
+    arPlayerId <- o .:? "playerId"
+    pure AmountsResponse {..}
+
+data StandaloneSetting
+  = SetKey CampaignLogKey Bool
+  | SetRecorded CampaignLogKey SomeRecordableType [SetRecordedEntry]
+  | SetOption CampaignOption Bool
+  | ChooseNum CampaignLogKey Int
+  | NoChooseRecord
+  | StandaloneSetPartnerStatus Int Int PartnerStatus Bool CardCode
+  | SettingsGroup [StandaloneSetting]
+  deriving stock Show
+
+data SetRecordedEntry
+  = SetAsCrossedOut Json.Value
+  | SetAsRecorded Json.Value
+  | DoNotRecord Json.Value
+  deriving stock Show
+
+makeStandaloneCampaignLog :: [StandaloneSetting] -> CampaignLog
+makeStandaloneCampaignLog = foldl' applySetting mkCampaignLog
+ where
+  applySetting :: CampaignLog -> StandaloneSetting -> CampaignLog
+  applySetting cl NoChooseRecord = cl
+  applySetting cl (ChooseNum k n) = setCampaignLogRecordedCount k n cl
+  applySetting cl (SetKey k True) = setCampaignLogKey k cl
+  applySetting cl (SetKey k False) = deleteCampaignLogKey k cl
+  applySetting cl (SetOption k True) = setCampaignLogOption k cl
+  applySetting cl (SetOption _ False) = cl
+  applySetting cl (StandaloneSetPartnerStatus dmg hrr status crash cCode) =
+    if crash
+      then
+        setCampaignLogRecorded (EdgeOfTheEarthKey WasKilledInThePlaneCrash) [recorded cCode]
+          $ setCampaignLogPartnerStatus dmg hrr status cCode cl
+      else setCampaignLogPartnerStatus dmg hrr status cCode cl
+  applySetting c1 (SettingsGroup xs) = foldl' applySetting c1 xs
+  applySetting cl (SetRecorded k rt vs) = case rt of
+    (SomeRecordableType RecordableCardCode) ->
+      let entries = mapMaybe (toEntry @CardCode) vs
+       in setCampaignLogRecorded k entries cl
+    (SomeRecordableType RecordableMemento) ->
+      let entries = mapMaybe (toEntry @Memento) vs
+       in setCampaignLogRecorded k entries cl
+    (SomeRecordableType RecordableMemory) ->
+      let entries = mapMaybe (toEntry @Memory) vs
+       in setCampaignLogRecorded k entries cl
+    (SomeRecordableType RecordableGeneric) ->
+      let entries = mapMaybe (toEntry @Value) vs
+       in setCampaignLogRecorded k entries cl
+  toEntry :: forall a. Recordable a => SetRecordedEntry -> Maybe SomeRecorded
+  toEntry (SetAsRecorded e) = case fromJSON @a e of
+    Success a -> Just (recorded a)
+    Error err -> error $ "Failed to parse " <> tshow e <> ": " <> T.pack err
+  toEntry (SetAsCrossedOut e) = case fromJSON @a e of
+    Success a -> Just (crossedOut a)
+    Error err -> error $ "Failed to parse " <> tshow e <> ": " <> T.pack err
+  toEntry (DoNotRecord _) = Nothing
+
+instance FromJSON StandaloneSetting where
+  parseJSON = withObject "StandaloneSetting" $ \o -> do
+    t <- o .: "type"
+    case t of
+      "ChooseRecord" -> do
+        mSelected <- o .: "selected"
+        case mSelected of
+          Nothing -> pure NoChooseRecord
+          Just selected -> SetRecorded selected <$> o .: "recordable" <*> ((: []) . SetAsRecorded <$> o .: "key")
+      "ToggleKey" -> SetKey <$> o .: "key" <*> o .: "content"
+      "ToggleOption" -> do
+        keyVal <- o .: "key"
+        key <- case keyVal of
+          String s -> parseJSON (object ["tag" .= String s])
+          _ -> parseJSON keyVal
+        SetOption key <$> o .: "content"
+      "PickKey" -> (`SetKey` True) <$> o .: "content"
+      "ToggleCrossedOut" -> do
+        k <- o .: "key"
+        rt <- o .: "recordable"
+        CrossedOutResults v <- o .: "content"
+        pure $ SetRecorded k rt v
+      "ToggleRecords" -> SetRecorded <$> o .: "key" <*> o .: "recordable" <*> o .: "content"
+      "ChooseNum" -> ChooseNum <$> o .: "key" <*> o .: "content"
+      "Group" -> SettingsGroup <$> o .: "content"
+      "SetPartnerKilled" -> StandaloneSetPartnerStatus 0 0 Eliminated True <$> o .: "content"
+      "SetPartnerDetails" -> do
+        details :: PartnerDetailsResponse <- o .: "content"
+        cCode <- o .: "value"
+        pure
+          $ StandaloneSetPartnerStatus details.damage details.horror details.status False
+          $ if details.status == Resolute then toResolute cCode else cCode
+      _ -> fail $ "No such standalone setting " <> t
+
+instance FromJSON SetRecordedEntry where
+  parseJSON = withObject "SetRecordedEntry" $ \o -> do
+    k <- o .: "key"
+    v <- o .: "content"
+    pure $ if v then SetAsRecorded k else DoNotRecord k
+
+newtype CrossedOutResults = CrossedOutResults [SetRecordedEntry]
+  deriving stock Show
+
+instance FromJSON CrossedOutResults where
+  parseJSON jdata = do
+    xs <- parseJSON jdata
+    let
+      toCrossedOutVersion = \case
+        DoNotRecord k -> SetAsRecorded k
+        SetAsCrossedOut a -> SetAsCrossedOut a
+        SetAsRecorded a -> SetAsCrossedOut a
+    pure $ CrossedOutResults $ map toCrossedOutVersion xs
+
+data CampaignRecorded = CampaignRecorded
+  { recordable :: SomeRecordableType
+  , entries :: [CampaignRecordedEntry]
+  }
+  deriving stock Show
+
+data CampaignRecordedEntry
+  = CampaignEntryRecorded Json.Value
+  | CampaignEntryCrossedOut Json.Value
+  deriving stock Show
+
+instance FromJSON CampaignRecordedEntry where
+  parseJSON = withObject "CampaignRecordedEntry" $ \o -> do
+    t :: Text <- o .: "tag"
+    case t of
+      "CrossedOut" -> CampaignEntryCrossedOut <$> o .: "value"
+      "Recorded" -> CampaignEntryRecorded <$> o .: "value"
+      _ -> fail $ "Invalid key" <> T.unpack t
+
+data CampaignSettings = CampaignSettings
+  { keys :: [CampaignLogKey]
+  , counts :: Map CampaignLogKey Int
+  , sets :: Map CampaignLogKey CampaignRecorded
+  , options :: [CampaignOption]
+  }
+  deriving stock Show
+
+instance FromJSON CampaignSettings where
+  parseJSON = withObject "CampaignSettings" $ \o -> do
+    options <- o .: "options" >>= traverse parseOption
+    CampaignSettings
+      <$> (o .: "keys")
+      <*> (o .: "counts")
+      <*> (o .: "sets")
+      <*> pure options
+   where
+    parseOption = \case
+      String s -> parseJSON (object ["tag" .= String s])
+      v -> parseJSON v
+
+instance FromJSON CampaignRecorded where
+  parseJSON = withObject "CampaignRecorded" $ \o ->
+    CampaignRecorded
+      <$> (o .: "recordable")
+      <*> (o .: "entries")
+
+makeCampaignLog :: CampaignSettings -> CampaignLog
+makeCampaignLog settings =
+  mkCampaignLog
+    { campaignLogRecorded = fromList (keys settings)
+    , campaignLogRecordedCounts = counts settings
+    , campaignLogRecordedSets = fmap toSomeRecorded $ sets settings
+    , campaignLogOrderedKeys = keys settings
+    , campaignLogOptions = fromList (options settings)
+    }
+ where
+  toSomeRecorded :: CampaignRecorded -> [SomeRecorded]
+  toSomeRecorded (CampaignRecorded rt entries) =
+    case rt of
+      (SomeRecordableType RecordableCardCode) -> map (toEntry @CardCode) entries
+      (SomeRecordableType RecordableMemento) -> map (toEntry @Memento) entries
+      (SomeRecordableType RecordableMemory) -> map (toEntry @Memory) entries
+      (SomeRecordableType RecordableGeneric) -> map (toEntry @Value) entries
+  toEntry :: forall a. Recordable a => CampaignRecordedEntry -> SomeRecorded
+  toEntry (CampaignEntryRecorded e) = case fromJSON @a e of
+    Success a -> recorded a
+    Error err -> error $ "Failed to parse " <> tshow e <> ": " <> T.pack err
+  toEntry (CampaignEntryCrossedOut e) = case fromJSON @a e of
+    Success a -> crossedOut a
+    Error err -> error $ "Failed to parse " <> tshow e <> ": " <> T.pack err
+
+answerPlayer :: Answer -> Maybe PlayerId
+answerPlayer = \case
+  Answer response -> qrPlayerId response
+  Raw _ -> Nothing
+  AmountsAnswer response -> arPlayerId response
+  PaymentAmountsAnswer response -> parPlayerId response
+  StandaloneSettingsAnswer _ -> Nothing
+  CampaignSettingsAnswer _ -> Nothing
+  CampaignSpecificAnswer {} -> Nothing
+  ScenarioSpecificAnswer {} -> Nothing
+  DeckAnswer _ pid -> Just pid
+  DeckListAnswer _ pid -> Just pid
+  PickDestinyAnswer _ -> Nothing
+  ExchangeAmountsAnswer {} -> Nothing
+  CampaignStepAnswer _ -> Nothing
+
+playerInvestigator :: Entities -> PlayerId -> InvestigatorId
+playerInvestigator Entities {..} pid = case find ((== pid) . attr investigatorPlayerId) (toList entitiesInvestigators) of
+  Just investigator -> toId investigator
+  Nothing -> error $ "No investigator for player " <> tshow pid
+
+data Reply = Handled [Message] | Unhandled Text
+
+handled :: Applicative m => [Message] -> m Reply
+handled = pure . Handled
+
+unhandled :: Applicative m => Text -> m Reply
+unhandled = pure . Unhandled
+
+{- | The messages that start this seat's deck-setup sub-flow.
+
+Inside a multi-seat barrier the sub-flow is self-contained and ends in
+'SeatResolved', which drops this seat's slot, re-parks the seats still waiting
+(each from its own durable slot) and, once every seat has resolved, runs the
+barrier's continuation. The barrier owns re-parking, so this must NOT re-push an
+'AskMap': that would park the remaining seats /ahead/ of the rest of THIS seat's
+sub-flow and strand its tail behind them.
+
+Outside a barrier the old re-push is kept: 'ChooseUpgradeDeck' (migrated in phase
+2) and The Dream Eaters' hand-rolled sequential deck prompts still use it.
+-}
+deckChosen :: Game -> PlayerId -> ArkhamDBDecklist -> [Message]
+deckChosen game playerId dl = case barrierSeat playerId game of
+  Just (bid, _) -> [LoadDecklist playerId dl, SeatResolved bid playerId]
+  Nothing -> LoadDecklist playerId dl : reAskOthers game playerId
+
+{- | Re-park the seats still owed a question after @playerId@ answered.
+
+Empty for a seat inside a multi-seat barrier: the barrier republishes the seats
+still waiting from their own durable slots when this seat emits 'SeatResolved'.
+Re-pushing here would instead park them /ahead/ of the rest of THIS seat's
+sub-flow, stranding its tail behind them.
+-}
+reAskOthers :: Game -> PlayerId -> [Message]
+reAskOthers game playerId
+  | isJust (barrierSeat playerId game) = []
+  | otherwise =
+      let question' = Map.delete playerId (gameQuestion game)
+          -- keep a retained ask retained; re-parking it bare would make the flag
+          -- survive exactly one answer and then drop the remaining seats
+          retain = if gameRetainedQuestion game then Retain else id
+       in [retain (AskMap question') | not (Map.null question')]
+
+handleAnswer :: Game -> PlayerId -> Answer -> DB Reply
+handleAnswer game playerId = \case
+  DeckAnswer deckId _ -> do
+    deck <- get404 deckId
+    let investigatorId = investigator_code $ arkhamDeckList deck
+    update (coerce playerId) [ArkhamPlayerInvestigatorId =. coerce investigatorId]
+    handled $ deckChosen game playerId (arkhamDeckList deck)
+  DeckListAnswer dl _ -> do
+    let investigatorId = investigator_code dl
+    update (coerce playerId) [ArkhamPlayerInvestigatorId =. coerce investigatorId]
+    handled $ deckChosen game playerId dl
+  other -> liftIO $ handleAnswerPure game playerId other
+
+{- | Like 'handleAnswer' but with no DB access. Returns 'Unhandled' for
+'DeckAnswer' / 'DeckListAnswer', which require updating an 'ArkhamPlayer'
+row. Used by the headless replay CLI.
+-}
+handleAnswerPure :: Game -> PlayerId -> Answer -> IO Reply
+handleAnswerPure game@Game {..} playerId = \case
+  DeckAnswer {} -> unhandled "DeckAnswer requires database access"
+  DeckListAnswer {} -> unhandled "DeckListAnswer requires database access"
+  StandaloneSettingsAnswer settings' -> do
+    let standaloneCampaignLog = makeStandaloneCampaignLog settings'
+    handled [SetCampaignLog standaloneCampaignLog]
+  CampaignSettingsAnswer settings' -> do
+    let campaignLog' = makeCampaignLog settings'
+    handled [SetCampaignLog campaignLog']
+  CampaignSpecificAnswer k v -> do
+    let
+      unwrap = \case
+        QuestionLabel _ _ q' -> unwrap q'
+        PayCostQuestion _ q' -> unwrap q'
+        QuestionWithSource _ _ q' -> unwrap q'
+        q' -> q'
+    case unwrap <$> Map.lookup playerId gameQuestion of
+      Just (PickCampaignSpecific {}) -> handled $ CampaignSpecific k v : reAskOthers game playerId
+      _ -> unhandled "Wrong question type"
+  ScenarioSpecificAnswer k v -> do
+    let
+      unwrap = \case
+        QuestionLabel _ _ q' -> unwrap q'
+        PayCostQuestion _ q' -> unwrap q'
+        QuestionWithSource _ _ q' -> unwrap q'
+        q' -> q'
+    case unwrap <$> Map.lookup playerId gameQuestion of
+      Just (PickScenarioSpecific {}) -> handled $ ScenarioSpecific k v : reAskOthers game playerId
+      _ -> unhandled "Wrong question type"
+  CampaignStepAnswer k -> do
+    let
+      unwrap = \case
+        QuestionLabel _ _ q' -> unwrap q'
+        PayCostQuestion _ q' -> unwrap q'
+        QuestionWithSource _ _ q' -> unwrap q'
+        q' -> q'
+    case unwrap <$> Map.lookup playerId gameQuestion of
+      Just ContinueCampaign -> case gameMode of
+        This c -> case c.step of
+          CS.ContinueCampaignStep {} -> handled [NextCampaignStep (Just k)]
+          CS.StandaloneScenarioStep _ (CS.ContinueCampaignStep {}) -> handled [NextCampaignStep (Just k)]
+          _ -> handled []
+        These c s -> case s.step of
+          Just (CS.ContinueCampaignStep {}) -> handled [NextScenarioCampaignStep (Just k)]
+          Just (CS.ScenarioStepWithOptions {}) -> handled [ScenarioCampaignStep k.normalize]
+          _ -> case c.step of
+            CS.ContinueCampaignStep {} -> handled [NextCampaignStep (Just k)]
+            CS.StandaloneScenarioStep _ (CS.ContinueCampaignStep {}) -> handled [NextCampaignStep (Just k)]
+            _ -> handled []
+        That s -> case s.step of
+          Just (CS.ContinueCampaignStep {}) -> handled [NextScenarioCampaignStep (Just k)]
+          _ -> handled []
+      _ -> unhandled "Wrong question type"
+  PickDestinyAnswer choices -> do
+    handled [SetDestiny $ Map.fromList $ map (\(DestinyDrawing scope card) -> (scope, card)) choices]
+  ExchangeAmountsAnswer source fromInvestigator toInvestigator token n -> do
+    if n < 0
+      then handled [MoveTokens source (toSource toInvestigator) (toTarget fromInvestigator) token (abs n)]
+      else handled [MoveTokens source (toSource fromInvestigator) (toTarget toInvestigator) token n]
+  AmountsAnswer response ->
+    case arQuestionVersion response of
+      Just v | v /= gameScenarioSteps -> unhandled "Stale question"
+      _ -> do
+        let
+          doResolve choices target = do
+            let nameMap = Map.fromList $ map (\(AmountChoice cId lbl _ _) -> (cId, lbl)) choices
+            let lookupChoice (uuid, n) =
+                  (\lbl -> (NamedUUID lbl uuid, n)) <$> Map.lookup uuid nameMap
+            case traverse lookupChoice (Map.toList $ arAmounts response) of
+              Nothing -> unhandled "Wrong choice id"
+              Just amounts ->
+                handled
+                  $ ResolveAmounts (playerInvestigator gameEntities playerId) amounts target
+                  : reAskOthers game playerId
+        case Map.lookup playerId gameQuestion of
+          Just (ChooseAmounts _ _ choices target) -> doResolve choices target
+          Just (QuestionLabel _ _ (ChooseAmounts _ _ choices target)) -> doResolve choices target
+          _ -> unhandled "Wrong question type"
+  PaymentAmountsAnswer response ->
+    case parQuestionVersion response of
+      Just v | v /= gameScenarioSteps -> unhandled "Stale question"
+      _ -> case Map.lookup playerId gameQuestion of
+        Just (PayCostQuestion _ (ChoosePaymentAmounts _ _ info)) -> do
+          let costMap = Map.fromList $ map (\(PaymentAmountChoice cId _ _ _ _ cost) -> (cId, cost)) info
+          let
+            combinePaymentAmounts n = \case
+              PayCost acId iid skip (UseCost aMatcher uType m) -> [PayCost acId iid skip (UseCost aMatcher uType (n * m))]
+              PayCost acId iid skip (ResourceCost _) | n == 0 -> [PayCost acId iid skip (ResourceCost 0)]
+              PayCost acId iid skip other -> [PayCost acId iid skip (fold $ replicate n other)]
+              payMsg -> replicate n payMsg
+          let handleCost (cId, n) = combinePaymentAmounts n $ Map.findWithDefault Noop cId costMap
+          handled $ concatMap handleCost $ Map.toList (parAmounts response)
+        Just (ChoosePaymentAmounts _ _ info) -> do
+          let costMap = Map.fromList $ map (\(PaymentAmountChoice cId _ _ _ _ cost) -> (cId, cost)) info
+          let
+            combinePaymentAmounts n = \case
+              PayCost acId iid skip (UseCost aMatcher uType m) -> [PayCost acId iid skip (UseCost aMatcher uType (n * m))]
+              PayCost acId iid skip (ResourceCost _) | n == 0 -> [PayCost acId iid skip (ResourceCost 0)]
+              PayCost acId iid skip other -> [PayCost acId iid skip (fold $ replicate n other)]
+              payMsg -> replicate n payMsg
+          let handleCost (cId, n) = combinePaymentAmounts n $ Map.findWithDefault Noop cId costMap
+          handled $ concatMap handleCost $ Map.toList (parAmounts response)
+        _ -> unhandled "Wrong question type"
+  Raw message -> do
+    let inFastWindow =
+          maybe
+            False
+            (any (any (\w -> Window.windowType w == Window.FastPlayerWindow)))
+            gameWindowStack
+    if not (Map.null gameQuestion) && not (any isRegeneratedWindowChoose $ toList gameQuestion)
+      then case message of
+        PassSkillTest -> handled [message]
+        FailSkillTest -> handled [message]
+        ForceChaosTokenDraw _ -> handled [message]
+        -- Settings updates regenerate the pending question themselves when a
+        -- fast player window is open (UpdateGlobalSetting re-runs runWindow);
+        -- skip the stale AskMap so it doesn't clobber the regenerated one.
+        UpdateGlobalSetting {} | inFastWindow -> handled [message]
+        UpdateCardSetting {} | inFastWindow -> handled [message]
+        SetAsIfRuling {} | inFastWindow -> handled [message]
+        _ -> handled [message, AskMap gameQuestion]
+      else handled [message]
+  Answer response ->
+    case qrQuestionVersion response of
+      Just v | v /= gameScenarioSteps -> unhandled "Stale question"
+      _ ->
+        maybe
+          (unhandled "Player not being asked")
+          ( \q -> do
+              result <- try @SomeException $ evaluate $ go id q response
+              case result of
+                Left _ -> unhandled "Wrong question type"
+                Right msgs -> do
+                  -- Re-ask ONLY leftover deck-selection seats. ChooseDeck has no
+                  -- regeneration path: if it is dropped when another seat answers,
+                  -- the campaign starts a man down. Every other multi-seat ask is
+                  -- either rebuilt by the queue (PlayerWindow re-pushes itself,
+                  -- WindowAsk queues a trailing Do (CheckWindows), the skill-test
+                  -- loop re-asks the commit window) or was satisfied by this answer
+                  -- (story Read continues for the table). Re-parking those hands a
+                  -- stale, decline-less question to the other player -- forcing a
+                  -- Joey ability (#5159), a commit to a finished test (#5164), or a
+                  -- second copy of every rules-book entry -- so they are dropped,
+                  -- which was the pre-#5151 behavior for all seats.
+                  --
+                  -- A seat inside a multi-seat barrier is exempt: the barrier
+                  -- republishes the seats still waiting from their own durable slots
+                  -- when this seat emits SeatResolved. Re-pushing here would park them
+                  -- ahead of the rest of THIS seat's sub-flow and strand its tail.
+                  -- (Unreachable while ChooseDeck -- a barrier's only question today --
+                  -- is answered via DeckAnswer; needed once phase 2/3 put
+                  -- ChooseUpgradeDeck / Read, which answer through here, in a barrier.)
+                  --
+                  -- A Retain-published ask is the third case: it is neither rebuilt
+                  -- by the queue nor barriered, and its seats hold baked message
+                  -- lists rather than a re-enumerable set of choices, so nothing is
+                  -- stale about re-parking them -- dropping them just destroys the
+                  -- messages (#4787). Every seat survives, this one included if it
+                  -- still has choices left.
+                  let retained = gameRetainedQuestion
+                      others
+                        | isJust (barrierSeat playerId game) = mempty
+                        | retained = Map.delete playerId gameQuestion
+                        | otherwise = Map.filter isDeckQuestion $ Map.delete playerId gameQuestion
+                  if retained
+                    then do
+                      -- Fold this seat's own re-ask into the same map. Emitting it as a
+                      -- separate `Ask` would park it ahead of the other seats, serialising
+                      -- a question whose whole point is that the table resolves it in an
+                      -- order of its choosing.
+                      let (ran, reask) = case reverse msgs of
+                            (Ask pid reasked : rest) | pid == playerId -> (reverse rest, Just reasked)
+                            _ -> (msgs, Nothing)
+                          question' = maybe others (\reasked -> Map.insert playerId reasked others) reask
+                      handled $ ran <> [Retain (AskMap question') | not (Map.null question')]
+                    else handled $ msgs <> [AskMap others | not (Map.null others)]
+          )
+          $ Map.lookup playerId gameQuestion
+ where
+  -- Seats the queue rebuilds on its own: PlayerWindow re-pushes itself, and a
+  -- WindowChooseOne is followed by the Do (CheckWindows ws) that WindowAsk
+  -- queues behind it. Re-parking either hands back a stale question (#5160).
+  isRegeneratedWindowChoose = \case
+    PlayerWindowChooseOne _ -> True
+    WindowChooseOne _ -> True
+    _ -> False
+  go
+    :: (Question Message -> Question Message)
+    -> Question Message
+    -> QuestionResponse
+    -> [Message]
+  go f q response = case q of
+    QuestionLabel lbl mCard q' -> go (QuestionLabel lbl mCard) q' response
+    PayCostQuestion cost q' -> go (PayCostQuestion cost) q' response
+    QuestionWithSource s tt q' -> go (QuestionWithSource s tt) q' response
+    Read t (BasicReadChoices qs) mcs -> case qs !!? qrChoice response of
+      Nothing -> [Ask playerId $ f $ Read t (BasicReadChoices qs) mcs]
+      Just msg -> [uiToRun msg]
+    Read t (BasicReadChoicesN n qs) mcs -> do
+      let (mm, msgs') = extract (qrChoice response) qs
+      case (mm, msgs') of
+        (Just m', []) -> [uiToRun m']
+        (Just m', _) ->
+          if n - 1 == 0
+            then [uiToRun m']
+            else [uiToRun m', Ask playerId $ f $ Read t (BasicReadChoicesN (n - 1) msgs') mcs]
+        (Nothing, msgs'') -> [Ask playerId $ f $ Read t (BasicReadChoicesN n msgs'') mcs]
+    Read t (BasicReadChoicesUpToN n qs) mcs -> do
+      let (mm, msgs') = extract (qrChoice response) qs
+      case (mm, msgs') of
+        (Just m', []) -> [uiToRun m']
+        (Just m'@(Done _), _) -> [uiToRun m']
+        (Just m', [Done _]) -> [uiToRun m']
+        (Just m', msgs'') ->
+          if n - 1 == 0
+            then [uiToRun m']
+            else [uiToRun m', Ask playerId $ f $ Read t (BasicReadChoicesUpToN (n - 1) msgs'') mcs]
+        (Nothing, msgs'') -> [Ask playerId $ f $ Read t (BasicReadChoicesUpToN n msgs'') mcs]
+    Read t (LeadInvestigatorMustDecide qs) mcs -> case qs !!? qrChoice response of
+      Nothing -> [Ask playerId $ f $ Read t (LeadInvestigatorMustDecide qs) mcs]
+      Just msg -> [uiToRun msg]
+    ChooseOneWizard flavor qs confirm back -> case qs !!? qrChoice response of
+      Nothing -> [Ask playerId $ f $ ChooseOneWizard flavor qs confirm back]
+      Just WizardChoice {messages} -> [Run messages]
+    ChooseOne qs -> case qs !!? qrChoice response of
+      Nothing -> [Ask playerId $ f $ ChooseOne qs]
+      Just msg -> [uiToRun msg]
+    PlayerWindowChooseOne qs -> case qs !!? qrChoice response of
+      Nothing -> [Ask playerId $ f $ PlayerWindowChooseOne qs]
+      Just msg -> [uiToRun msg]
+    WindowChooseOne qs -> case qs !!? qrChoice response of
+      Nothing -> [Ask playerId $ f $ WindowChooseOne qs]
+      Just msg -> [uiToRun msg]
+    ChooseOneFromEach qs -> case concat qs !!? qrChoice response of
+      Nothing -> [Ask playerId $ f $ ChooseOneFromEach qs]
+      Just msg ->
+        let
+          removeSublistAtIndex :: Int -> [[a]] -> [[a]]
+          removeSublistAtIndex idx xss = removeSublist idx xss 0
+          removeSublist _ [] _ = []
+          removeSublist n (ys : yss) currentIdx
+            | n < currentIdx + length ys = yss
+            | otherwise = ys : removeSublist n yss (currentIdx + length ys)
+          remaining = removeSublistAtIndex (qrChoice response) qs
+         in
+          uiToRun msg : [Ask playerId $ f $ ChooseOneFromEach remaining | not (null remaining)]
+    ChooseN n qs -> do
+      let (mm, msgs') = extract (qrChoice response) qs
+      case (mm, msgs') of
+        (Just m', []) -> [uiToRun m']
+        (Just m', msgs''@(m1 : mrest)) ->
+          if n - 1 == 0
+            then [uiToRun m']
+            else
+              -- it is possible that every choice in qs is the same, in which case we can just run them all
+              if all (== m1) mrest
+                then uiToRun m' : map uiToRun (take (n - 1) msgs'')
+                else [uiToRun m', Ask playerId $ f $ ChooseN (n - 1) msgs'']
+        (Nothing, msgs'') -> [Ask playerId $ f $ ChooseN n msgs'']
+    ChooseUpToN n qs -> do
+      let (mm, msgs') = extract (qrChoice response) qs
+      case (mm, msgs') of
+        (Just m', []) -> [uiToRun m']
+        (Just m'@(Done _), _) -> [uiToRun m']
+        (Just m', [Done _]) -> [uiToRun m']
+        (Just m', msgs'') ->
+          if n - 1 == 0
+            then [uiToRun m']
+            else [uiToRun m', Ask playerId $ f $ ChooseUpToN (n - 1) msgs'']
+        (Nothing, msgs'') -> [Ask playerId $ f $ ChooseUpToN n msgs'']
+    ChooseOneAtATime msgs -> do
+      let (mm, msgs') = extract (qrChoice response) msgs
+      case (mm, msgs') of
+        (Just m', []) -> [uiToRun m']
+        (Just m', msgs'') ->
+          [uiToRun m', Ask playerId $ f $ ChooseOneAtATime msgs'']
+        (Nothing, msgs'') ->
+          [Ask playerId $ f $ ChooseOneAtATime msgs'']
+    ChooseOneAtATimeWithAuto k msgs -> do
+      -- Choice 0 is the auto ("resolve everything still listed") option, so the real
+      -- choices are offset by one. The auto option only earns its place while more
+      -- than one is left: against a single option it is a second button that does
+      -- exactly what the first one does.
+      let reask rest = if length rest > 1 then ChooseOneAtATimeWithAuto k rest else ChooseOneAtATime rest
+      if qrChoice response == 0
+        then map uiToRun msgs
+        else do
+          let (mm, msgs') = extract (qrChoice response - 1) msgs
+          case (mm, msgs') of
+            (Just m', []) -> [uiToRun m']
+            (Just m', msgs'') -> [uiToRun m', Ask playerId $ f $ reask msgs'']
+            (Nothing, msgs'') -> [Ask playerId $ f $ reask msgs'']
+    ChooseSome msgs -> do
+      let (mm, msgs') = extract (qrChoice response) msgs
+      case (mm, msgs') of
+        (Just (Done _), _) -> []
+        (Just m', msgs'') -> case msgs'' of
+          [] -> [uiToRun m']
+          [Done _] -> [uiToRun m']
+          rest -> [uiToRun m', Ask playerId $ f $ ChooseSome rest]
+        (Nothing, msgs'') -> [Ask playerId $ f $ ChooseSome msgs'']
+    ChooseSome1 doneMsg msgs -> do
+      let (mm, msgs') = extract (qrChoice response) msgs
+      case (mm, msgs') of
+        (Just (Done _), _) -> []
+        (Just m', msgs'') -> case msgs'' of
+          [] -> [uiToRun m']
+          [Done _] -> [uiToRun m']
+          rest -> [uiToRun m', Ask playerId $ f $ ChooseSome $ Done doneMsg : rest]
+        (Nothing, msgs'') -> [Ask playerId $ f $ ChooseSome $ Done doneMsg : msgs'']
+    PickSupplies remaining chosen qs rs -> case qs !!? qrChoice response of
+      Nothing -> [Ask playerId $ f $ PickSupplies remaining chosen qs rs]
+      Just msg -> [uiToRun msg]
+    DropDown qs -> case qs !!? qrChoice response of
+      Nothing -> [Ask playerId $ f $ DropDown qs]
+      Just (_, msg) -> [msg]
+    _ -> error "Wrong question type"
+
+extract :: Int -> [a] -> (Maybe a, [a])
+extract n xs = let a = xs !!? n in (a, [x | (i, x) <- zip [0 ..] xs, i /= n])

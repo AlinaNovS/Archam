@@ -1,0 +1,327 @@
+{-# LANGUAGE TypeAbstractions #-}
+{-# OPTIONS_GHC -Wno-orphans #-}
+
+module Arkham.Investigator (
+  module Arkham.Investigator,
+  module Arkham.Investigator.Types,
+) where
+
+import Arkham.Prelude
+
+import Arkham.Card
+import Arkham.Classes.Entity.TH
+import Arkham.Id
+import Arkham.Investigator.Investigators
+import Arkham.Investigator.Runner hiding (allInvestigators)
+import Arkham.Investigator.Types
+import Data.Aeson (Result (..))
+import Data.Typeable
+
+lookupInvestigator :: InvestigatorId -> PlayerId -> Investigator
+lookupInvestigator iid pid = case lookup (toCardCode iid) allInvestigators of
+  Nothing -> lookupPromoInvestigator iid pid
+  Just c -> overAttrs (artL .~ CardCodeExact (toCardCode iid)) $ toInvestigator c pid
+
+normalizeInvestigatorId :: InvestigatorId -> InvestigatorId
+normalizeInvestigatorId iid = findWithDefault iid iid promoInvestigators
+
+{- | Handle promo investigators
+
+Some investigators have book versions that are just alternative art
+with some replacement cards. Since these investigators are functionally
+the same, we proxy the lookup to their non-promo version.
+-}
+promoInvestigators :: Map InvestigatorId InvestigatorId
+promoInvestigators =
+  mapFromList
+    [ ("98001", "02003") -- Jenny Barnes
+    , ("98004", "01001") -- Roland Banks
+    , ("98007", "08004") -- Norman Withers
+    , ("98010", "05001") -- Carolyn Fern
+    , ("98013", "07005") -- Silas Marsh
+    , ("98016", "07004") -- Dexter Drake
+    , ("99001", "05006") -- Marie Lambeau
+    ]
+
+lookupPromoInvestigator :: InvestigatorId -> PlayerId -> Investigator
+lookupPromoInvestigator iid pid = case lookup iid promoInvestigators of
+  Nothing -> error $ "Unknown promo investigator: " <> show iid
+  Just iid' -> overAttrs (artL .~ CardCodeExact (toCardCode iid)) $ lookupInvestigator iid' pid
+
+instance FromJSON Investigator where
+  parseJSON = withObject "Investigator" $ \o -> do
+    cCode <- o .: "cardCode"
+    withInvestigatorCardCode cCode
+      $ \(SomeInvestigator @a) -> Investigator <$> parseJSON @a (Object o)
+
+withInvestigatorCardCode :: CardCode -> (SomeInvestigator -> r) -> r
+withInvestigatorCardCode cCode f = case lookup cCode allInvestigators of
+  Nothing -> case cCode of
+    "04244" -> f (SomeInvestigator @BodyOfAYithian)
+    "05046" -> f (SomeInvestigator @GavriellaMizrah)
+    "05047" -> f (SomeInvestigator @JeromeDavids)
+    "05048" -> f (SomeInvestigator @ValentinoRivas)
+    "05049" -> f (SomeInvestigator @PennyWhite)
+    "10661" -> f (SomeInvestigator @ShatteredSelf)
+    _ -> error ("invalid investigators: " <> show cCode)
+  Just (SomeInvestigatorCard (_ :: InvestigatorCard a)) -> f (SomeInvestigator @a)
+
+allInvestigators :: Map CardCode SomeInvestigatorCard
+allInvestigators =
+  mapFromList
+    $ concatMap
+      someInvestigatorCardCodes
+      [ SomeInvestigatorCard rolandBanks
+      , SomeInvestigatorCard daisyWalker
+      , SomeInvestigatorCard skidsOToole
+      , SomeInvestigatorCard agnesBaker
+      , SomeInvestigatorCard wendyAdams
+      , SomeInvestigatorCard zoeySamaras
+      , SomeInvestigatorCard rexMurphy
+      , SomeInvestigatorCard jennyBarnes
+      , SomeInvestigatorCard jimCulver
+      , SomeInvestigatorCard ashcanPete
+      , SomeInvestigatorCard markHarrigan
+      , SomeInvestigatorCard minhThiPhan
+      , SomeInvestigatorCard sefinaRousseau
+      , SomeInvestigatorCard akachiOnyele
+      , SomeInvestigatorCard williamYorick
+      , SomeInvestigatorCard lolaHayes
+      , SomeInvestigatorCard leoAnderson
+      , SomeInvestigatorCard ursulaDowns
+      , SomeInvestigatorCard finnEdwards
+      , SomeInvestigatorCard fatherMateo
+      , SomeInvestigatorCard calvinWright
+      , SomeInvestigatorCard carolynFern
+      , SomeInvestigatorCard joeDiamond
+      , SomeInvestigatorCard prestonFairmont
+      , SomeInvestigatorCard dianaStanley
+      , SomeInvestigatorCard ritaYoung
+      , SomeInvestigatorCard marieLambeau
+      , SomeInvestigatorCard gavriellaMizrah
+      , SomeInvestigatorCard jeromeDavids
+      , SomeInvestigatorCard valentinoRivas
+      , SomeInvestigatorCard pennyWhite
+      , SomeInvestigatorCard tommyMuldoon
+      , SomeInvestigatorCard mandyThompson
+      , SomeInvestigatorCard tonyMorgan
+      , SomeInvestigatorCard lukeRobinson
+      , SomeInvestigatorCard patriceHathaway
+      , SomeInvestigatorCard sisterMary
+      , SomeInvestigatorCard amandaSharpe
+      , SomeInvestigatorCard trishScarborough
+      , SomeInvestigatorCard dexterDrake
+      , SomeInvestigatorCard silasMarsh
+      , SomeInvestigatorCard danielaReyes
+      , SomeInvestigatorCard normanWithers
+      , SomeInvestigatorCard montereyJack
+      , SomeInvestigatorCard lilyChen
+      , SomeInvestigatorCard bobJenkins
+      , SomeInvestigatorCard carsonSinclair
+      , SomeInvestigatorCard vincentLee
+      , SomeInvestigatorCard kymaniJones
+      , SomeInvestigatorCard aminaZidane
+      , SomeInvestigatorCard darrellSimmons
+      , SomeInvestigatorCard charlieKane
+      , SomeInvestigatorCard wilsonRichards
+      , SomeInvestigatorCard kateWinthrop
+      , SomeInvestigatorCard alessandraZorzi
+      , SomeInvestigatorCard kohakuNarukami
+      , SomeInvestigatorCard hankSamson
+      , SomeInvestigatorCard hankSamsonResoluteAssistant
+      , SomeInvestigatorCard hankSamsonResoluteWarden
+      , SomeInvestigatorCard marionTavares
+      , SomeInvestigatorCard luciusGalloway
+      , SomeInvestigatorCard agathaCrane_Seeker
+      , SomeInvestigatorCard agathaCrane_Mystic
+      , SomeInvestigatorCard michaelMcGlen
+      , SomeInvestigatorCard gloriaGoldberg
+      , SomeInvestigatorCard georgeBarnaby
+      , SomeInvestigatorCard lostHomunculus
+      , SomeInvestigatorCard danielaReyes2
+      , SomeInvestigatorCard joeDiamond2
+      , SomeInvestigatorCard trishScarborough2
+      , SomeInvestigatorCard dexterDrake2
+      , SomeInvestigatorCard isabelleBarnes
+      , SomeInvestigatorCard nathanielCho
+      , SomeInvestigatorCard tommyMuldoon2
+      , SomeInvestigatorCard harveyWalters
+      , SomeInvestigatorCard carolynFern2
+      , SomeInvestigatorCard winifredHabbamock
+      , SomeInvestigatorCard andrePatel
+      , SomeInvestigatorCard jacquelineFine
+      , SomeInvestigatorCard marieLambeau2
+      , SomeInvestigatorCard stellaClark
+      , SomeInvestigatorCard miguelDeLaCruz
+      , SomeInvestigatorCard subject5U21
+      , SomeInvestigatorCard daisyWalkerParallel
+      , SomeInvestigatorCard skidsOTooleParallel
+      , SomeInvestigatorCard agnesBakerParallel
+      , SomeInvestigatorCard rolandBanksParallel
+      , SomeInvestigatorCard wendyAdamsParallel
+      , SomeInvestigatorCard ashcanPeteParallel
+      , SomeInvestigatorCard jimCulverParallel
+      , SomeInvestigatorCard zoeySamarasParallel
+      , SomeInvestigatorCard montereyJackParallel
+      , SomeInvestigatorCard rexMurphyParallel
+      , SomeInvestigatorCard fatherMateoParallel
+      , SomeInvestigatorCard jennyBarnesParallel
+      , SomeInvestigatorCard lolaHayesParallel
+      ]
+
+becomeYithian :: Investigator -> Investigator
+becomeYithian (Investigator a) =
+  Investigator
+    $ BodyOfAYithian
+    . (`with` YithianMetadata (toJSON a))
+    $ (toAttrs a)
+      { investigatorHealth = 7
+      , investigatorSanity = 7
+      , investigatorWillpower = 2
+      , investigatorIntellect = 2
+      , investigatorCombat = 2
+      , investigatorAgility = 2
+      , investigatorCardCode = "04244"
+      , investigatorClass = Neutral
+      , investigatorTraits = setFromList [Monster, Yithian]
+      , investigatorForm = YithianForm
+      , investigatorDiscarding = Nothing
+      }
+
+becomeHomunculus :: Investigator -> Investigator
+becomeHomunculus (Investigator a) =
+  Investigator
+    $ LostHomunculus
+    $ (toAttrs a)
+      { investigatorHealth = 6
+      , investigatorSanity = 6
+      , investigatorWillpower = 2
+      , investigatorIntellect = 2
+      , investigatorCombat = 2
+      , investigatorAgility = 2
+      , investigatorCardCode = "11068b"
+      , investigatorArt = "11068b"
+      , investigatorClass = Mystic
+      , investigatorTraits = setFromList [Construct, Scion]
+      , investigatorDiscarding = Nothing
+      , investigatorForm = HomunculusForm
+      }
+
+becomeShatteredSelf :: Investigator -> Investigator
+becomeShatteredSelf (Investigator a) =
+  Investigator
+    $ ShatteredSelf
+    . (`with` ShatteredSelfMetadata (toJSON a))
+    $ (toAttrs a)
+      { investigatorHealth = 7
+      , investigatorSanity = 7
+      , investigatorWillpower = 0
+      , investigatorIntellect = 0
+      , investigatorCombat = 0
+      , investigatorAgility = 0
+      , investigatorCardCode = "10661"
+      , investigatorClass = Neutral
+      , investigatorTraits = setFromList [Shattered]
+      , investigatorForm = ShatteredForm
+      , investigatorDiscarding = Nothing
+      }
+
+-- | The investigator a Body of a Yithian was made from, per its stored snapshot.
+yithianOriginalCardCode :: Investigator -> Maybe CardCode
+yithianOriginalCardCode (Investigator a) = case cast a of
+  Just (BodyOfAYithian (_ `With` meta)) -> case fromJSON @Investigator meta.originalBody of
+    Success x -> Just $ investigatorCardCode $ toAttrs x
+    _ -> Nothing
+  Nothing -> Nothing
+
+shatteredSelfOriginalCardCode :: Investigator -> Maybe CardCode
+shatteredSelfOriginalCardCode (Investigator a) = case cast a of
+  Just (ShatteredSelf (_ `With` meta)) -> case fromJSON @Investigator meta.originalBody of
+    Success x -> Just $ investigatorCardCode $ toAttrs x
+    _ -> Nothing
+  Nothing -> Nothing
+
+returnFromShatteredSelf :: Investigator -> Investigator
+returnFromShatteredSelf = flip handleInvestigator \(ShatteredSelf (attrs `With` meta)) ->
+  case fromJSON meta.originalBody of
+    Success x -> updateAttrs x \a ->
+      a
+        { investigatorSettings = investigatorSettings attrs <> investigatorSettings a
+        , investigatorXp = investigatorXp attrs
+        , investigatorSpentXp = investigatorSpentXp attrs
+        , investigatorPhysicalTrauma = investigatorPhysicalTrauma attrs
+        , investigatorMentalTrauma = investigatorMentalTrauma attrs
+        , investigatorTokens = investigatorTokens attrs
+        , investigatorPlacement = investigatorPlacement attrs
+        , investigatorMovement = investigatorMovement attrs
+        , investigatorPreviousLocation = investigatorPreviousLocation attrs
+        , investigatorUsedAbilities = filter onlyCampaignAbilities (investigatorUsedAbilities a)
+        , investigatorLog = investigatorLog a
+        , investigatorKilled = investigatorKilled a
+        , investigatorDrivenInsane = investigatorDrivenInsane a
+        , investigatorDeck = investigatorDeck attrs
+        , investigatorHand = investigatorHand attrs
+        , investigatorDiscard = investigatorDiscard attrs
+        , investigatorSlots = investigatorSlots attrs
+        , investigatorRemainingActions = investigatorRemainingActions attrs
+        , investigatorActionsTaken = investigatorActionsTaken attrs
+        , investigatorActionsPerformed = investigatorActionsPerformed attrs
+        , investigatorEndedTurn = investigatorEndedTurn attrs
+        }
+    _ ->
+      fromMaybe (error "The shattered self cannot be made whole again")
+        $ rebuildFromAlternateBody attrs
+
+handleInvestigator :: IsInvestigator a => Investigator -> (a -> Investigator) -> Investigator
+handleInvestigator o@(Investigator a) f = maybe o f (cast a)
+
+{- | Rebuild the investigator an alternate body (Body of a Yithian, Shattered Self) was
+made from when the stored snapshot of that investigator can no longer be read. Older
+versions of the engine clobbered the snapshot when the alternate body was transfigured,
+so some saves carry a snapshot of the alternate body instead of the original.
+
+Nothing meaningful is lost: taking on an alternate body keeps the original investigator's
+id, deck, hand, discard, XP, and trauma, so only the printed identity has to come back
+from the card.
+-}
+rebuildFromAlternateBody :: InvestigatorAttrs -> Maybe Investigator
+rebuildFromAlternateBody attrs
+  | toCardCode attrs.id == investigatorCardCode attrs = Nothing
+  | otherwise = Just $ updateAttrs base \b ->
+      attrs
+        { investigatorCardCode = investigatorCardCode b
+        , investigatorArt = investigatorArt b
+        , investigatorName = investigatorName b
+        , investigatorClass = investigatorClass b
+        , investigatorTraits = investigatorTraits b
+        , investigatorHealth = investigatorHealth b
+        , investigatorSanity = investigatorSanity b
+        , investigatorWillpower = investigatorWillpower b
+        , investigatorIntellect = investigatorIntellect b
+        , investigatorCombat = investigatorCombat b
+        , investigatorAgility = investigatorAgility b
+        , investigatorForm = RegularForm
+        , investigatorUsedAbilities = filter onlyCampaignAbilities (investigatorUsedAbilities attrs)
+        }
+ where
+  base = lookupInvestigator attrs.id (investigatorPlayerId attrs)
+
+returnToBody :: Investigator -> Investigator
+returnToBody = flip handleInvestigator \(BodyOfAYithian (attrs `With` meta)) ->
+  case fromJSON meta.originalBody of
+    Success x -> updateAttrs x \a ->
+      a
+        { investigatorSettings = investigatorSettings attrs <> investigatorSettings a
+        , investigatorXp = investigatorXp attrs
+        , investigatorSpentXp = investigatorSpentXp attrs
+        , investigatorPhysicalTrauma = investigatorPhysicalTrauma attrs
+        , investigatorMentalTrauma = investigatorMentalTrauma attrs
+        , investigatorTokens = investigatorTokens attrs
+        , investigatorUsedAbilities = filter onlyCampaignAbilities (investigatorUsedAbilities a)
+        , investigatorLog = investigatorLog a
+        , investigatorKilled = investigatorKilled a
+        , investigatorDrivenInsane = investigatorDrivenInsane a
+        }
+    _ ->
+      fromMaybe (error "Investigator mind is too corrupted to return to their body")
+        $ rebuildFromAlternateBody attrs

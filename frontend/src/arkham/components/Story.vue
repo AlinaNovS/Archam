@@ -1,0 +1,257 @@
+<script lang="ts" setup>
+import { computed, ref } from 'vue'
+import { Game } from '@/arkham/types/Game'
+import * as ArkhamGame from '@/arkham/types/Game'
+import { AbilityLabel, AbilityMessage, Message, MessageType } from '@/arkham/types/Message'
+import { useDebug } from '@/arkham/debug'
+import { cardImage } from '@/arkham/cardImages'
+import { useCardFlip } from '@/arkham/composables/useCardFlip'
+import AbilityButton from '@/arkham/components/AbilityButton.vue'
+import Token from '@/arkham/components/Token.vue'
+import DebugStory from '@/arkham/components/debug/Story.vue'
+import * as Arkham from '@/arkham/types/Story'
+import TokenPool from '@/arkham/components/TokenPool.vue';
+import { TokenType } from '@/arkham/types/Token';
+
+export interface Props {
+  game: Game
+  story: Arkham.Story
+  playerId: string
+  atLocation?: boolean
+}
+
+const props = withDefaults(defineProps<Props>(), { atLocation: false })
+const emit = defineEmits<{
+  choose: [value: number]
+}>()
+
+const image = computed(() => {
+  const { art, flippedArt, flipped } = props.story
+  return cardImage(flipped ? flippedArt : art)
+})
+
+const { displayedImage, flipping } = useCardFlip(image)
+
+const id = computed(() => props.story.id)
+
+const choices = computed(() => ArkhamGame.choices(props.game, props.playerId))
+const choose = (idx: number) => emit('choose', idx)
+
+const checkmarks = computed(() => {
+  return props.story.modifiers?.flatMap((m) => {
+    if (m.type.tag !== 'UIModifier') return []
+    const contents = m.type.contents
+    if (typeof contents !== 'object' || contents.tag !== 'OverlayCheckmark') return []
+    return [contents]
+  }) ?? []
+})
+
+
+const setAsideInfestationTokens = computed(() => props.story.meta?.infestationSetAside ?? [])
+
+const debug = useDebug()
+const debugging = ref(false)
+
+const hasBag = computed(() => {
+  const meta = props.story.meta
+  if (!meta) return false
+  return (
+    (meta.predationTokens?.length ?? 0) > 0 ||
+    (meta.predationSetAside?.length ?? 0) > 0 ||
+    meta.predationCurrentToken != null ||
+    (meta.infestationTokens?.length ?? 0) > 0 ||
+    (meta.infestationSetAside?.length ?? 0) > 0 ||
+    meta.infestationCurrentToken != null
+  )
+})
+
+function canInteract(c: Message): boolean {
+  if (c.tag === MessageType.TARGET_LABEL && c.target.contents === id.value) {
+    return true
+  }
+  return false
+}
+
+const cardAction = computed(() => choices.value.findIndex(canInteract))
+
+const crossedOff = computed(() => {
+  const entries = props.story.meta?.crossedOff
+  if (!entries) return null
+  return JSON.stringify(entries)
+})
+
+function isAbility(v: Message): v is AbilityLabel {
+  if (v.tag !== MessageType.ABILITY_LABEL) {
+    return false
+  }
+
+  const { source } = v.ability;
+
+  if (source.sourceTag === 'ProxySource') {
+    if ("contents" in source.source) {
+      return source.source.contents === id.value
+    }
+  } else if (source.tag === 'StorySource') {
+    return source.contents === id.value
+  }
+
+  return false
+}
+
+const abilities = computed(() => {
+  return choices
+    .value
+    .reduce<AbilityMessage[]>((acc, v, i) => {
+      if (isAbility(v)) {
+        return [...acc, { contents: v, displayAsAction: false, index: i}];
+      }
+
+      return acc;
+    }, []);
+})
+
+// Story cards generally expose a single story ability. Let the card itself
+// select that unambiguous choice instead of requiring a second click on the
+// ability button. Target-label choices still take precedence.
+const directAction = computed(() => {
+  if (cardAction.value !== -1) return cardAction.value
+  return abilities.value.length === 1 ? abilities.value[0].index : -1
+})
+
+const civilians = computed(() => props.story.tokens[TokenType.Civilian])
+const storyTokens = computed(() => {
+  const { Civilian, ...rest } = props.story.tokens
+  return rest
+})
+
+const hasPool = computed(() => Object.values(storyTokens.value).some((amount) => (amount ?? 0) > 0))
+const sealedChaosTokens = computed(() => props.story.sealedChaosTokens ?? [])
+</script>
+
+<template>
+  <div class="story">
+    <div class="story-card">
+      <div class="image-container">
+        <img :src="displayedImage"
+          :class="{'story--can-interact': directAction !== -1, 'card--flipping': flipping }"
+          :data-crossed-off="crossedOff"
+          :data-checkmarks="JSON.stringify(checkmarks)"
+          class="card story"
+          @click="directAction !== -1 && $emit('choose', directAction)"
+        />
+        <div class="pool" v-if="hasPool">
+          <TokenPool :tokens="storyTokens" />
+        </div>
+        <div class="sealed-tokens" v-if="sealedChaosTokens.length > 0">
+          <Token v-for="(sealedToken, index) in sealedChaosTokens" :key="index" :token="sealedToken" :playerId="playerId" :game="game" @choose="choose" />
+        </div>
+        <TokenPool :tokens="{ Civilian: civilians }" :overrides="{ Civilian: { class: 'civilians' } }" />
+      </div>
+      <AbilityButton
+        v-for="ability in abilities"
+        :key="ability.index"
+        :ability="ability.contents"
+        :data-image="image"
+        :game="game"
+        @click="$emit('choose', ability.index)"
+        />
+      <button v-if="debug.active && hasBag" @click="debugging = true">
+        {{ $t('debug.story.inspectBag') }}
+      </button>
+    </div>
+    <div v-if="setAsideInfestationTokens.length > 0" class="infestation-tokens">
+      <Token v-for="token in setAsideInfestationTokens" :key="token.infestationTokenId" :token="Arkham.infestationAsChaosToken(token)" :playerId="playerId" :game="game" @choose="choose" />
+    </div>
+    <DebugStory v-if="debugging" :story="story" @close="debugging = false" />
+  </div>
+</template>
+
+<style scoped>
+.story--can-interact {
+  border: 3px solid var(--select);
+  border-radius: 15px;
+  cursor: pointer;
+}
+
+.story {
+  display: flex;
+  flex-direction: row;
+
+  & :deep(.token) {
+    width: 2em;
+  }
+
+  & :deep(.token-container) {
+    width: fit-content;
+  }
+}
+
+.infestation-tokens {
+  width: fit-content;
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-rows: 2em 2em;
+  gap: 5px;
+  padding: 5px;
+  margin: 5px;
+  background: rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 5px;
+  height: calc(4em + 10px);
+}
+
+.story-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.button{
+  margin-top: 2px;
+  border: 0;
+  color: #fff;
+  border-radius: 4px;
+  border: 1px solid var(--select);
+}
+
+.card {
+  width: var(--card-width);
+  max-width: var(--card-width);
+  border-radius: 5px;
+}
+
+.image-container {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-areas: "base";
+  place-items: center;
+  place-content: center;
+
+  > .pool {
+    grid-area: base;
+    pointer-events: none;
+  }
+
+  /* Sealed tokens sit on the card, like an asset's, but stay clickable so a
+     "release the token sealed here" prompt can be answered from them. */
+  > .sealed-tokens {
+    grid-area: base;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 2px;
+  }
+
+  > .card {
+    grid-area: base;
+  }
+}
+
+.civilians {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  pointer-events: none;
+  z-index: var(--z-index-10);
+}
+</style>

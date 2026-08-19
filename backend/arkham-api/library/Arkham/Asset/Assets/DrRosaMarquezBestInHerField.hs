@@ -1,0 +1,39 @@
+module Arkham.Asset.Assets.DrRosaMarquezBestInHerField (drRosaMarquezBestInHerField) where
+
+import Arkham.Ability
+import Arkham.Asset.Cards qualified as Cards
+import Arkham.Asset.Import.Lifted
+import Arkham.Campaigns.TheFeastOfHemlockVale.Helpers
+import Arkham.Helpers.Modifiers (ModifierType (..), controllerGets)
+import Arkham.Matcher
+
+newtype DrRosaMarquezBestInHerField = DrRosaMarquezBestInHerField AssetAttrs
+  deriving anyclass IsAsset
+  deriving newtype (Show, Eq, ToJSON, FromJSON, Entity)
+
+drRosaMarquezBestInHerField :: AssetCard DrRosaMarquezBestInHerField
+drRosaMarquezBestInHerField = ally DrRosaMarquezBestInHerField Cards.drRosaMarquezBestInHerField (2, 2)
+
+instance HasModifiersFor DrRosaMarquezBestInHerField where
+  getModifiersFor (DrRosaMarquezBestInHerField a) =
+    controllerGets a [SkillModifier #intellect 1, SkillModifier #agility 1]
+
+instance HasAbilities DrRosaMarquezBestInHerField where
+  getAbilities (DrRosaMarquezBestInHerField a) =
+    [ groupLimit PerGame
+        $ restricted
+          a
+          1
+          ( oneOf [ControlsThis, thisExists a (not_ $ AssetControlledBy Anyone) <> OnSameLocation]
+              <> youCanTriggerCodex Theta
+          )
+        $ freeReaction
+        $ DiscoveringLastClue #after You YourLocation
+    ]
+
+instance RunMessage DrRosaMarquezBestInHerField where
+  runMessage msg a@(DrRosaMarquezBestInHerField attrs) = runQueueT $ case msg of
+    UseThisAbility iid (isSource attrs -> True) 1 -> do
+      codex iid (attrs.ability 1) Theta
+      pure a
+    _ -> DrRosaMarquezBestInHerField <$> liftRunMessage msg attrs

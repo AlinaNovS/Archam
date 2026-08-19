@@ -1,0 +1,487 @@
+<script lang="ts" setup>
+import { computed } from 'vue'
+import { useDbCardStore } from '@/stores/dbCards'
+import type { ArkhamDBCard } from '@/stores/dbCards'
+import * as Arkham from '@/arkham/types/CardDef'
+import { localizeArkhamDBBaseUrl } from '@/arkham/helpers'
+import sets from '@/arkham/data/sets.json'
+
+const props = withDefaults(defineProps<{ cards: Arkham.CardDef[], attachments?: Record<string, Arkham.CardDef[]>, showCounts?: boolean }>(), {
+  attachments: () => ({}),
+  showCounts: true,
+})
+
+const store = useDbCardStore()
+
+const cardName = (card: Arkham.CardDef) => {
+  const subtitle = card.name.subtitle === null ? "" : `: ${card.name.subtitle}`
+  return `${card.name.title}${subtitle}`
+}
+
+const levelText = (card: Arkham.CardDef) => {
+  if (!card.level || card.level === 0) return ''
+  return ` (${card.level})`
+}
+
+const cardCost = (card: Arkham.CardDef) => {
+  if (card.cost?.tag === "StaticCost") return card.cost.contents
+  if (card.cost?.tag === "DynamicCost") return -2
+  if (card.cost?.tag === "DeferredCost") return -2
+  if (card.cost?.tag === "DiscardAmountCost") return -2
+  return null
+}
+
+const cardType = (card: Arkham.CardDef) => {
+  switch (card.cardType) {
+    case "PlayerTreacheryType": return "Treachery"
+    case "PlayerEnemyType": return "Enemy"
+    default: return card.cardType.replace(/Type$/, '')
+  }
+}
+
+const cardTraits = (card: Arkham.CardDef) => {
+  if (card.cardTraits.length === 0) return ''
+  return `${card.cardTraits.join('. ')}.`
+}
+
+const cardIcons = (card: Arkham.CardDef) => {
+  return card.skills.map((s) => {
+    if (s.tag === "SkillIcon") {
+      switch (s.contents) {
+        case "SkillWillpower": return "willpower"
+        case "SkillIntellect": return "intellect"
+        case "SkillCombat": return "combat"
+        case "SkillAgility": return "agility"
+        default: return "unknown"
+      }
+    }
+    if (s.tag == "WildIcon" || s.tag == "WildMinusIcon") return "wild"
+    return "unknown"
+  })
+}
+
+const cardSetCache = new Map<string, (typeof sets)[number] | undefined>()
+
+const cardSet = (card: Arkham.CardDef) => {
+  const cached = cardSetCache.get(card.art)
+  if (cached !== undefined || cardSetCache.has(card.art)) return cached
+
+  const cardCode = parseInt(card.art)
+  const set = sets.find((s) => cardCode >= s.min && cardCode <= s.max)
+  cardSetCache.set(card.art, set)
+  return set
+}
+
+const cardSetText = (card: Arkham.CardDef) => {
+  const setNumber = parseInt(card.art.slice(2))
+  const language = localStorage.getItem('language') || 'en'
+  let setName = ''
+
+  if (language !== 'en') {
+    const match: ArkhamDBCard | null = store.getDbCard(card.art)
+    if (match) setName = match.pack_name
+  }
+
+  if (!setName) {
+    const set = cardSet(card)
+    if (set) setName = set.name
+  }
+
+  if (setName) return `${setName} ${setNumber % 500}`
+  return "Unknown"
+}
+
+const ungroupedWarOfTheOuterGodsCards = new Set(['c86038a', 'c86044a', 'c86049a'])
+
+const groupKey = (card: Arkham.CardDef) => ungroupedWarOfTheOuterGodsCards.has(card.cardCode) ? card.cardCode : card.art
+
+const groupCards = (cards: Arkham.CardDef[]) => {
+  const grouped = new Map<string, { card: Arkham.CardDef; count: number }>()
+
+  for (const card of cards) {
+    const key = groupKey(card)
+    const existing = grouped.get(key)
+    if (existing) existing.count += 1
+    else grouped.set(key, { card, count: 1 })
+  }
+
+  return Array.from(grouped.values())
+}
+
+const groupedCards = computed(() => groupCards(props.cards))
+
+const attachedCards = (card: Arkham.CardDef) => props.attachments[card.art] ?? []
+
+const groupedAttachedCards = (card: Arkham.CardDef) => groupCards(attachedCards(card))
+
+const underworldMarketCards = () => props.attachments['09077'] ?? []
+const spiritDeckCards = () => props.attachments['90052'] ?? []
+const stickToThePlanCards = () => props.attachments['03264'] ?? []
+const ancestralKnowledgeCards = () => props.attachments['07303'] ?? []
+const bewitchingCards = () => props.attachments['10079'] ?? []
+const eldritchBrandCards = () => props.attachments['11080'] ?? []
+
+const countCards = (cards: Arkham.CardDef[]) => {
+  const counts = new Map<string, number>()
+  for (const card of cards) counts.set(card.art, (counts.get(card.art) ?? 0) + 1)
+  return counts
+}
+
+const marketCardCounts = computed(() => countCards(underworldMarketCards()))
+const spiritCardCounts = computed(() => countCards(spiritDeckCards()))
+const stickToThePlanCardCounts = computed(() => countCards(stickToThePlanCards()))
+const ancestralKnowledgeCardCounts = computed(() => countCards(ancestralKnowledgeCards()))
+const bewitchingCardCounts = computed(() => countCards(bewitchingCards()))
+const eldritchBrandCardCounts = computed(() => countCards(eldritchBrandCards()))
+
+const marketCardCount = (card: Arkham.CardDef) => marketCardCounts.value.get(card.art) ?? 0
+const spiritCardCount = (card: Arkham.CardDef) => spiritCardCounts.value.get(card.art) ?? 0
+const stickToThePlanCardCount = (card: Arkham.CardDef) => stickToThePlanCardCounts.value.get(card.art) ?? 0
+const ancestralKnowledgeCardCount = (card: Arkham.CardDef) => ancestralKnowledgeCardCounts.value.get(card.art) ?? 0
+const bewitchingCardCount = (card: Arkham.CardDef) => bewitchingCardCounts.value.get(card.art) ?? 0
+const eldritchBrandCardCount = (card: Arkham.CardDef) => eldritchBrandCardCounts.value.get(card.art) ?? 0
+
+const marketTooltip = (card: Arkham.CardDef) => `Attached to Market deck (x ${marketCardCount(card)})`
+const spiritTooltip = (card: Arkham.CardDef) => `In Spirit deck (x ${spiritCardCount(card)})`
+const stickToThePlanTooltip = (card: Arkham.CardDef) => `Attached to Stick to the Plan (x ${stickToThePlanCardCount(card)})`
+const ancestralKnowledgeTooltip = (card: Arkham.CardDef) => `Attached to Ancestral Knowledge (x ${ancestralKnowledgeCardCount(card)})`
+const bewitchingTooltip = (card: Arkham.CardDef) => `Attached to Bewitching (x ${bewitchingCardCount(card)})`
+const eldritchBrandTooltip = (card: Arkham.CardDef) => `Branded by Eldritch Brand (x ${eldritchBrandCardCount(card)})`
+
+const isUnderworldMarketCard = (card: Arkham.CardDef) => marketCardCount(card) > 0
+const isSpiritDeckCard = (card: Arkham.CardDef) => spiritCardCount(card) > 0
+const isStickToThePlanCard = (card: Arkham.CardDef) => stickToThePlanCardCount(card) > 0
+const isAncestralKnowledgeCard = (card: Arkham.CardDef) => ancestralKnowledgeCardCount(card) > 0
+const isBewitchingCard = (card: Arkham.CardDef) => bewitchingCardCount(card) > 0
+const isEldritchBrandCard = (card: Arkham.CardDef) => eldritchBrandCardCount(card) > 0
+
+const attachmentHeading = (card: Arkham.CardDef) => {
+  if (card.art === '90052') return 'Spirit deck'
+  if (card.art === '09077') return 'Underworld Market'
+  if (card.art === '11080') return 'Eldritch Brand'
+  return `Attached cards for ${cardName(card)}`
+}
+</script>
+
+<template>
+  <div class="card-table-wrapper">
+    <table class="card-table">
+      <thead>
+        <tr>
+          <th>{{ $t('cardsList.name') }}</th>
+          <th>{{ $t('cardsList.class') }}</th>
+          <th>{{ $t('cardsList.cost') }}</th>
+          <th>{{ $t('cardsList.type') }}</th>
+          <th>{{ $t('cardsList.icons') }}</th>
+          <th class="traits-col">{{ $t('cardsList.traits') }}</th>
+          <th class="set-col">{{ $t('cardsList.set') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <template v-for="{ card, count } in groupedCards" :key="groupKey(card)">
+          <tr>
+            <td>
+              <div class="card-name-cell">
+                <span v-if="showCounts" class="deck-card-count">x {{ count }}</span>
+                <a target="_blank" :href="`${localizeArkhamDBBaseUrl()}/card/${card.art}`">{{ cardName(card) }}{{ levelText(card) }}</a>
+                <span v-if="isUnderworldMarketCard(card)" class="market-badge" v-tooltip="marketTooltip(card)" :aria-label="marketTooltip(card)">
+                  <font-awesome-icon icon="store" />
+                  <span>x {{ marketCardCount(card) }}</span>
+                </span>
+                <span v-if="isStickToThePlanCard(card)" class="market-badge" v-tooltip="stickToThePlanTooltip(card)" :aria-label="stickToThePlanTooltip(card)">
+                  <font-awesome-icon icon="paperclip" />
+                  <span>x {{ stickToThePlanCardCount(card) }}</span>
+                </span>
+                <span v-if="isAncestralKnowledgeCard(card)" class="market-badge" v-tooltip="ancestralKnowledgeTooltip(card)" :aria-label="ancestralKnowledgeTooltip(card)">
+                  <font-awesome-icon icon="paperclip" />
+                  <span>x {{ ancestralKnowledgeCardCount(card) }}</span>
+                </span>
+                <span v-if="isBewitchingCard(card)" class="market-badge" v-tooltip="bewitchingTooltip(card)" :aria-label="bewitchingTooltip(card)">
+                  <font-awesome-icon icon="paperclip" />
+                  <span>x {{ bewitchingCardCount(card) }}</span>
+                </span>
+                <span v-if="isEldritchBrandCard(card)" class="market-badge" v-tooltip="eldritchBrandTooltip(card)" :aria-label="eldritchBrandTooltip(card)">
+                  <font-awesome-icon icon="book" />
+                  <span>x {{ eldritchBrandCardCount(card) }}</span>
+                </span>
+                <span v-if="isSpiritDeckCard(card)" class="spirit-badge" v-tooltip="spiritTooltip(card)" :aria-label="spiritTooltip(card)">
+                  <font-awesome-icon :icon="['fas', 'ghost']" />
+                  <span>x {{ spiritCardCount(card) }}</span>
+                </span>
+              </div>
+            </td>
+            <td>
+              <span class="class-text">
+                <span v-for="(sym, i) in card.classSymbols" :key="sym" :class="`class-sym ${sym.toLowerCase()}-sym`">{{ sym }}{{ i < card.classSymbols.length - 1 ? ', ' : '' }}</span>
+              </span>
+              <span class="class-icons">
+                <span v-for="sym in card.classSymbols" :key="sym" :class="[`${sym.toLowerCase()}-icon`, `${sym.toLowerCase()}-sym`]"></span>
+              </span>
+            </td>
+            <td>{{ cardCost(card) }}</td>
+            <td>{{ cardType(card) }}</td>
+            <td>
+              <i v-for="(icon, index) in cardIcons(card)" :key="index" :class="[icon, `${icon}-icon`]"></i>
+            </td>
+            <td class="traits-col">{{ cardTraits(card) }}</td>
+            <td class="set-col">{{ cardSetText(card) }}</td>
+          </tr>
+          <tr v-if="attachedCards(card).length > 0" class="attachments-row">
+            <td colspan="7">
+              <div class="attachments-list">
+                <div class="attachments-heading" :class="{ 'attachments-heading--spirit': card.art === '90052' }">
+                  <font-awesome-icon :icon="card.art === '90052' ? ['fas', 'ghost'] : 'paperclip'" /> {{ attachmentHeading(card) }}
+                </div>
+                <div v-if="card.art === '11080'" class="attachment-pills">
+                  <a
+                    v-for="entry in groupedAttachedCards(card)"
+                    :key="groupKey(entry.card)"
+                    class="attachment-pill"
+                    target="_blank"
+                    :href="`${localizeArkhamDBBaseUrl()}/card/${entry.card.art}`"
+                  >
+                    <span class="attachment-name">{{ cardName(entry.card) }}{{ levelText(entry.card) }} was branded</span>
+                    <span v-if="entry.count > 1" class="attachment-count">x {{ entry.count }}</span>
+                  </a>
+                </div>
+                <div v-else class="attachment-pills">
+                  <a
+                    v-for="entry in groupedAttachedCards(card)"
+                    :key="groupKey(entry.card)"
+                    class="attachment-pill"
+                    target="_blank"
+                    :href="`${localizeArkhamDBBaseUrl()}/card/${entry.card.art}`"
+                  >
+                    <span class="attachment-name">{{ cardName(entry.card) }}{{ levelText(entry.card) }}</span>
+                    <span class="attachment-count">x {{ entry.count }}</span>
+                  </a>
+                </div>
+              </div>
+            </td>
+          </tr>
+        </template>
+      </tbody>
+    </table>
+  </div>
+</template>
+
+<style scoped>
+.card-table-wrapper {
+  flex: 1;
+  overflow-x: auto;
+  overflow-y: auto;
+}
+
+.card-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.86rem;
+  @media (max-width: 768px) {
+    width: auto;
+    min-width: 580px;
+  }
+}
+
+.card-table th {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-index-1);
+  text-align: left;
+  padding: 11px 12px;
+  color: #a8a8a8;
+  background: var(--box-background);
+  border-bottom: 2px solid rgba(255,255,255,0.1);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+  font-weight: 700;
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+
+  &:first-child { padding-left: 20px; }
+
+  @media (max-width: 768px) {
+    padding: 8px 8px;
+    font-size: 0.62rem;
+    letter-spacing: 0.06em;
+    &:first-child { padding-left: 12px; }
+  }
+}
+
+.card-table td {
+  padding: 7px 12px;
+  color: #d0d0d0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+
+  &:first-child { padding-left: 20px; }
+
+  @media (max-width: 768px) {
+    padding: 5px 8px;
+    &:first-child { padding-left: 12px; }
+  }
+}
+
+.card-table tbody tr {
+  transition: background 0.1s;
+  &:hover { background: rgba(255,255,255,0.05); }
+  &:nth-child(even) { background: rgba(255,255,255,0.02); }
+  &:nth-child(even):hover { background: rgba(255,255,255,0.05); }
+}
+
+i { font-style: normal; }
+
+.willpower { font-size: 1.3em; margin: 0 1px; color: var(--willpower); }
+.intellect { font-size: 1.3em; margin: 0 1px; color: var(--intellect); }
+.combat    { font-size: 1.3em; margin: 0 1px; color: var(--combat); }
+.agility   { font-size: 1.3em; margin: 0 1px; color: var(--agility); }
+.wild      { font-size: 1.3em; margin: 0 1px; color: var(--wild); }
+
+a {
+  color: var(--spooky-green);
+  text-decoration: none;
+  font-weight: 500;
+  &:hover { opacity: 0.8; }
+}
+
+.card-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+.deck-card-count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 30px;
+  height: 20px;
+  padding: 0 6px;
+  color: #cfcfcf;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 6px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.market-badge,
+.spirit-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 22px;
+  height: 20px;
+  padding: 0 6px;
+  color: #c8a96e;
+  background: rgba(200, 169, 110, 0.14);
+  border: 1px solid rgba(200, 169, 110, 0.32);
+  border-radius: 6px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.spirit-badge {
+  color: #b8d7ff;
+  background: rgba(120, 170, 255, 0.14);
+  border-color: rgba(120, 170, 255, 0.34);
+}
+
+.attachments-row td {
+  padding-top: 0;
+  padding-bottom: 10px;
+  background: rgba(200, 169, 110, 0.035);
+}
+
+.attachments-list {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 7px;
+  width: 100%;
+  padding: 9px 10px;
+  background: linear-gradient(135deg, rgba(200, 169, 110, 0.14), rgba(255, 255, 255, 0.035));
+  border: 1px solid rgba(200, 169, 110, 0.24);
+  border-radius: 9px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.attachments-heading {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-right: 3px;
+  color: #c8a96e;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.attachments-heading--spirit {
+  color: #b8d7ff;
+}
+
+.attachment-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.attachment-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  max-width: 240px;
+  padding: 3px 5px 3px 8px;
+  color: #f0e2c0;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  &:hover { background: rgba(200, 169, 110, 0.16); opacity: 1; }
+}
+
+.attachment-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.attachment-count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 28px;
+  height: 16px;
+  padding: 0 5px;
+  color: #1d170f;
+  background: #c8a96e;
+  border-radius: 999px;
+  font-size: 0.62rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.class-icons {
+  display: none;
+  gap: 2px;
+  span[class$="-icon"] { font-size: 1.1em; }
+}
+
+.guardian-sym  { color: var(--guardian); }
+.seeker-sym    { color: var(--seeker); }
+.rogue-sym     { color: var(--rogue); }
+.mystic-sym    { color: var(--mystic); }
+.survivor-sym  { color: var(--survivor); }
+.neutral-sym   { color: var(--neutral); }
+
+@media (max-width: 768px) {
+  .class-text { display: none; }
+  .class-icons { display: inline-flex; }
+}
+</style>

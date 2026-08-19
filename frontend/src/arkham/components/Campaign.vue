@@ -1,0 +1,334 @@
+<script lang="ts" setup>
+import { computed } from 'vue';
+import type { Game } from '@/arkham/types/Game';
+import type { Campaign } from '@/arkham/types/Campaign';
+import StoryQuestion from '@/arkham/components/StoryQuestion.vue';
+import Scenario from '@/arkham/components/Scenario.vue';
+import UpgradeDeck from '@/arkham/components/UpgradeDeck.vue';
+import ChooseDeck from '@/arkham/components/ChooseDeck.vue';
+import ContinueCampaign from '@/arkham/components/ContinueCampaign.vue';
+import UltimatumsAndBoonsQuestion from '@/arkham/components/UltimatumsAndBoonsQuestion.vue';
+import { handleEmbeddedI18n } from '@/arkham/i18n';
+import { useI18n } from 'vue-i18n';
+
+const props = defineProps<{
+  game: Game
+  campaign: Campaign
+  playerId: string
+  realityAcidLightDevoured?: boolean
+  realityAcidLightActive?: boolean
+}>()
+
+const emit = defineEmits<{
+  update: [game: Game]
+  choose: [idx: number]
+  toggleRealityAcidLight: []
+}>()
+
+const { t } = useI18n()
+
+async function update(game: Game) {
+  emit('update', game);
+}
+
+async function choose(idx: number) {
+  emit('choose', idx)
+}
+
+const chooseDeck = computed(() => {
+  if (props.game.campaign && props.game.campaign.step?.tag === 'ChooseDecksStep') return true
+  // Deck screen only while someone actually has a ChooseDeck question parked.
+  // gameState alone is not enough: it can be stuck at IsChooseDecks with a
+  // different question pending (e.g. after a lost DoneChoosingDecks), and
+  // rendering by state would mask that question behind an inert deck screen.
+  return Object.values(props.game.question).some((q) => {
+    if (!q) return false
+    if (q.tag === 'ChooseDeck') return true
+    return q.tag === 'QuestionLabel' && q.question.tag === 'ChooseDeck'
+  })
+})
+
+
+const questionLabel = computed(() => {
+  let question = props.game.question[props.playerId]
+
+  if (!question && chooseDeck.value) {
+    question = Object.values(props.game.question)[0]
+  }
+
+  if (!question) return null
+
+  // Ultimatums/Boons questions render their own titled panel inside ChooseDeck
+  if (question.tag === 'QuestionLabel' && question.label?.startsWith('$label.ultimatumsAndBoons')) return null
+
+  return question.tag === 'QuestionLabel' ? handleEmbeddedI18n(question.label, t) : null
+})
+
+// Boon of the Morrígan's weakness choice is deferred to just after decks are
+// chosen, so the campaign step is already a ContinueCampaignStep (e.g. the
+// prologue) while the choice is still pending. Suppress the campaign "Continue"
+// screen while any player has a pending Ultimatums & Boons question so the
+// asking player's question surfaces (via StoryQuestion) instead of being masked.
+const ultimatumsAndBoonsQuestion = computed(() => {
+  const entry = Object.entries(props.game.question).find(
+    ([, q]) => q?.tag === 'QuestionLabel' && q.label?.startsWith('$label.ultimatumsAndBoons')
+  )
+  return entry ? { playerId: entry[0] } : null
+})
+
+const pendingUltimatumsAndBoonsQuestion = computed(() => ultimatumsAndBoonsQuestion.value !== null)
+
+const continueCampaign = computed(() => {
+  if (!props.game.campaign) return null
+  if (pendingUltimatumsAndBoonsQuestion.value) return null
+  // The campaign step records where play will continue, but deferred deck setup
+  // (such as In the Thick of It trauma) can still have its own question pending.
+  // Only render the continuation when the server is actually asking for it.
+  const hasContinueQuestion = Object.values(props.game.question)
+    .some((question) => question?.tag === 'ContinueCampaign')
+  if (!hasContinueQuestion) return null
+
+  // A scenario can raise its own continuation mid-scenario (Fortune and Folly's
+  // checkpoint and its part 2 hand-off). The campaign step is still parked on
+  // the StandaloneScenarioStep that will resume the campaign afterwards, so both
+  // are ContinueCampaignSteps at once. The server resolves the scenario's step
+  // first (Entity/Answer.hs, the `These c s` branch), so the campaign screen must
+  // defer to continueScenario or we answer with the campaign's next step and the
+  // scenario never advances.
+  if (props.game.scenario?.campaignStep?.tag === 'ContinueCampaignStep') return null
+
+  const step = props.game.campaign.step
+  if (step?.tag === 'ContinueCampaignStep') return step.contents
+  if (step?.tag === 'StandaloneScenarioStep' && step.contents[1]?.tag === 'ContinueCampaignStep') {
+    return step.contents[1].contents
+  }
+  return null
+})
+
+const upgradeDeck = computed(() => {
+  // The campaign step can remain parked on UpgradeDeckStep while killed/insane
+  // investigator handling advances through its continuation. Render this screen
+  // only while an upgrade question actually exists; otherwise it can mask the
+  // newly produced question behind a permanent "waiting" panel.
+  return Object.values(props.game.question).some((question) => {
+    if (!question) return false
+    if (question.tag === 'ChooseUpgradeDeck') return true
+    return question.tag === 'QuestionLabel' && question.question.tag === 'ChooseUpgradeDeck'
+  })
+})
+
+const pickDestiny = computed(() => {
+  const question = Object.values(props.game.question)[0]
+
+  if (question === null || question == undefined) {
+    return false
+  }
+
+  const { tag } = question
+
+  if (tag === 'PickDestiny') {
+    return true
+  }
+
+  return false
+})
+
+const questionHash = computed(() => {
+  let question = JSON.stringify(props.game.question[props.playerId])
+  return btoa(encodeURIComponent(question))
+})
+
+const continueScenario = computed(() => {
+  const step = props.game.scenario?.campaignStep
+  if (!step) return null
+  if (step.tag === 'ContinueCampaignStep') return step.contents
+
+  // ContinueCampaignStep was already unwrapped by the backend but question is still pending
+  const question = props.game.question[props.playerId] ?? Object.values(props.game.question)[0]
+  if (question?.tag === 'ContinueCampaign') {
+    return { nextStep: step, canUpgradeDecks: false, chooseSideStory: false, canChooseSideStory: false }
+  }
+  return null
+})
+
+const scenarioContinuationStep = computed(() => {
+  const step = props.game.scenario?.campaignStep
+  if (!step) return null
+  if (['ScenarioStep', 'ScenarioStepWithOptions'].includes(step.tag)) return step
+  return null
+})
+
+const inScenarioStep = computed(() => {
+  return !!props.game.scenario?.campaignStep
+})
+
+// A question can be parked while gameState is still IsChooseDecks (e.g. Boon
+// of the Morrígan's weakness swap asked between deck loads). It must render
+// through the same question branches as an active game, or the screen is blank.
+const hasQuestion = computed(() => Object.keys(props.game.question).length > 0)
+</script>
+
+<template>
+  <div v-if="upgradeDeck" id="game" class="game">
+    <UpgradeDeck :game="game" :playerId="playerId" @choose="choose" @update="update" />
+  </div>
+  <div v-else-if="chooseDeck" id="game" class="game">
+    <h2 v-if="questionLabel" class="title question-label">{{ questionLabel }}</h2>
+    <ChooseDeck :game="game" :playerId="playerId" @choose="choose" />
+  </div>
+  <div v-else-if="continueCampaign" id="game" class="game">
+    <ContinueCampaign
+      :game="game"
+      :campaign="campaign"
+      :scenario="game.scenario ?? undefined"
+      :playerId="playerId"
+      :canUpgradeDecks="continueCampaign.canUpgradeDecks"
+      :step="scenarioContinuationStep || continueCampaign.nextStep"
+      :chooseSideStory="continueCampaign.chooseSideStory"
+      :canChooseSideStory="continueCampaign.canChooseSideStory"
+    />
+  </div>
+  <div v-else-if="game.gameState.tag === 'IsActive' || hasQuestion" id="game" class="game">
+    <UltimatumsAndBoonsQuestion
+      v-if="ultimatumsAndBoonsQuestion"
+      :game="game"
+      :playerId="ultimatumsAndBoonsQuestion.playerId"
+      :viewOnly="ultimatumsAndBoonsQuestion.playerId !== playerId"
+      @choose="choose"
+    />
+    <template v-else-if="pickDestiny">
+      <StoryQuestion :game="game" :key="questionHash" :playerId="playerId" @choose="choose" />
+    </template>
+    <ContinueCampaign
+      v-else-if="continueScenario"
+      :game="game"
+      :scenario="game.scenario ?? undefined"
+      :canUpgradeDecks="continueScenario.canUpgradeDecks"
+      :step="continueScenario.nextStep"
+      :chooseSideStory="continueScenario.chooseSideStory"
+      :canChooseSideStory="continueScenario.canChooseSideStory"
+    />
+    <Scenario
+      v-else-if="(game.gameState.tag === 'IsActive' || game.gameState.tag === 'IsOver') && game.scenario && game.scenario.started && Object.entries(game.investigators).length > 0 && !inScenarioStep"
+      :game="game"
+      :scenario="game.scenario"
+      :playerId="playerId"
+      :realityAcidLightDevoured="realityAcidLightDevoured"
+      :realityAcidLightActive="realityAcidLightActive"
+      @choose="choose"
+      @update="update"
+      @toggleRealityAcidLight="$emit('toggleRealityAcidLight')"
+    />
+    <template v-else>
+      <StoryQuestion :game="game" :key="questionHash" :playerId="playerId" @choose="choose" />
+    </template>
+  </div>
+</template>
+
+<style scoped>
+.card {
+  box-shadow: 0 3px 6px rgba(0,0,0,0.23), 0 3px 6px rgba(0,0,0,0.53);
+  border-radius: 6px;
+  margin: 2px;
+  width: var(--card-width);
+}
+
+.card--sideways {
+  width: auto;
+  height: calc(var(--card-width) * 2);
+}
+
+.scenario-cards {
+  display: flex;
+  align-self: center;
+  align-items: flex-start;
+  justify-content: center;
+  padding-bottom: 10px;
+}
+
+.clue--can-investigate {
+  border: 3px solid var(--select);
+  border-radius: 100px;
+  cursor: pointer;
+}
+
+.clue {
+  position: relative;
+  width: 57px;
+  height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: black;
+  font-weight: 900;
+  font-size: 1.5em;
+
+  img {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: auto;
+    z-index: var(--z-index-neg-1);
+  }
+}
+
+.game {
+  width: 100%;
+  z-index: var(--z-index-1);
+}
+
+.location-cards {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: auto;
+  min-height: 350px;
+}
+
+.portrait {
+  border-radius: 3px;
+}
+
+.portrait--can-move {
+  cursor: pointer;
+  border: 3px solid var(--select);
+}
+
+.location--can-move-to {
+  border: 3px solid var(--select);
+  cursor: pointer;
+}
+
+.agenda-container, .act-container {
+  align-self: flex-start;
+}
+
+.discard {
+  height: 100%;
+  position: relative;
+  &::after {
+    pointer-events: none;
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #FFF;
+    /* background-image: linear-gradient(120deg, #eaee44, #33d0ff); */
+    opacity: .85;
+    mix-blend-mode: saturation;
+  }
+}
+
+.question-label {
+  text-align: center;
+  background-color: var(--background);
+  padding: 0;
+  margin: 0;
+  margin-top: 10px;
+  overflow:auto;
+}
+</style>

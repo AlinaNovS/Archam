@@ -1,0 +1,41 @@
+module Arkham.Homebrew.DarkMatter.Scenarios.Starfall (starfall) where
+
+import Arkham.Homebrew.DarkMatter.CardDefs.Acts qualified as Acts
+import Arkham.Homebrew.DarkMatter.CardDefs.Agendas qualified as Agendas
+import Arkham.Homebrew.DarkMatter.CardDefs.Locations qualified as Locations
+import Arkham.Homebrew.DarkMatter.Helpers (scenarioI18n)
+import Arkham.Homebrew.DarkMatter.Sets qualified as Set
+import Arkham.Resolution
+import Arkham.Scenario.Import.Lifted
+
+-- Skeleton scenario for Dark Matter (homebrew). Chaos-token values, full
+-- setup, and resolutions are added by later work.
+newtype Starfall = Starfall ScenarioAttrs
+  deriving anyclass (IsScenario, HasModifiersFor)
+  deriving newtype (Show, Eq, ToJSON, FromJSON, Entity)
+
+starfall :: Difficulty -> Starfall
+starfall difficulty = scenario Starfall ":dark-matter:243" "Starfall" difficulty []
+
+instance HasChaosTokenValue Starfall where
+  getChaosTokenValue iid tokenFace (Starfall attrs) = case tokenFace of
+    Skull -> pure $ toChaosTokenValue attrs Skull 1 2
+    otherFace -> getChaosTokenValue iid otherFace attrs
+
+instance RunMessage Starfall where
+  runMessage msg s@(Starfall attrs) = runQueueT $ scenarioI18n "starfall" $ case msg of
+    Setup -> runScenarioSetup Starfall attrs do
+      gather Set.Starfall
+      setAgendaDeck [Agendas.journeyAcrossSpace, Agendas.redSun, Agendas.supernova]
+      setActDeck [Acts.endTimes]
+      startAt =<< place Locations.theTatterdemalion
+    ScenarioResolution r -> scope "resolutions" do
+      case r of
+        NoResolution -> do
+          resolution "noResolution"
+          push $ ScenarioResolution $ Resolution 1
+        Resolution n | n `elem` [1, 2] -> resolution ("resolution" <> tshow n)
+        _ -> error "invalid resolution"
+      when (r /= NoResolution) endOfScenario
+      pure s
+    _ -> Starfall <$> liftRunMessage msg attrs

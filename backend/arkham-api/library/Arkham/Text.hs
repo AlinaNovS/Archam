@@ -1,0 +1,152 @@
+{-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE ImplicitParams #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE NoFieldSelectors #-}
+
+module Arkham.Text where
+
+import Arkham.Card.CardCode
+import Arkham.ChaosToken.Types (ChaosTokenFace)
+import Arkham.I18n
+import Arkham.Json
+import Arkham.Prelude
+import Arkham.Tarot
+import Data.Aeson.TH
+import Data.Aeson.KeyMap qualified
+
+newtype Tooltip = Tooltip Text
+  deriving stock Data
+  deriving newtype (Show, Eq, ToJSON, FromJSON, Ord)
+
+data FlavorTextModifier
+  = BlueEntry
+  | GreenEntry
+  | BorderedEntry
+  | RedEntry
+  | RightAligned
+  | PlainText
+  | InvalidEntry
+  | ValidEntry
+  | CenteredEntry
+  | ResolutionEntry
+  | CheckpointEntry
+  | InterludeEntry
+  | NestedEntry
+  | NoUnderline
+  | CodexEntry
+  | HauntedEntry
+  deriving stock (Show, Eq, Ord, Data)
+
+data ListItemEntry = ListItemEntry
+  { entry :: FlavorTextEntry
+  , nested :: [ListItemEntry]
+  }
+  deriving stock (Show, Eq, Ord, Data)
+
+data FlavorTextEntry
+  = BasicEntry {text :: Text}
+  | I18nEntry {key :: Text, variables :: Map Text Value}
+  | HeaderEntry {level :: Int, key :: Text}
+  | ModifyEntry
+      { modifiers :: [FlavorTextModifier]
+      , entry :: FlavorTextEntry
+      }
+  | CompositeEntry
+      { entries :: [FlavorTextEntry]
+      }
+  | ColumnEntry
+      { entries :: [FlavorTextEntry]
+      }
+  | ListEntry {list :: [ListItemEntry]}
+  | CardEntry {cardCode :: CardCode, imageModifiers :: [ImageModifier]}
+  | TarotEntry {tarot :: TarotCardArcana}
+  | ChaosTokenEntry {chaosTokenFace :: ChaosTokenFace}
+  | ChaosTokenMorphEntry {morphFrom :: ChaosTokenFace, morphTo :: ChaosTokenFace}
+  | EntrySplit
+  deriving stock (Show, Eq, Ord, Data)
+
+data ImageModifier = RemoveImage | SelectImage
+  deriving stock (Show, Eq, Ord, Data)
+
+instance Semigroup FlavorTextEntry where
+  CompositeEntry entries1 <> CompositeEntry entries2 = CompositeEntry (entries1 <> entries2)
+  CompositeEntry entries1 <> entry2 = CompositeEntry (entries1 <> [entry2])
+  entry1 <> CompositeEntry entries2 = CompositeEntry (entry1 : entries2)
+  ListEntry entries1 <> ListEntry entries2 = ListEntry (entries1 <> entries2)
+  entry1 <> entry2 = CompositeEntry [entry1, entry2]
+
+data FlavorText = FlavorText
+  { flavorTitle :: Maybe Text
+  , flavorBody :: [FlavorTextEntry]
+  }
+  deriving stock (Show, Eq, Ord, Data)
+addFlavorEntry :: FlavorText -> FlavorTextEntry -> FlavorText
+addFlavorEntry (FlavorText title entries) entry' =
+  FlavorText title (entries <> [entry'])
+
+setFlavorTitle :: Text -> FlavorText -> FlavorText
+setFlavorTitle title (FlavorText _ entries) = FlavorText (Just title) entries
+
+instance Semigroup FlavorText where
+  FlavorText mTitle1 body1 <> FlavorText mTitle2 body2 = FlavorText (mTitle1 <|> mTitle2) (body1 <> body2)
+
+instance Monoid FlavorText where
+  mempty = FlavorText Nothing []
+
+i18n :: HasI18n => Text -> FlavorText
+i18n = FlavorText Nothing . pure . i18nEntry
+
+i18nEntry :: HasI18n => Scope -> FlavorTextEntry
+i18nEntry t = I18nEntry (intercalate "." (?scope <> [t])) ?scopeVars
+
+i18nWithTitle :: HasI18n => Text -> FlavorText
+i18nWithTitle t = FlavorText (Just $ toI18n $ t <> ".title") [i18nEntry $ t <> ".body"]
+
+toI18n :: HasI18n => Text -> Text
+toI18n = ("$" <>) . ikey
+
+toFlavor :: FlavorTextEntry -> FlavorText
+toFlavor = FlavorText Nothing . pure
+
+ft :: Text -> FlavorText
+ft = FlavorText Nothing . pure . BasicEntry
+
+mconcat
+  [ deriveJSON defaultOptions ''FlavorTextModifier
+  , deriveToJSON defaultOptions ''ImageModifier
+  , [d|
+      instance FromJSON ImageModifier where
+        parseJSON (String s) = pure $ case s of
+          "RemoveImage" -> RemoveImage
+          "SelectImage" -> SelectImage
+          _ -> error $ "Unknown image modifier: " <> show s
+        parseJSON _ = pure RemoveImage
+      |]
+  , deriveJSON defaultOptions ''ListItemEntry
+  , deriveToJSON defaultOptions ''FlavorTextEntry
+  , [d|
+      instance FromJSON FlavorTextEntry where
+        parseJSON (String s) = pure $ BasicEntry s
+
+        parseJSON v@(Object obj) = do
+          let addDefaultLevel c =
+                case Data.Aeson.KeyMap.lookup "level" c of
+                  Nothing -> Data.Aeson.KeyMap.insert "level" (Number 1) c
+                  Just _ -> c
+          case Data.Aeson.KeyMap.lookup "tag" obj of
+            Just (String "HeaderEntry") ->
+              case Data.Aeson.KeyMap.lookup "contents" obj of
+                Just (Object c) ->
+                  let obj' = Data.Aeson.KeyMap.insert "contents" (Object $ addDefaultLevel c) obj
+                  in $(mkParseJSON defaultOptions ''FlavorTextEntry) (Object obj')
+                _ ->
+                  $(mkParseJSON defaultOptions ''FlavorTextEntry) (Object $ addDefaultLevel obj)
+
+            _ ->
+              $(mkParseJSON defaultOptions ''FlavorTextEntry) v
+
+        parseJSON v =
+          $(mkParseJSON defaultOptions ''FlavorTextEntry) v
+      |]
+  , deriveJSON (aesonOptions $ Just "flavor") ''FlavorText
+  ]

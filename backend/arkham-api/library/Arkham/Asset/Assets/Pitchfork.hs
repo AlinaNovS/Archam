@@ -1,0 +1,44 @@
+module Arkham.Asset.Assets.Pitchfork (pitchfork, Pitchfork (..)) where
+
+import Arkham.Ability
+import Arkham.Asset.Cards qualified as Cards
+import Arkham.Asset.Import.Lifted
+import Arkham.Helpers.Location (withLocationOf)
+import Arkham.I18n
+import Arkham.Matcher
+import Arkham.Modifier
+import Arkham.Placement
+
+newtype Pitchfork = Pitchfork AssetAttrs
+  deriving anyclass (IsAsset, HasModifiersFor)
+  deriving newtype (Show, Eq, ToJSON, FromJSON, Entity)
+
+pitchfork :: AssetCard Pitchfork
+pitchfork = asset Pitchfork Cards.pitchfork
+
+instance HasAbilities Pitchfork where
+  getAbilities (Pitchfork a) =
+    controlled_ a 1 fightAction_
+      : case a.placement of
+        AttachedToLocation lid ->
+          [ (cardI18n $ withI18nTooltip "pitchfork.takeControlOfPitchfork") $ restrictedAbility (proxied lid a) 2 Here actionAbility
+          ]
+        _ -> []
+
+instance RunMessage Pitchfork where
+  runMessage msg a@(Pitchfork attrs) = runQueueT $ case msg of
+    UseThisAbility iid (isSource attrs -> True) 1 -> do
+      sid <- getRandom
+      skillTestModifiers sid (attrs.ability 1) iid [SkillModifier #combat 1, DamageDealt 2]
+      chooseFightEnemy sid iid (attrs.ability 1)
+      pure a
+    PassedThisSkillTest iid (isAbilitySource attrs 1 -> True) -> do
+      withLocationOf iid \lid -> do
+        whenM (lid <=~> LocationCanHaveAttachments) do
+          push $ PlaceAsset attrs.id $ AttachedToLocation lid
+          afterSkillTestQuiet $ push $ LoseControlOfAsset attrs.id
+      pure a
+    UseThisAbility iid (isProxySource attrs -> True) 2 -> do
+      push $ TakeControlOfAsset iid attrs.id
+      pure a
+    _ -> Pitchfork <$> liftRunMessage msg attrs

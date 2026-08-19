@@ -1,0 +1,718 @@
+{
+  "serviceUnavailable": "Сервис недоступен",
+  "pleaseTryAgainLater": "Пожалуйста, попробуйте ещё раз позже.",
+  "nav": {
+    "home": "Главная",
+    "about": "О проекте",
+    "achievements": "Достижения",
+    "admin": "Админ",
+    "cards": "Карты",
+    "myDecks": "Колоды",
+    "support": "Patreon"
+  },
+  "activeGames": "Активные игры",
+  "checkCampaignLog": "Проверьте ваш журнал кампании.",
+  "continue": "Продолжить",
+  "debugGame": "Отладочная игра",
+  "elusive": {
+    "flee": "Ускользание: выберите соединённую локацию, куда сбежит этот враг."
+  },
+  "hunter": {
+    "move": "Охотник: выберите локацию, к которой двинется этот враг."
+  },
+  "patrol": {
+    "move": "Патруль: выберите локацию, к которой двинется этот враг."
+  },
+  "doDeleteGame": "Вы уверены, что хотите удалить эту игру?",
+  "email": "Эл. почта",
+  "finishedGames": "Завершённые игры",
+  "forgotPassword": "Забыли пароль",
+  "invalidEmailOrPassword": "Неверный адрес эл. почты или пароль",
+  "language": "Язык",
+  "logIn": "Войти",
+  "newGame": "Новая игра",
+  "newPassword": "Новый пароль",
+  "password": "Пароль",
+  "passwordResetRequested": "Запрошен сброс пароля",
+  "passwordUpdatedSuccessfully": "Пароль успешно обновлён",
+  "register": "Регистрация",
+  "resetPassword": "Сбросить пароль",
+  "settings": "Настройки",
+  "updatePassword": "Обновить пароль",
+  "username": "Имя пользователя",
+  "usernameOrEmailAlreadyTaken": "Имя пользователя или эл. почта уже заняты",
+  "tooltips": {
+    "attacksYou": "{name} атакует вас",
+    "takeControlOfKey": "Возьмите под контроль ключ {key}",
+    "name": "{name}",
+    "giveSeal": "Передать Печать",
+    "takeSeal": "Взять Печать",
+    "takeHorror": "Получите {count} ужас | Получите {count} ужаса",
+    "discardTopOfEncounterDeck": "Сбросьте верхнюю карту колоды столкновений | Сбросьте верхние {count} карт колоды столкновений",
+    "takeDamageAndHorror": "Получите {damage} урона и {horror} ужаса",
+    "loseActions": "Потеряйте 1 действие | Потеряйте {count} действия",
+    "loseResources": "Потеряйте 1 ресурс | Потеряйте {count} ресурса"
+  },
+  "name": "{name}",
+  "discard": "Сбросить {name}",
+  "waitingForPlayer": "Ожидание {name}…",
+  "shuffleRemainder": "Перемешайте оставшиеся карты столкновений, чтобы собрать колоду столкновений.",
+  "readyToBegin": "Теперь вы готовы начать.",
+  "Yes": "Да",
+  "No": "Нет",
+  "On": "Вкл",
+  "Off": "Выкл",
+  "Back": "Назад",
+  "exchange": "Обмен",
+  "Parley": "Переговоры",
+  "Resign": "Сдаться",
+  "Investigate": "Расследовать",
+  "Evade": "Уклониться",
+  "Explore": "Исследовать",
+  "Fight": "Сражаться",
+  "Engage": "Вступить в бой",
+  "Forced": "Принудительное",
+  "Reaction": "Реакция",
+  "Delayed": "Отложенное",
+  "Objective": "Цель",
+  "Haunted": "Обитаемое",
+  "Results": "Результаты",
+  "Story": "История",
+  "ChooseOne": "Выберите одно",
+  "Choose": "Выбрать",
+  "setup": "Подготовка",
+  "addToken": "Добавьте жетон хаоса {'{'}{token}{'}'} в мешок хаоса до конца кампании.",
+  "token": {
+    "Aether": "Эфир",
+    "AlarmLevel": "Уровень тревоги",
+    "Ammo": "Боеприпасы",
+    "Antiquity": "Древность",
+    "Bounty": "Награда",
+    "Brilliance": "Сияние",
+    "Charge": "Заряд",
+    "Civilian": "Гражданский",
+    "Clue": "Улика",
+    "Corruption": "Порча",
+    "Damage": "Урон",
+    "DarknessLevel": "Уровень тьмы",
+    "Depletion": "Истощение",
+    "Depth": "Глубина",
+    "Doom": "Рок",
+    "Durability": "Прочность",
+    "Eclipse": "Затмение",
+    "Empowerment": "Усиление",
+    "Evidence": "Доказательство",
+    "Growth": "Рост",
+    "Horror": "Ужас",
+    "Inspiration": "Вдохновение",
+    "Key": "Ключ",
+    "Kindling": "Растопка",
+    "Lead": "Ведение",
+    "Leyline": "Линия силы",
+    "Lock": "Замок",
+    "LostSoul": "Потерянная душа",
+    "Offering": "Подношение",
+    "Overgrowth": "Разрастание",
+    "Pillar": "Столп",
+    "Portent": "Предзнаменование",
+    "Renown": "Известность",
+    "Resource": "Ресурс",
+    "Rumor": "Слух",
+    "ScoutingReport": "Разведданные",
+    "Scrap": "Металлолом",
+    "Seal": "Печать",
+    "Secret": "Тайна",
+    "Shard": "Осколок",
+    "Shell": "Снаряд",
+    "Study": "Исследование",
+    "Supply": "Припасы",
+    "Suspicion": "Подозрение",
+    "Switch": "Переключатель",
+    "Target": "Цель",
+    "Ticket": "Билет",
+    "Time": "Время",
+    "Truth": "Правда",
+    "Try": "Попытка",
+    "Warning": "Предупреждение",
+    "Whistle": "Свисток",
+    "Wish": "Желание"
+  },
+  "choice": {
+    "actions": "Действия",
+    "ammo": "Боеприпасы",
+    "breaches": "Прорывы",
+    "cards": "Карты",
+    "charge": "Заряд",
+    "clues": "Улики",
+    "damage": "Урон",
+    "horror": "Ужас",
+    "mental": "Психический",
+    "physical": "Физический",
+    "resources": "Ресурсы",
+    "secret": "Тайна",
+    "supply": "Припасы",
+    "supplyPoints": "Очки припасов для получения"
+  },
+  "proceedToSetup": "Перейти к _Подготовке_",
+  "slot": {
+    "accessory": "Аксессуар",
+    "ally": "Союзник",
+    "arcane": "Мистический",
+    "body": "Тело",
+    "hand": "Рука",
+    "head": "Голова",
+    "tarot": "Таро"
+  },
+  "destiny": {
+    "theWitchingHour": "Ведьмовской час",
+    "atDeathsDoorStep": "На пороге смерти",
+    "theSecretName": "Тайное имя",
+    "theWagesOfSin": "Расплата за грех",
+    "forTheGreaterGood": "Ради высшего блага",
+    "unionAndDisillusion": "Союз и разочарование",
+    "inTheClutchesOfChaos": "В лапах хаоса",
+    "beforeTheBlackThrone": "Перед Чёрным Троном"
+  },
+  "pickDestiny": {
+    "title": "Выбор судьбы",
+    "instructions": "Переверните половину карт (с округлением вверх)."
+  },
+  "tarot": {
+    "TheFool0": "Шут • 0",
+    "TheMagicianI": "Маг • I",
+    "TheHighPriestessII": "Верховная Жрица • II",
+    "TheEmpressIII": "Императрица • III",
+    "TheEmperorIV": "Император • IV",
+    "TheHierophantV": "Иерофант • V",
+    "TheLoversVI": "Влюблённые • VI",
+    "TheChariotVII": "Колесница • VII",
+    "StrengthVIII": "Сила • VIII",
+    "TheHermitIX": "Отшельник • IX",
+    "WheelOfFortuneX": "Колесо Фортуны • X",
+    "JusticeXI": "Справедливость • XI",
+    "TheHangedManXII": "Повешенный • XII",
+    "DeathXIII": "Смерть • XIII",
+    "TemperanceXIV": "Умеренность • XIV",
+    "TheDevilXV": "Дьявол • XV",
+    "TheTowerXVI": "Башня • XVI",
+    "TheStarXVII": "Звезда • XVII",
+    "TheMoonXVIII": "Луна • XVIII",
+    "TheSunXIX": "Солнце • XIX",
+    "JudgementXX": "Суд • XX",
+    "TheWorldXXI": "Мир • XXI"
+  },
+  "headings": {
+    "prologue": "Пролог",
+    "epilogue": "Эпилог",
+    "scenario": "Сценарий",
+    "interlude": "Интерлюдия {number}",
+    "deckCreation": "Создание колоды"
+  },
+  "upgradeDecks": "Улучшить колоды",
+  "addSideScenario": "Добавить побочный сценарий",
+  "lead": "Ведущий",
+  "or2": "{0} или {1}",
+  "or3": "{0}, {1} или {2}",
+  "slashOr": "{0}/{1}",
+  "and": "{0} или {1}",
+  "cardsUnderneath": "1 карта внизу | {count} карт внизу",
+  "drew": "{iname} вытянул(а) {name}",
+  "Done With Mulligan": "Завершить муллиган",
+  "skip": "Пропустить",
+  "handSize": "Размер руки",
+  "yes": "Да",
+  "no": "Нет",
+  "succeededBy": "Успех с запасом {amount}",
+  "failedBy": "Провал на {amount}",
+  "chooseLeadInvestigator": "Выберите ведущего сыщика",
+  "cluesPerPlayerAsGroup": "Потратьте {total} улик как группа",
+  "fromDeck": "Из колоды",
+  "fromHand": "Из руки",
+  "fromDiscard": "Из сброса",
+  "fromEncounterDeck": "Из колоды столкновений",
+  "fromEncounterDiscard": "Из сброса столкновений",
+  "fromInvestigatorDeck": "Из колоды {name}",
+  "fromInvestigatorHand": "Из руки {name}",
+  "fromInvestigatorDiscard": "Из сброса {name}",
+  "searchThisDeck": "Найти в этой колоде (она будет перемешана)",
+  "ok": "ОК",
+  "back": "Назад",
+  "join": "Присоединиться",
+  "joinGame": "Присоединиться к игре",
+  "decks": "Колоды",
+  "newDeck": {
+    "save": "Сохранить",
+    "saveAndUse": "Сохранить и использовать",
+    "useWithoutSaving": "Использовать без сохранения",
+    "unimplementedError": "Не удалось создать колоду: следующие карты не реализованы:"
+  },
+  "deckSyncedSuccessfully": "Колода успешно синхронизирована",
+  "areYouSureDeleteDeck": "Вы уверены, что хотите удалить эту колоду?",
+  "noDecksMatchFilters": "Ни одна колода не соответствует вашим фильтрам.",
+  "deck": {
+    "viewOnArkhamDb": "Смотреть на ArkhamDB",
+    "syncDeck": "Синхронизировать колоду",
+    "deleteDeck": "Удалить колоду"
+  },
+  "deckList": {
+    "newDeck": "Новая колода",
+    "saveToDeckList": "Сохранить в список колод",
+    "saveToDeckListDescription": "Сохранить эту колоду для будущих кампаний"
+  },
+  "lobby": {
+    "scenario": "Сценарий",
+    "campaign": "Кампания",
+    "multiplayer": "Мультиплеер",
+    "waitingForPlayers": "Ожидание игроков",
+    "inviteOthers": "Пригласите других присоединиться:",
+    "copy": "Копировать",
+    "copied": "✓ Скопировано",
+    "claim": "Занять",
+    "takeASeat": "Займите место",
+    "claimed": "Занято",
+    "waiting": "Ожидание",
+    "joined": "Присоединился",
+    "couldNotClaimSeat": "Не удалось занять это место. Возможно, оно уже занято.",
+    "waitingForMorePlayers": "Ожидание ещё {remaining} игрока | Ожидание ещё {remaining} игроков"
+  },
+  "waitingOn": {
+    "label": "Ожидание этого сыщика"
+  },
+  "game": {
+    "areYouSureUndoScenario": "Вы уверены, что хотите отменить до начала сценария?",
+    "playabilityChecks": "Проверки играбельности",
+    "unableToDownloadExport": "Не удалось скачать экспорт",
+    "shortcutSection": {
+      "game": "Игра",
+      "undo": "Отмена",
+      "view": "Вид"
+    },
+    "undoTo": "Отменить до",
+    "startOfAction": "Начало действия",
+    "startOfTurn": "Начало хода",
+    "startOfPhase": "Начало фазы",
+    "startOfRound": "Начало раунда",
+    "shortcutUndoActionStart": "Отменить до начала действия",
+    "shortcutUndoTurnStart": "Отменить до начала хода",
+    "shortcutUndoPhaseStart": "Отменить до начала фазы",
+    "shortcutUndoRoundStart": "Отменить до начала раунда",
+    "gameOver": "Игра окончена"
+  },
+  "cardsView": {
+    "browseSets": "Обзор наборов",
+    "searchCards": "Поиск карт...",
+    "listView": "Список",
+    "imageView": "Изображения",
+    "includeEncounter": "Включить столкновения",
+    "cardPool": "Пул карт",
+    "playerCards": "Игрок",
+    "campaignCards": "Кампания",
+    "bothCards": "Все",
+    "chapter1": "Глава 1",
+    "chapter2": "Глава 2"
+  },
+  "cardsList": {
+    "name": "Название",
+    "class": "Класс",
+    "cost": "Стоимость",
+    "type": "Тип",
+    "icons": "Значки",
+    "traits": "Черты",
+    "set": "Набор"
+  },
+  "scenarioSettings": {
+    "title": "Настройки одиночного сценария",
+    "noSettings": "Для этого сценария сейчас нет доступных настроек одиночной игры.",
+    "begin": "Начать"
+  },
+  "campaignSettings": {
+    "title": "Настройки кампании"
+  },
+  "sideStory": {
+    "selectSideScenario": "Выберите побочный сценарий для добавления",
+    "requiresInvestigator": "Требуется {name}",
+    "xpAsymmetric": "({signatureXp} ОП для {name}, {otherXp} ОП для каждого остального сыщика)"
+  },
+  "partners": {
+    "expeditionTeam": "Экспедиционная группа",
+    "damage": "Урон",
+    "horror": "Ужас",
+    "theEntity": "Сущность"
+  },
+  "partnerStatus": {
+    "safe": "В безопасности",
+    "resolute": "Решительный",
+    "eliminated": "Устранён"
+  },
+  "campaignLog": {
+    "chaosBag": "Мешок хаоса",
+    "remembered": "Запомнено",
+    "specialRules": "Особые правила",
+    "campaignRules": "Правила кампании",
+    "backToTop": "Наверх",
+    "noRules": "Нет особых правил для текущего сценария или кампании.",
+    "tabs": {
+      "log": "Журнал кампании",
+      "investigators": "Сыщики",
+      "rules": "Правила"
+    },
+    "campaignNotes": "Заметки кампании"
+  },
+  "campaignLogView": {
+    "noEntriesYet": "Записей пока нет.",
+    "recordedSets": "Записанные наборы",
+    "recordedCounts": "Записанные количества"
+  },
+  "investigatorRow": {
+    "physical": "Физический",
+    "mental": "Психический",
+    "earnedCards": "Полученные карты",
+    "showModifiers": "Показать модификаторы",
+    "expand": "Развернуть",
+    "collapse": "Свернуть"
+  },
+  "treachery": {
+    "discard": "Сбросить"
+  },
+  "modifier": {
+    "cannotCommitCards": "Нельзя назначать карты",
+    "difficulty": "Сложность",
+    "cancelEffects": "Отменить эффекты",
+    "cannotPerformSkillTest": "Нельзя проводить проверку навыка",
+    "result": "Результат",
+    "skillValue": "Значение навыка",
+    "doubleSuccess": "Двойной успех",
+    "doubleDifficulty": "Двойная сложность",
+    "automaticallyFailIfSucceedByAtLeast": "Автоматический провал, если вы преуспеете с запасом {amount} или более",
+    "mayIgnoreLocationEffects": "Можно игнорировать эффекты локации",
+    "skillIconsSubtract": "Значки навыков вычитаются",
+    "skillTestAutomaticallySucceeds": "Проверка навыка автоматически успешна",
+    "revealAnotherChaosToken": "Откройте ещё один жетон хаоса",
+    "cancelMatchingChaosTokens": "Отмените подходящие жетоны хаоса и откройте другой",
+    "cancelMatchingChaosTokensShort": "Отменить подходящие жетоны хаоса"
+  },
+  "modifiersTitle": "Модификаторы",
+  "skillTestActions": {
+    "passSkillTest": "Успешная проверка",
+    "failSkillTest": "Проваленная проверка"
+  },
+  "draw": {
+    "shuffleBackIn": "Перемешать обратно",
+    "selectDraw": "Выбрать взятие",
+    "shuffle": "Перемешать"
+  },
+  "encounterDeck": {
+    "draw": "Взять"
+  },
+  "scenarioComponent": {
+    "shuffleBackIn": "Перемешать обратно"
+  },
+  "scenarioDeck": {
+    "showCards": "Показать карты"
+  },
+  "chaosBagChoice": {
+    "grouped": "Сгруппировано"
+  },
+  "player": {
+    "viewDeck": "Просмотр колоды"
+  },
+  "enemy": {
+    "debug": "Отладка"
+  },
+  "location": {
+    "under": "Внизу ({count})"
+  },
+  "concealedCard": {
+    "debug": "Отладка"
+  },
+  "importGame": {
+    "solo": "Одиночная",
+    "multiplayer": "Мультиплеер",
+    "soloDescription": "Вы будете управлять всеми сыщиками.",
+    "multiplayerDescription": "Вы получите ссылку-приглашение, чтобы другие могли присоединиться и занять своих сыщиков."
+  },
+  "questionFilter": {
+    "filter": "Фильтр"
+  },
+  "resourcesAria": {
+    "assignAllHorror": "Назначить весь ужас"
+  },
+  "pickSupplies": {
+    "investigatorPortrait": "Портрет сыщика"
+  },
+  "chooseDeck": {
+    "search": "Поиск…",
+    "useThisDeck": "Использовать эту колоду",
+    "randomBasicWeaknessPoolTooltip": "Настройте, какие продукты используются при случайном назначении базовой слабости этой колоды."
+  },
+  "deckRestrictions": {
+    "scarletKeys": {
+      "redGlovedMan": {
+        "description": "Человек в красных перчатках не может быть включён.",
+        "error": "Кампания «Алые ключи» не может включать Человека в красных перчатках."
+      }
+    }
+  },
+  "deckToolbar": {
+    "searchDecks": "Поиск колод…",
+    "sortName": "Сортировка: по имени",
+    "sortClass": "Сортировка: по классу"
+  },
+  "claimSeat": {
+    "unableToLoad": "Не удалось загрузить данные игры.",
+    "goToGame": "Перейти к игре →",
+    "loading": "Загрузка…"
+  },
+  "home": {
+    "dismiss": "Закрыть",
+    "noActiveGames": "Нет активных игр.",
+    "loadGame": "Загрузить игру"
+  },
+  "about": {
+    "supportTitle": "Поддержка",
+    "supportBody": "Содержать инфраструктуру этого сервиса довольно дорого. Проект полагается на вклад сообщества, чтобы покрывать эти расходы. Пожалуйста, посетите наш Patreon, если у вас есть возможность финансово поддержать проект.",
+    "supportNote": "Обратите внимание: никакие функции не скрыты за платным доступом. Проект бесплатен для всех и останется таким, пока продолжает работать.",
+    "copyrightTitle": "Уведомление об авторских правах",
+    "copyrightBody": "Информация, представленная в этом приложении об <a href=\"https://www.fantasyflightgames.com/en/products/arkham-horror-the-card-game/\">Arkham Horror: The Card Game™</a>, как текстовая, так и графическая, © Fantasy Flight Games 2024. Это приложение — фанатский проект и не создано, не одобрено и не поддерживается Fantasy Flight Games и не связано с ней.",
+    "copyrightArtwork": "Все изображения и иллюстрации являются интеллектуальной собственностью их создателей. Все изображения и графика Arkham Horror: The Card Game™ защищены авторским правом Fantasy Flight Games.",
+    "projectTitle": "О проекте",
+    "projectBody": "Это приложение создано <a href=\"https://github.com/halogenandtoast\">halogenandtoast</a> и участниками в поддержку сообщества Arkham Horror: The Card Game. Исходный код проекта доступен на <a href=\"https://github.com/halogenandtoast/ArkhamHorror\">Github</a>. Отзывы и сообщения об ошибках приветствуются через issues на Github или в специальном канале на сервере Mythos Busters в Discord."
+  },
+  "settingsForm": {
+    "languageHelp": "Это изменит язык карт и приложения, но будет использовать английский по умолчанию, если карта или текст недоступны на выбранном языке.",
+    "enrollInBeta": "Участвовать в бете",
+    "betaWarning": "Бета-функции, скорее всего, сильно сломаны, и игры могут быть невосстановимы. Включайте, только если готовы давать обратную связь.",
+    "epicMultiplayer": "Эпический мультиплеер (dev)",
+    "epicMultiplayerWarning": "Эпический мультиплеер находится в активной разработке — пока не работает. Включайте только для тестирования.",
+    "dangerZone": "Опасная зона",
+    "dangerZoneDescription": "Навсегда удалить ваш аккаунт и все связанные данные, включая игры и колоды.",
+    "cannotBeUndone": "Это действие необратимо.",
+    "deleteAccount": "Удалить аккаунт",
+    "deleteConfirm": "Вы уверены? Все ваши игры, колоды и данные аккаунта будут безвозвратно потеряны.",
+    "confirmPermanentDelete": "Да, навсегда удалить мой аккаунт"
+  },
+  "campaignLogTooltip": {
+    "rememberedTitle": "Запомнено",
+    "campaignNotesTitle": "Заметки кампании"
+  },
+  "worldMap": {
+    "toggleFullscreen": "Полноэкранный режим"
+  },
+  "admin": {
+    "title": "Админ",
+    "toggleSidebar": "Переключить боковую панель",
+    "dashboard": "Панель",
+    "rooms": "Комнаты",
+    "users": "Пользователи",
+    "games": "Игры",
+    "insights": "Аналитика",
+    "reports": "Отчёты",
+    "status": "Статус"
+  },
+  "calendar": {
+    "timePassed": "Прошло времени"
+  },
+  "keysStatus": {
+    "keys": "Ключи",
+    "nameOfArtifact": "Название парапространственного артефакта",
+    "bearer": "Носитель"
+  },
+  "scarletKeys": {
+    "dossierHeader": "Вы можете читать это досье в любое время",
+    "youAreCurrentlyHere": "Вы сейчас здесь.",
+    "travelHere": "Переместиться сюда",
+    "travelTime": "Время в пути",
+    "sideStoryLocation": "Это локация побочной истории.",
+    "sideStoryDescription": "Если вы хотите добавить побочную историю в эту кампанию, вы можете переместиться в эту локацию и потратить дополнительное время, равное обычному опыту за прохождение этой побочной истории.",
+    "travelWithExpeditedTicket": "Переместиться с экспресс-билетом (1 раз)",
+    "travelWithoutStopping": "Переместиться сюда без остановок",
+    "locationLocked": "Эта локация сейчас заперта."
+  },
+  "gameRow": {
+    "solo": "Одиночная"
+  },
+  "replay": {
+    "restart": "Перезапустить",
+    "stepBack": "Шаг назад",
+    "play": "Играть",
+    "stop": "Стоп",
+    "stepForward": "Шаг вперёд"
+  },
+  "core2": {
+    "tooltips": {
+      "sewerCulvert": {
+        "resign": "«Я больше не могу!» Вы бежите из канализации."
+      }
+    }
+  },
+  "debug": {
+    "asset": {
+      "title": "Отладка актива",
+      "takeControl": "Взять под контроль",
+      "ready": "Готов",
+      "exhaust": "Исчерпать",
+      "defeat": "Победить",
+      "discard": "Сбросить",
+      "flip": "Перевернуть",
+      "showSlots": "Показать слоты"
+    },
+    "concealedCard": {
+      "title": "Отладка скрытой карты"
+    },
+    "enemy": {
+      "title": "Отладка врага",
+      "increaseDamageDealt": "Увеличить нанесённый урон",
+      "addHunter": "Добавить «Охотник»",
+      "increaseHealth": "Увеличить здоровье",
+      "exhaust": "Исчерпать",
+      "ready": "Готов",
+      "defeat": "Победить",
+      "evade": "Уклониться",
+      "addDamage": "Добавить урон"
+    },
+    "location": {
+      "title": "Отладка локации",
+      "addPassageway": "Добавить проход",
+      "floodLevel": "Уровень затопления",
+      "floodLevels": {
+        "Unflooded": "Не затоплена",
+        "PartiallyFlooded": "Частично затоплена",
+        "FullyFlooded": "Полностью затоплена"
+      },
+      "reveal": "Открыть",
+      "removeClues": "Убрать улики",
+      "placeClue": "Положить улику",
+      "reset": "Сбросить"
+    },
+    "story": {
+      "title": "Отладка истории",
+      "inspectBag": "Осмотреть мешок",
+      "empty": "В мешке нет содержимого."
+    },
+    "common": {
+      "place": "Положить",
+      "back": "Назад",
+      "placeTokens": "Положить жетоны",
+      "removeAllTokens": "Убрать все жетоны",
+      "modifiers": "Модификаторы",
+      "close": "Закрыть"
+    }
+  },
+  "customizations": {
+    "Enchanted": "Зачарованный",
+    "ProtectiveRunes": "Защитные руны",
+    "Durable": "Прочный",
+    "Hallowed": "Освящённый",
+    "Lightweight": "Лёгкий",
+    "Hexdrinker": "Пьющий гексы",
+    "ArmorOfThorns": "Броня из шипов",
+    "Heirloom": "Фамильная реликвия",
+    "InscriptionOfGlory": "Надпись славы",
+    "InscriptionOfTheElders": "Надпись старцев",
+    "InscriptionOfTheHunt": "Надпись охоты",
+    "InscriptionOfFury": "Надпись ярости",
+    "AncientPower": "Древняя сила",
+    "Saga": "Сага",
+    "Scriptweaver": "Ткач свитков",
+    "NotchedSight": "Насечка-прицел",
+    "ExtendedStock": "Удлинённый приклад",
+    "Counterbalance": "Компенсатор",
+    "LeatherGrip": "Кожаная рукоять",
+    "ExtendedMagazine": "Увеличенный магазин",
+    "QuicksilverBullets": "Пули из жидкого серебра",
+    "MendingDistillate": "Целебный дистиллят",
+    "CalmingDistillate": "Успокаивающий дистиллят",
+    "EnlighteningDistillate": "Просветляющий дистиллят",
+    "QuickeningDistillate": "Ускоряющий дистиллят",
+    "Refined": "Улучшенный",
+    "Empowered": "Усиленный",
+    "Perfected": "Совершенный",
+    "PessimisticOutlook": "Пессимистичный взгляд",
+    "TrialAndError": "Метод проб и ошибок",
+    "IndepedentVariable": "Независимая переменная",
+    "FieldResearch": "Полевое исследование",
+    "PeerReview": "Рецензирование",
+    "ResearchGrant": "Исследовательский грант",
+    "IrrefutableProof": "Неопровержимое доказательство",
+    "AlternativeHypothesis": "Альтернативная гипотеза",
+    "LivingQuill": "Живое перо",
+    "SpectralBinding": "Призрачная связь",
+    "MysticVane": "Мистический флюгер",
+    "EndlessInkwell": "Бесконечная чернильница",
+    "EnergySap": "Вытягивание энергии",
+    "InterwovenInk": "Сплетённые чернила",
+    "SupernaturalRecord": "Сверхъестественная запись",
+    "SearchWarrant": "Ордер на обыск",
+    "FabricatedEvidence": "Сфабрикованное доказательство",
+    "Blackmail": "Шантаж",
+    "Extort": "Вымогательство",
+    "Surveil": "Слежка",
+    "Expose": "Разоблачение",
+    "Helpful": "Полезный",
+    "Versatile": "Универсальный",
+    "Bolstering": "Укрепляющий",
+    "Clever": "Умный",
+    "Prompt": "Быстрый",
+    "Experienced": "Опытный",
+    "Swift": "Стремительный",
+    "ReflexResponse": "Рефлекторная реакция",
+    "SituationalAwareness": "Ситуационная осведомлённость",
+    "KillerInstinct": "Инстинкт убийцы",
+    "GutReaction": "Чутьё",
+    "MuscleMemory": "Мышечная память",
+    "SharpenedTalent": "Отточенный талант",
+    "ImpulseControl": "Контроль импульсов",
+    "ForceOfHabit": "Сила привычки",
+    "ShiftingInk": "Меняющиеся чернила",
+    "SubtleDepiction": "Тонкое изображение",
+    "ImbuedInk": "Пропитанные чернила",
+    "EldritchInk": "Жуткие чернила",
+    "EldritchInk2": "Жуткие чернила",
+    "MacabreDepiction": "Мрачное изображение",
+    "Vibrancy": "Яркость",
+    "ArmoredCarapace": "Бронированный панцирь",
+    "ClawsThatCatch": "Когти, что хватают",
+    "JawsThatSnatch": "Челюсти, что хватают",
+    "EyesOfFlame": "Глаза пламени",
+    "WingsOfNight": "Крылья ночи",
+    "Dominance": "Доминирование",
+    "DreamingCall": "Зов снов",
+    "DæmonicInfluence": "Демоническое влияние",
+    "Betray": "Предательство",
+    "Mercy": "Милосердие",
+    "Confess": "Признание",
+    "Distract": "Отвлечение",
+    "GreaterControl": "Больший контроль",
+    "Bonded": "Связанный",
+    "Tonguetwister": "Скороговорка",
+    "ThriceSpoken": "Трижды сказанное",
+    "Detachable": "Отсоединяемый",
+    "PryBar": "Монтировка",
+    "SharpenedKnife": "Заточенный нож",
+    "SignalMirror": "Сигнальное зеркало",
+    "MagnifyingLens": "Увеличительное стекло",
+    "LuckyCharm": "Счастливый талисман",
+    "SpringLoaded": "Пружинный",
+    "ImprovedTimer": "Улучшенный таймер",
+    "Tripwire": "Растяжка",
+    "Simple": "Простой",
+    "Poisonous": "Ядовитый",
+    "RemoteConfiguration": "Дистанционная конфигурация",
+    "Net": "Сеть",
+    "ExplosiveDevice": "Взрывное устройство",
+    "Specialist": "Специалист",
+    "Specialist2": "Специалист",
+    "Nemesis": "Немезида",
+    "MythosHardened": "Закалённый мифами",
+    "AlwaysPrepared": "Всегда готов",
+    "Railshooter": "Рельсовый стрелок",
+    "Telescanner": "Телесканер",
+    "Translocator": "Транслокатор",
+    "Realitycollapser": "Коллапсёр реальности",
+    "Matterweaver": "Ткач материи",
+    "AethericLink": "Эфирная связь",
+    "EmpoweredConfiguration": "Усиленная конфигурация"
+  },
+  "submit": "Отправить",
+  "Close": "Закрыть"
+}

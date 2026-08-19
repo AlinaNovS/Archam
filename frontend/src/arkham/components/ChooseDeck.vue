@@ -1,0 +1,1082 @@
+<script lang="ts" setup>
+import { displayTabooId, displayTabooList } from '@/arkham/taboo';
+import { computed, ref, inject, watch, nextTick } from 'vue'
+import type { Game } from '@/arkham/types/Game';
+import { fetchDecks } from '@/arkham/api'
+import { cardImg, imgsrc, type InvestigatorClass } from '@/arkham/helpers'
+import { portraitImage as portraitImageHelper } from '@/arkham/cardImages'
+import * as Arkham from '@/arkham/types/Deck'
+import {deckClass} from '@/arkham/types/Deck'
+import { deckInvestigatorCode, deckRequirementDescriptions, deckRestrictionError, hasValidatedUltimatumDeckConstraints, type SelectableDeckList } from '@/arkham/deckRestrictions'
+import type { ArkhamDbDecklist, DeckMeta } from '@/arkham/types/Deck'
+import type { Investigator } from '@/arkham/types/Investigator'
+import Question from '@/arkham/components/Question.vue';
+import UltimatumsAndBoonsQuestion from '@/arkham/components/UltimatumsAndBoonsQuestion.vue';
+import NewDeck from '@/arkham/components/NewDeck.vue'
+import DeckToolbar from '@/arkham/components/DeckToolbar.vue'
+import { useI18n } from 'vue-i18n'
+import { handleEmbeddedI18n } from '@/arkham/i18n'
+
+const { t } = useI18n()
+
+const decks = ref<Arkham.Deck[]>([])
+const ready = ref(false)
+const deckId = ref<string | null>(null)
+const unsavedDeckList = ref<ArkhamDbDecklist | null>(null)
+const createdPortrait = ref<string | null>(null)
+
+type DeckType = "UseExistingDeck" | "LoadNewDeck" | "UnsavedDeck"
+
+const deckType = ref<DeckType>("UseExistingDeck")
+
+const searchText = ref('')
+const filterClasses = ref<InvestigatorClass[]>([])
+const sortBy = ref<'name' | 'class'>('name')
+const validOnly = ref(false)
+const CLASS_ORDER: Record<string, number> = {
+  guardian: 0, seeker: 1, rogue: 2, mystic: 3, survivor: 4, neutral: 5
+}
+const allClasses: InvestigatorClass[] = ["guardian", "seeker", "rogue", "mystic", "survivor", "neutral"]
+
+function deckPortraitCode(deck: Arkham.Deck): string {
+  return deckInvestigatorCode(deck.list)
+}
+
+function deckTaboo(deck: Arkham.Deck): string | null {
+  return deck.list.taboo_id ? displayTabooId(deck.list.taboo_id) : null
+}
+
+const filteredDecks = computed(() => {
+  let result = decks.value.filter((deck) => {
+    const cls = deckClass(deck)
+    const matchesClass = filterClasses.value.length === 0 ||
+      filterClasses.value.some((k) => cls[k])
+    const matchesSearch = !searchText.value ||
+      deck.name.toLowerCase().includes(searchText.value.toLowerCase())
+    const matchesValidity = !validOnly.value || deckError(deck.list) === null
+    return matchesClass && matchesSearch && matchesValidity
+  })
+
+  if (sortBy.value === 'name') {
+    result = [...result].sort((a, b) => a.name.localeCompare(b.name))
+  } else if (sortBy.value === 'class') {
+    result = [...result].sort((a, b) => {
+      const ca = allClasses.find(k => deckClass(a)[k]) ?? 'neutral'
+      const cb = allClasses.find(k => deckClass(b)[k]) ?? 'neutral'
+      return (CLASS_ORDER[ca] ?? 5) - (CLASS_ORDER[cb] ?? 5)
+    })
+  }
+
+  return result
+})
+
+const props = defineProps<{
+  game: Game
+  playerId: string
+}>()
+
+const chooseDeck = inject<(deckId: string) => Promise<void>>('chooseDeck')
+const chooseDeckList = inject<(deckList: ArkhamDbDecklist) => Promise<void>>('chooseDeckList')
+const question = computed(() => props.game.question[props.playerId])
+const deckRequirements = computed(() => deckRequirementDescriptions(props.game.scenario?.id, {
+  campaignId: props.game.campaign?.id,
+  campaignLog: props.game.campaign?.log,
+  ultimatumsAndBoons: props.game.settings.settingsUltimatumsAndBoons,
+}, t))
+
+// Deckbuilding Ultimatums restrict which decks qualify — like challenge
+// scenarios, but stricter: default the list to valid decks only. The player
+// can still toggle the filter off to see (error-annotated) invalid decks.
+watch(
+  () =>
+    hasValidatedUltimatumDeckConstraints(
+      props.game.settings.settingsUltimatumsAndBoons,
+      !!props.game.campaign,
+    ),
+  (restricted) => {
+    if (restricted) validOnly.value = true
+  },
+  { immediate: true },
+)
+
+const weaknessPoolOptions = [
+  { token: 'cycle:core', label: 'Core Set', aliases: ['core'] },
+  { token: 'cycle:rcore', label: 'Revised Core Set', aliases: ['rcore'] },
+  { token: 'cycle:dwl', label: 'The Dunwich Legacy', aliases: ['dwl', 'dwlp'] },
+  { token: 'cycle:ptc', label: 'The Path to Carcosa', aliases: ['ptc', 'ptcp'] },
+  { token: 'cycle:tfa', label: 'The Forgotten Age', aliases: ['tfa', 'tfap'] },
+  { token: 'cycle:tcu', label: 'The Circle Undone', aliases: ['tcu', 'tcup'] },
+  { token: 'cycle:tde', label: 'The Dream-Eaters', aliases: ['tde', 'tdep'] },
+  { token: 'cycle:tic', label: 'The Innsmouth Conspiracy', aliases: ['tic', 'ticp'] },
+  { token: 'cycle:eote', label: 'Edge of the Earth', aliases: ['eote', 'eoep'] },
+  { token: 'cycle:tsk', label: 'The Scarlet Keys', aliases: ['tsk', 'tskp'] },
+  { token: 'cycle:fhv', label: 'The Feast of Hemlock Vale', aliases: ['fhv', 'fhvp'] },
+  { token: 'cycle:tdc', label: 'The Drowned City', aliases: ['tdc', 'tdcp'] },
+  { token: 'cycle:core_ch2', label: 'Chapter 2 Core Set', aliases: ['core_ch2', 'core2026', 'core_2026'] },
+  { token: 'cycle:return', label: 'Return To boxes', aliases: ['return'] },
+  { token: 'cycle:investigator_decks', label: 'Investigator Starter Decks', aliases: ['investigator_decks'] },
+  { token: 'cycle:investigator_decks_ch2', label: 'Chapter 2 Investigator Decks', aliases: ['investigator_decks_ch2'] },
+]
+
+function normalizeWeaknessPoolToken(token: string): string {
+  const trimmed = token.trim()
+  const bare = trimmed.startsWith('cycle:') ? trimmed.slice(6) : trimmed
+  return weaknessPoolOptions.find((o) => o.token === trimmed || o.aliases.includes(bare))?.token ?? trimmed
+}
+
+const selectedWeaknessPool = ref<string[]>([])
+const weaknessPoolTouched = ref(false)
+const weaknessPoolOpen = ref(false)
+
+const selectedDeck = computed(() => decks.value.find((d) => d.id === deckId.value) ?? null)
+const currentDeckList = computed(() => {
+  if (unsavedDeckList.value) return unsavedDeckList.value
+  if (!selectedDeck.value) return null
+  return deckToArkhamDbDecklist(selectedDeck.value)
+})
+const weaknessPoolSummary = computed(() => {
+  if (selectedWeaknessPool.value.length === 0) return 'All basic weaknesses'
+  const names = selectedWeaknessPool.value.map((token) => weaknessPoolOptions.find((o) => o.token === token)?.label ?? token)
+  return names.length <= 2 ? names.join(', ') : `${names.length} products selected`
+})
+
+function deckToArkhamDbDecklist(deck: Arkham.Deck): ArkhamDbDecklist {
+  return {
+    id: deck.id,
+    name: deck.name,
+    url: deck.url,
+    investigator_code: deck.list.investigator_code,
+    investigator_name: deck.name,
+    slots: { ...deck.list.slots },
+    sideSlots: { ...(deck.list.sideSlots ?? {}) },
+    meta: deck.list.meta,
+    taboo_id: deck.list.taboo_id ?? null,
+  }
+}
+
+function decodeMeta(meta: DeckMeta | undefined): Record<string, unknown> {
+  if (!meta) return {}
+  if (typeof meta === 'string') {
+    try {
+      const parsed = JSON.parse(meta)
+      return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {}
+    } catch (_e) {
+      return {}
+    }
+  }
+  return { ...meta }
+}
+
+function weaknessPoolFromMeta(meta: DeckMeta | undefined): string[] {
+  const cardPool = decodeMeta(meta).card_pool
+  if (typeof cardPool !== 'string') return []
+  return [...new Set(cardPool.split(',').map(normalizeWeaknessPoolToken).filter(Boolean))]
+}
+
+function deckListWithWeaknessPool(deckList: ArkhamDbDecklist): ArkhamDbDecklist {
+  const meta = decodeMeta(deckList.meta)
+  if (selectedWeaknessPool.value.length === 0) {
+    delete meta.card_pool
+  } else {
+    meta.card_pool = selectedWeaknessPool.value.join(',')
+  }
+
+  return { ...deckList, meta: JSON.stringify(meta) }
+}
+
+function resetWeaknessPoolFromDeck() {
+  selectedWeaknessPool.value = weaknessPoolFromMeta(currentDeckList.value?.meta)
+  weaknessPoolTouched.value = false
+  weaknessPoolOpen.value = false
+}
+
+function setWeaknessPool(tokens: string[]) {
+  selectedWeaknessPool.value = tokens
+  weaknessPoolTouched.value = true
+}
+
+async function toggleWeaknessPoolForDeck(deck: Arkham.Deck) {
+  if (deckId.value === deck.id) {
+    weaknessPoolOpen.value = !weaknessPoolOpen.value
+    return
+  }
+
+  deckId.value = deck.id
+  await nextTick()
+  weaknessPoolOpen.value = true
+}
+
+watch(currentDeckList, resetWeaknessPoolFromDeck)
+
+const questionLabel = computed(() => {
+  if (question.value)
+    return question.value.tag === 'QuestionLabel' ? handleEmbeddedI18n(question.value.label, t) : null
+})
+
+// Ultimatums/Boons deckbuilding interruptions (e.g. Boon of the Morrígan's
+// weakness choice) get a dedicated, boon-styled question UI.
+const isUltimatumsAndBoonsQuestion = computed(() =>
+  question.value?.tag === 'QuestionLabel'
+    && question.value.label?.startsWith('$label.ultimatumsAndBoons')
+)
+
+async function setPortrait(src: string) {
+  createdPortrait.value = src
+}
+
+async function addDeck(d: Arkham.Deck) {
+  decks.value = [...decks.value, d]
+  deckId.value = d.id
+  unsavedDeckList.value = null
+  deckType.value = "UseExistingDeck"
+  // "Save and use" means use it: seat the deck immediately rather than dropping the player
+  // back into the existing-deck list to hunt for what they just made (a filter or search
+  // could even be hiding it). Reset the pool state up front instead of waiting on the
+  // currentDeckList watcher -- it flushes after this function, so a pool left selected on a
+  // PREVIOUS deck would otherwise be applied to this one.
+  resetWeaknessPoolFromDeck()
+  await choose()
+}
+
+async function addUnsavedDeck(dl: ArkhamDbDecklist) {
+  unsavedDeckList.value = dl
+  deckId.value = null
+  deckType.value = "UnsavedDeck"
+}
+
+function deckError(deckList: SelectableDeckList): string | null {
+  const chosenInvestigatorCodes = Object.values(props.game.investigators).map((i) => i.cardCode)
+  const restrictionError = deckRestrictionError(props.game.scenario?.id, deckList, chosenInvestigatorCodes, {
+    campaignId: props.game.campaign?.id,
+    campaignLog: props.game.campaign?.log,
+    // Deck legality follows the SELECTED tags, not the runtime on/off toggle.
+    ultimatumsAndBoons: props.game.settings.settingsUltimatumsAndBoons,
+  }, t, { isLastPlayer: isLastPlayerChoosing.value })
+  if (restrictionError) return restrictionError
+
+  const investigator = deckInvestigatorCode(deckList)
+  const alreadyTaken = Object.values(props.game.investigators).some((i) => {
+    return i.id === investigator
+  })
+
+  if (alreadyTaken) {
+    return 'This investigator is already taken'
+  }
+
+  const inOtherScenario = Object.values(props.game.otherInvestigators).some((i) => {
+    return i.id === investigator
+  })
+
+  if (inOtherScenario) {
+    return 'This investigator is already taken in this campaign'
+  }
+
+  return null
+}
+
+const error = computed(() => {
+  if(!deckId.value) {
+    return null
+  }
+
+  const deck = decks.value.find((d) => d.id === deckId.value)
+  return deck ? deckError(deck.list) : null
+})
+
+const unsavedDeckError = computed(() => {
+  return unsavedDeckList.value ? deckError(unsavedDeckList.value) : null
+})
+
+const investigators = computed(() => props.game.investigators)
+
+fetchDecks().then((result) => {
+  decks.value = result;
+  if (result.length == 0) {
+    deckType.value = "LoadNewDeck"
+  }
+  ready.value = true;
+})
+
+const emit = defineEmits(['choose'])
+
+const chooseChoice = (idx: number) => emit('choose', idx)
+
+async function choose() {
+  if (unsavedDeckList.value && chooseDeckList && unsavedDeckError.value === null) {
+    await chooseDeckList(deckListWithWeaknessPool(unsavedDeckList.value))
+  } else if (deckId.value && error.value === null) {
+    if (weaknessPoolTouched.value && chooseDeckList && selectedDeck.value) {
+      await chooseDeckList(deckListWithWeaknessPool(deckToArkhamDbDecklist(selectedDeck.value)))
+    } else if (chooseDeck) {
+      await chooseDeck(deckId.value)
+    }
+  }
+}
+
+async function selectAndChoose(deck: Arkham.Deck) {
+  deckId.value = deck.id
+  if (error.value !== null) return
+  await choose()
+}
+
+type Player = { tag: "EmptyPlayer", id: string } | { tag: "Chosen", contents: Investigator, id: string }
+
+const tabooList = function (investigator: Investigator) {
+  return investigator.taboo ? displayTabooList(investigator.taboo) : null
+}
+
+const players = computed<Player[]>(() => {
+  if (props.game.gameState.tag === 'IsChooseDecks') {
+    return props.game.gameState.contents.map((p) => {
+      const maybeInvestigator = Object.values(investigators.value).find((i) => i.playerId === p)
+      return maybeInvestigator ? { tag: "Chosen", contents: maybeInvestigator, id: p } : { tag: "EmptyPlayer", id: p }
+    })
+  }
+
+  return []
+})
+
+// A challenge scenario only needs one player to use the required deck. The
+// required investigator is therefore only enforced on the final player still
+// choosing, and only if nobody else has already provided it.
+const isLastPlayerChoosing = computed(() =>
+  players.value.filter((p) => p.tag === 'EmptyPlayer').length <= 1
+)
+
+function portraitImage(investigator: Investigator) {
+  return portraitImageHelper(investigator.cardCode)
+}
+
+const needsReply = computed(() => {
+  const question = props.game.question[props.playerId]
+  if (question === null || question === undefined) {
+    return false
+  }
+
+  return question.tag === 'ChooseDeck' || (question.tag === 'QuestionLabel' && question.question.tag === 'ChooseDeck')
+})
+
+
+
+</script>
+
+<template>
+  <div class="container scroll-container">
+    <div class="investigators">
+      <h2 class="page-title">{{$t('create.chooseYourDeck', {s: players.length > 1 ? 's' : ''})}}</h2>
+      <div class="portraits">
+        <div class="investigator-row" v-for="player in players" :key="player.id">
+          <template v-if="player.tag === 'Chosen'">
+            <div class="portrait">
+              <img :src="portraitImage(player.contents)" />
+            </div>
+            <div v-if="question && playerId == player.contents.playerId" class="question">
+              <UltimatumsAndBoonsQuestion
+                v-if="isUltimatumsAndBoonsQuestion"
+                :game="game"
+                :playerId="playerId"
+                @choose="chooseChoice"
+              />
+              <template v-else>
+                <h2 v-if="questionLabel" class="title question-label">{{ questionLabel }}</h2>
+                <Question :game="game" :playerId="playerId" @choose="chooseChoice" />
+              </template>
+            </div>
+            <div v-else>
+              <div v-if="tabooList(player.contents)" class="taboo-list">
+                {{$t('create.tabooList', {tabooList: tabooList(player.contents)})}}
+              </div>
+            </div>
+          </template>
+          <template v-else>
+            <div v-if="needsReply && player.id == playerId" class="deck-main">
+              <div v-if="deckRequirements.length" class="deck-requirements-card">
+                <div class="deck-requirements-title">Deck Requirements</div>
+                <div class="deck-requirements-body">
+                  <ul class="deck-requirements">
+                    <li v-for="requirement in deckRequirements" :key="requirement">{{ requirement }}</li>
+                  </ul>
+                  <button
+                    type="button"
+                    class="valid-filter"
+                    :class="{ active: validOnly }"
+                    @click.prevent="validOnly = !validOnly"
+                  >
+                    {{ validOnly ? 'Showing Valid Decks' : 'Filter Valid Decks' }}
+                  </button>
+                </div>
+              </div>
+              <div class="deck-tabs">
+                <button @click.prevent="deckType = 'UseExistingDeck'" :class="{ current: deckType == 'UseExistingDeck'}" :disabled="decks.length == 0">
+                  {{$t('create.useExistingDeck')}}
+                </button>
+                <button @click.prevent="deckType = 'LoadNewDeck'" :class="{ current: deckType == 'LoadNewDeck' || deckType == 'UnsavedDeck'}">
+                  {{$t('create.loadNewDeck')}}
+                </button>
+              </div>
+              <div v-if="deckType == 'UseExistingDeck'" class="deck-picker">
+                <DeckToolbar
+                  compact
+                  :search-placeholder="$t('chooseDeck.search')"
+                  v-model:search="searchText"
+                  v-model:filterClasses="filterClasses"
+                  v-model:sortBy="sortBy"
+                />
+                <div class="deck-list">
+                  <div v-if="filteredDecks.length === 0" class="deck-list-empty">{{ $t('noDecksMatchFilters') }}</div>
+                  <template v-for="deck in filteredDecks" :key="deck.id">
+                    <div
+                      class="deck-item"
+                      :class="[deckClass(deck), { selected: deckId === deck.id, 'has-error': deckId === deck.id && error }]"
+                      @click.prevent="deckId = deck.id"
+                    >
+                      <img class="deck-item-portrait" :src="cardImg(deckPortraitCode(deck))" />
+                      <div class="deck-item-info">
+                        <span class="deck-item-name">{{ deck.name }}</span>
+                        <span v-if="deckTaboo(deck)" class="deck-item-taboo">
+                          <font-awesome-icon icon="book" /> {{ deckTaboo(deck) }}
+                        </span>
+                        <span v-if="deckId === deck.id && error" class="deck-item-error">{{ error }}</span>
+                      </div>
+                      <button
+                        type="button"
+                        class="deck-item-weakness-button"
+                        :class="{ active: deckId === deck.id && (weaknessPoolOpen || selectedWeaknessPool.length > 0) }"
+                        v-tooltip="$t('chooseDeck.randomBasicWeaknessPoolTooltip')"
+                        :aria-label="$t('chooseDeck.randomBasicWeaknessPoolTooltip')"
+                        @click.stop.prevent="toggleWeaknessPoolForDeck(deck)"
+                      >
+                        <font-awesome-icon icon="shuffle" />
+                      </button>
+                      <button class="deck-item-use" @click.stop.prevent="selectAndChoose(deck)" :title="$t('chooseDeck.useThisDeck')">
+                        <font-awesome-icon icon="chevron-right" />
+                      </button>
+                      <div v-if="deckId === deck.id && weaknessPoolOpen" class="weakness-pool-panel deck-item-weakness-pool" @click.stop>
+                        <div class="weakness-pool-heading">
+                          <span>Random basic weakness pool</span>
+                          <span class="weakness-pool-summary">{{ weaknessPoolSummary }}</span>
+                        </div>
+                        <p class="weakness-pool-help">
+                          Limit random basic weaknesses to selected products. Leave empty to use the full pool.
+                        </p>
+                        <div class="weakness-pool-actions">
+                          <button type="button" @click.prevent="setWeaknessPool(weaknessPoolOptions.map((o) => o.token))">Select all</button>
+                          <button type="button" @click.prevent="setWeaknessPool([])">Clear</button>
+                        </div>
+                        <div class="weakness-pool-grid">
+                          <label v-for="option in weaknessPoolOptions" :key="option.token" class="weakness-pool-option">
+                            <input type="checkbox" :value="option.token" v-model="selectedWeaknessPool" @change="weaknessPoolTouched = true" />
+                            <span>{{ option.label }}</span>
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  </template>
+                </div>
+              </div>
+              <div v-else class="load-deck-layout">
+                <div class="load-deck-portrait">
+                  <div v-if="createdPortrait" class="portrait">
+                    <img :src="createdPortrait" />
+                  </div>
+                  <div v-else class="portrait-empty">
+                    <img :src="imgsrc('slots/ally.png')" />
+                  </div>
+                </div>
+                <div class="load-deck-content">
+                  <form v-if="deckType == 'UnsavedDeck'" class="deck-form" @submit.prevent="choose">
+                    <p class="unsaved-deck-name">{{ unsavedDeckList?.name }}</p>
+                    <p v-if="unsavedDeckError" class="deck-form-error">{{ unsavedDeckError }}</p>
+                    <div class="weakness-pool-panel">
+                      <button type="button" class="weakness-pool-toggle" @click.prevent="weaknessPoolOpen = !weaknessPoolOpen">
+                        <span>Random basic weakness pool</span>
+                        <span class="weakness-pool-summary">{{ weaknessPoolSummary }}</span>
+                      </button>
+                      <div v-if="weaknessPoolOpen" class="weakness-pool-body">
+                        <p class="weakness-pool-help">
+                          Limit random basic weaknesses to selected products. Leave empty to use the full pool.
+                        </p>
+                        <div class="weakness-pool-actions">
+                          <button type="button" @click.prevent="setWeaknessPool(weaknessPoolOptions.map((o) => o.token))">Select all</button>
+                          <button type="button" @click.prevent="setWeaknessPool([])">Clear</button>
+                        </div>
+                        <div class="weakness-pool-grid">
+                          <label v-for="option in weaknessPoolOptions" :key="option.token" class="weakness-pool-option">
+                            <input type="checkbox" :value="option.token" v-model="selectedWeaknessPool" @change="weaknessPoolTouched = true" />
+                            <span>{{ option.label }}</span>
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                    <button type="submit" class="primary-action" :disabled="!!unsavedDeckError">{{$t('create.choose')}}</button>
+                  </form>
+                  <NewDeck v-else @new-deck="addDeck" @new-deck-list="addUnsavedDeck" :no-portrait="true" :set-portrait="setPortrait" />
+                </div>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+
+<style scoped>
+.container {
+  background: var(--background);
+  width: 100%;
+  max-width: unset;
+  height: 100%;
+  margin: 0;
+}
+
+.investigators {
+  width: 100%;
+  color: #FFF;
+  padding: 10px;
+  border-radius: 3px;
+  max-width: 800px;
+  margin-inline: auto;
+  margin-top: 20px;
+}
+
+.page-title {
+  margin: 0 0 12px 0;
+  padding: 0;
+  text-transform: uppercase;
+  color: var(--title);
+  font-family: Teutonic;
+  font-size: 1.8em;
+  letter-spacing: 0.04em;
+}
+
+.portraits {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.investigator-row {
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+
+  & :deep(.choices) {
+    margin: 0;
+    padding: 0;
+  }
+  & :deep(form) {
+    margin: 0;
+    height: fit-content;
+  }
+
+  .question {
+    flex: 1;
+    & :deep(.modal-contents) {
+      border-radius: 5px;
+      form {
+        width: 100%;
+        align-items: flex-start;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        label {
+          text-transform: uppercase;
+          margin-right: 15px;
+        }
+        button {
+          width: 100%;
+          margin: 0;
+        }
+      }
+    }
+  }
+}
+
+.portrait {
+  width: 100px;
+  border-radius: 5px;
+  flex-shrink: 0;
+  img {
+    width: 100%;
+    border-radius: 5px;
+    box-shadow: 1px 1px 6px rgba(0, 0, 0, 0.45);
+  }
+}
+
+.portrait-empty {
+  width: 100px;
+  height: 155px;
+  border-radius: 5px;
+  flex-shrink: 0;
+  box-shadow: 1px 1px 6px rgba(0, 0, 0, 0.45);
+  background: rgba(100, 100, 100, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  img {
+    width: 80%;
+    opacity: 0.6;
+  }
+}
+
+.deck-main {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.deck-requirements-card {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 211, 112, 0.18);
+  background: rgba(95, 65, 10, 0.24);
+}
+
+.deck-requirements-title {
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 0.72em;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.deck-requirements-body {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.valid-filter {
+  width: auto;
+  min-width: 150px;
+  padding: 9px 13px;
+  font-size: 0.74em;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: rgba(255, 240, 196, 0.98);
+  background: rgba(143, 98, 22, 0.62);
+  border: 1px solid rgba(255, 211, 112, 0.34);
+  border-radius: 6px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.24);
+  transition: transform 120ms ease, background 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    background: rgba(162, 112, 28, 0.78);
+    border-color: rgba(255, 211, 112, 0.48);
+    box-shadow: 0 7px 18px rgba(0,0,0,0.32);
+  }
+
+  &.active {
+    background: rgba(178, 126, 36, 0.86);
+    border-color: rgba(255, 211, 112, 0.58);
+  }
+}
+
+.deck-requirements {
+  flex: 1;
+  margin: 0;
+  padding-left: 18px;
+  color: rgba(255, 226, 154, 0.95);
+  line-height: 1.35;
+  font-size: 0.82em;
+}
+
+/* Tab buttons — segmented control */
+.deck-tabs {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 3px;
+  padding: 3px;
+  background: rgba(0,0,0,0.30);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+
+  button {
+    height: 36px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: rgba(255,255,255,0.50);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-size: 0.74em;
+    cursor: pointer;
+    transition: background 160ms ease, color 120ms ease, box-shadow 160ms ease;
+    outline: none;
+
+    &:hover:not(:disabled):not(.current) {
+      background: rgba(255,255,255,0.06);
+      color: rgba(255,255,255,0.80);
+    }
+
+    &.current {
+      background: rgba(110, 134, 64, 0.88);
+      color: white;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.35);
+    }
+
+    &:disabled {
+      opacity: 0.30;
+      cursor: not-allowed;
+    }
+  }
+}
+
+/* Deck picker (UseExistingDeck) */
+.deck-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.deck-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  max-height: calc(100dvh - 380px);
+  min-height: 120px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.15) transparent;
+}
+
+.deck-list-empty {
+  padding: 24px;
+  text-align: center;
+  color: var(--button);
+  font-size: 0.85em;
+}
+
+.deck-item {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 10px 12px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-left: 3px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+  color: #e0e0e0;
+
+  &:hover { background: rgba(255,255,255,0.08); }
+
+  &.guardian { border-left-color: var(--guardian-dark); &:hover { background: var(--guardian-extra-dark); } }
+  &.seeker   { border-left-color: var(--seeker-dark);   &:hover { background: var(--seeker-extra-dark); } }
+  &.rogue    { border-left-color: var(--rogue-dark);    &:hover { background: var(--rogue-extra-dark); } }
+  &.mystic   { border-left-color: var(--mystic-dark);   &:hover { background: var(--mystic-extra-dark); } }
+  &.survivor { border-left-color: var(--survivor-dark); &:hover { background: var(--survivor-extra-dark); } }
+  &.neutral  { border-left-color: var(--neutral-dark);  &:hover { background: var(--neutral-extra-dark); } }
+
+  &.selected {
+    border-color: rgba(110, 134, 64, 0.4);
+    border-left-color: rgba(110, 134, 64, 0.9);
+    background: rgba(110, 134, 64, 0.10);
+  }
+
+  &.has-error {
+    border-color: rgba(200, 50, 50, 0.5);
+    border-left-color: rgba(200, 50, 50, 0.9);
+    background: rgba(160, 25, 25, 0.15);
+  }
+}
+
+.deck-item-portrait {
+  width: 60px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  box-shadow: 1px 1px 5px rgba(0,0,0,0.5);
+}
+
+.deck-item-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.deck-item-name {
+  font-size: 0.94em;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.deck-item-taboo {
+  font-size: 0.72em;
+  font-weight: 600;
+  color: #c8a96e;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.deck-item-error {
+  font-size: 0.75em;
+  color: #ff8080;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.deck-item-use,
+.deck-item-weakness-button {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 5px;
+  border: 1px solid rgba(255,255,255,0.10);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85em;
+  transition: background 150ms ease, transform 120ms ease, box-shadow 150ms ease;
+  outline: none;
+
+  &:hover {
+    transform: scale(1.08);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+  }
+
+  &:active { transform: scale(1.0); }
+}
+
+.deck-item-use {
+  background: rgba(110, 134, 64, 0.85);
+
+  &:hover {
+    background: rgba(110, 134, 64, 1);
+  }
+}
+
+.deck-item-weakness-button {
+  width: 24px;
+  height: 24px;
+  font-size: 0.68em;
+  background: rgba(235, 235, 235, 0.18);
+  color: rgba(255, 255, 255, 0.86);
+  backdrop-filter: blur(4px);
+
+  &:hover,
+  &.active {
+    background: rgba(235, 235, 235, 0.30);
+    color: white;
+  }
+}
+
+/* Load New Deck layout: portrait left, form right */
+.load-deck-layout {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.load-deck-portrait {
+  flex-shrink: 0;
+}
+
+.load-deck-content {
+  flex: 1;
+  min-width: 0;
+}
+
+/* UnsavedDeck form */
+.deck-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  p {
+    margin: 0;
+    padding: 0;
+  }
+
+  p.unsaved-deck-name {
+    color: #e0e0e0;
+    padding: 12px 16px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 6px;
+    text-align: center;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    font-size: 0.92em;
+  }
+
+  p.deck-form-error {
+    color: #ff8080;
+    padding: 10px 12px;
+    background: rgba(160, 25, 25, 0.15);
+    border: 1px solid rgba(200, 50, 50, 0.5);
+    border-radius: 6px;
+    font-size: 0.82em;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+}
+
+.weakness-pool-panel {
+  margin-top: 10px;
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 8px;
+  background: rgba(0,0,0,0.16);
+  overflow: hidden;
+}
+
+.deck-item-weakness-pool {
+  flex: 0 0 100%;
+  margin-top: 0;
+  cursor: default;
+}
+
+.weakness-pool-toggle {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: rgba(255,255,255,0.86);
+  font-size: 0.78em;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.weakness-pool-toggle:hover {
+  background: rgba(255,255,255,0.05);
+}
+
+.weakness-pool-heading {
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: rgba(255,255,255,0.86);
+  font-size: 0.78em;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.weakness-pool-summary {
+  color: rgba(255,255,255,0.55);
+  font-size: 0.9em;
+  font-weight: 600;
+  text-align: right;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.weakness-pool-help,
+.deck-form p.weakness-pool-help {
+  margin: 0;
+  padding: 0 12px 10px;
+  color: rgba(255,255,255,0.6);
+  font-size: 0.82em;
+}
+
+.weakness-pool-actions {
+  display: flex;
+  gap: 8px;
+  padding: 0 12px 10px;
+}
+
+.weakness-pool-actions button {
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 999px;
+  background: rgba(255,255,255,0.07);
+  color: rgba(255,255,255,0.78);
+  padding: 5px 10px;
+  font-size: 0.76em;
+  cursor: pointer;
+}
+
+.weakness-pool-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 6px;
+  padding: 0 12px 12px;
+}
+
+.weakness-pool-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(255,255,255,0.82);
+  font-size: 0.84em;
+  padding: 5px 6px;
+  border-radius: 5px;
+  background: rgba(255,255,255,0.04);
+}
+
+.weakness-pool-option input {
+  accent-color: rgb(110, 134, 64);
+}
+
+/* Primary action button */
+.primary-action {
+  width: 100%;
+  height: 48px;
+  border-radius: 5px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(110, 134, 64, 0.95);
+  color: white;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.88em;
+  cursor: pointer;
+  box-shadow: 0 5px 18px rgba(0,0,0,0.3);
+  transition: transform 120ms ease, background 160ms ease, box-shadow 160ms ease;
+  outline: none;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+    background: rgba(110, 134, 64, 1);
+    box-shadow: 0 10px 28px rgba(0,0,0,0.4);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+  }
+}
+
+/* Taboo shown on chosen investigator rows */
+.taboo-list {
+  color: #A8A749;
+  font-size: 0.78em;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 4px 0;
+}
+</style>

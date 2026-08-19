@@ -1,0 +1,170 @@
+import * as JsonDecoder from 'ts.data.json';
+import { cardImgPath } from '@/arkham/helpers';
+import { Tokens } from '@/arkham/types/Token';
+import { customizationsDecoder, Customization } from '@/arkham/types/Customization';
+import { v2Optional } from '@/arkham/parser';
+
+export type Card = PlayerCard | EncounterCard | VengeanceCard;
+
+function cardIsFlipped(card: Card | CardContents) {
+  switch (card.tag) {
+    case 'CardContents':
+      return card.isFlipped ?? false;
+    case 'PlayerCard':
+      return card.contents.isFlipped ?? false;
+    case 'EncounterCard':
+      return card.contents.isFlipped ?? false;
+    case 'VengeanceCard':
+      return cardIsFlipped(card.contents);
+  }
+}
+
+export function cardFacedown(card: Card | CardContents): boolean {
+  if (card.tag === 'CardContents') return card.facedown ?? false
+  switch (card.tag) {
+    case 'PlayerCard':
+      return card.contents.facedown ?? false;
+    case 'EncounterCard':
+      return card.contents.facedown ?? false;
+    case 'VengeanceCard':
+      return cardFacedown(card.contents);
+  }
+}
+
+function cardArt(card: Card | CardContents): string | undefined {
+  switch (card.tag) {
+    case 'CardContents':
+      return card.art
+    case 'PlayerCard':
+      return card.contents.art
+    case 'EncounterCard':
+      return card.contents.art
+    case 'VengeanceCard':
+      return cardArt(card.contents);
+  }
+}
+
+export function asCardCode(card: Card | CardContents): string {
+  switch (card.tag) {
+    case 'CardContents':
+      return card.cardCode
+    case 'PlayerCard':
+      return card.contents.cardCode
+    case 'EncounterCard':
+      return card.contents.cardCode
+    case 'VengeanceCard':
+      return asCardCode(card.contents);
+  }
+}
+
+export function cardId(card: Card | CardContents): string {
+  return toCardContents(card).id
+}
+
+export function cardImage(card: Card | CardContents) {
+  if (cardFacedown(card)) {
+    return card.tag === 'PlayerCard' || card.tag === 'CardContents' ? 'backs/back_player.jpg' : 'backs/back_encounter.jpg'
+  }
+  const side = cardIsFlipped(card) ? 'b' : ''
+  // TODO, send art with cards next to
+  const art = cardArt(card) || asCardCode(card).replace('c', '')
+  return cardImgPath(`${art}${side}`)
+}
+
+export function toCardContents(card: Card | CardContents): CardContents {
+  if (card.tag === 'CardContents') {
+    return card
+  }
+
+  switch (card.tag) {
+    case 'PlayerCard':
+      return card.contents
+    case 'EncounterCard':
+      return card.contents
+    case 'VengeanceCard':
+      return toCardContents(card.contents);
+  }
+}
+
+export type CardContents = {
+  tag: "CardContents"
+  id: string
+  cardCode: string
+  isFlipped?: boolean
+  facedown?: boolean
+  tokens: Tokens
+  art?: string
+  customizations?: Customization[]
+  mutated?: string
+  chained?: string
+  meta?: Record<string, any>
+  // owner === searching investigator => their own zone; another id => that
+  // investigator's zone; null/absent => the scenario "Abyss" deck (owner-less).
+  owner?: string
+}
+
+export type VengeanceCard = {
+  tag: 'VengeanceCard';
+  contents: PlayerCard | EncounterCard;
+}
+
+export type PlayerCard = {
+  tag: 'PlayerCard';
+  contents: CardContents;
+}
+
+export type EncounterCard = {
+  tag: 'EncounterCard';
+  contents: CardContents;
+}
+
+export const cardContentsDecoder = JsonDecoder.object<CardContents>(
+  {
+    tag: JsonDecoder.constant('CardContents'),
+    id: JsonDecoder.string(),
+    cardCode: JsonDecoder.string(),
+    isFlipped: v2Optional(JsonDecoder.boolean()),
+    facedown: v2Optional(JsonDecoder.boolean()),
+    tokens: JsonDecoder.constant({}),
+    art: v2Optional(JsonDecoder.string()),
+    customizations: v2Optional(customizationsDecoder),
+    mutated: v2Optional(JsonDecoder.string()),
+    chained: v2Optional(JsonDecoder.string()),
+    meta: v2Optional(JsonDecoder.succeed()),
+    owner: v2Optional(JsonDecoder.string()),
+  },
+  'CardContents',
+);
+
+export const playerCardDecoder = JsonDecoder.object<PlayerCard>(
+  {
+    tag: JsonDecoder.literal('PlayerCard'),
+    contents: cardContentsDecoder,
+  },
+  'PlayerCard',
+);
+
+export const encounterCardDecoder = JsonDecoder.object<EncounterCard>(
+  {
+    tag: JsonDecoder.literal('EncounterCard'),
+    contents: cardContentsDecoder,
+  },
+  'EncounterCard',
+);
+
+export const vengeanceCardDecoder = JsonDecoder.object<VengeanceCard>(
+  {
+    tag: JsonDecoder.literal('VengeanceCard'),
+    contents: JsonDecoder.oneOf<PlayerCard | EncounterCard>([playerCardDecoder, encounterCardDecoder], 'VengeanceCardContents')
+  },
+  'EncounterCard',
+);
+
+export const cardDecoder = JsonDecoder.oneOf<Card>(
+  [
+    playerCardDecoder,
+    encounterCardDecoder,
+    vengeanceCardDecoder,
+  ],
+  'Card',
+);

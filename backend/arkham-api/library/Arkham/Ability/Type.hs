@@ -1,0 +1,278 @@
+{-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE NoFieldSelectors #-}
+
+module Arkham.Ability.Type where
+
+import Arkham.Action
+import Arkham.Actions
+import Arkham.Cost
+import Arkham.Criteria (Criterion)
+import Arkham.Matcher
+import Arkham.Prelude
+import Arkham.SkillType
+import Data.Aeson.TH
+import GHC.OverloadedLabels
+import GHC.Records
+
+evadeAction :: Cost -> AbilityType
+evadeAction cost = ActionAbility #evade #agility (ActionCost 1 <> cost)
+
+evadeAction_ :: AbilityType
+evadeAction_ = ActionAbility #evade #agility $ ActionCost 1
+
+evadeActionWithAlternate_ :: AbilitySkills -> AbilityType
+evadeActionWithAlternate_ stype = ActionAbility #evade (Just $ OrAbilitySkills [#agility, stype]) (ActionCost 1)
+
+evadeActionWith_ :: SkillType -> AbilityType
+evadeActionWith_ stype = ActionAbility #evade (Just $ AbilitySkill stype) (ActionCost 1)
+
+instance IsLabel "evade" AbilityType where
+  fromLabel = evadeAction_
+
+fightActionWith :: SkillType -> Cost -> AbilityType
+fightActionWith stype cost = ActionAbility #fight (Just $ AbilitySkill stype) (ActionCost 1 <> cost)
+
+fightActionWith_ :: SkillType -> AbilityType
+fightActionWith_ stype = ActionAbility #fight (Just $ AbilitySkill stype) (ActionCost 1)
+
+fightAction :: Cost -> AbilityType
+fightAction cost = ActionAbility #fight #combat (ActionCost 1 <> cost)
+
+fightActionWithAlternate :: AbilitySkills -> Cost -> AbilityType
+fightActionWithAlternate stype cost = ActionAbility #fight (Just $ OrAbilitySkills [#combat, stype]) (ActionCost 1 <> cost)
+
+fightActionWithAlternate_ :: AbilitySkills -> AbilityType
+fightActionWithAlternate_ stype = ActionAbility #fight (Just $ OrAbilitySkills [#combat, stype]) (ActionCost 1)
+
+fightAction_ :: AbilityType
+fightAction_ = fightAction mempty
+
+instance IsLabel "fight" AbilityType where
+  fromLabel = fightAction_
+
+parleyAction :: Cost -> AbilityType
+parleyAction cost = ActionAbility #parley Nothing (ActionCost 1 <> cost)
+
+parleyAction_ :: AbilityType
+parleyAction_ = parleyAction mempty
+
+instance IsLabel "parley" AbilityType where
+  fromLabel = parleyAction_
+
+investigateAction :: Cost -> AbilityType
+investigateAction cost = ActionAbility #investigate #intellect (ActionCost 1 <> cost)
+
+investigateAction_ :: AbilityType
+investigateAction_ = investigateAction mempty
+
+investigateActionWith :: SkillType -> Cost -> AbilityType
+investigateActionWith stype cost = ActionAbility #investigate (Just $ AbilitySkill stype) (ActionCost 1 <> cost)
+
+investigateActionWith_ :: SkillType -> AbilityType
+investigateActionWith_ stype = ActionAbility #investigate (Just $ AbilitySkill stype) (ActionCost 1)
+
+investigateActionWithAlternate :: AbilitySkills -> Cost -> AbilityType
+investigateActionWithAlternate stype cost = ActionAbility #investigate (Just $ OrAbilitySkills [#intellect, stype]) (ActionCost 1 <> cost)
+
+investigateActionWithAlternate_ :: AbilitySkills -> AbilityType
+investigateActionWithAlternate_ stype = ActionAbility #investigate (Just $ OrAbilitySkills [#intellect, stype]) (ActionCost 1)
+
+resignAction :: Cost -> AbilityType
+resignAction cost = ActionAbility #resign Nothing (ActionCost 1 <> cost)
+
+resignAction_ :: AbilityType
+resignAction_ = resignAction mempty
+
+actionAbility :: AbilityType
+actionAbility = ActionAbility mempty Nothing (ActionCost 1)
+
+doubleActionAbility :: AbilityType
+doubleActionAbility = ActionAbility mempty Nothing (ActionCost 2)
+
+instance IsLabel "action" AbilityType where
+  fromLabel = actionAbility
+
+actionAbilityWithCost :: Cost -> AbilityType
+actionAbilityWithCost cost = ActionAbility mempty Nothing (ActionCost 1 <> cost)
+
+doubleActionAbilityWithCost :: Cost -> AbilityType
+doubleActionAbilityWithCost cost = ActionAbility mempty Nothing (ActionCost 2 <> cost)
+
+freeReaction :: WindowMatcher -> AbilityType
+freeReaction window = ReactionAbility window Free mempty
+
+triggered :: WindowMatcher -> Cost -> AbilityType
+triggered wm cost = ReactionAbility wm cost mempty
+
+triggeredAction :: Action -> WindowMatcher -> Cost -> AbilityType
+triggeredAction action wm cost = ReactionAbility wm cost (SingleAction action)
+
+triggered_ :: WindowMatcher -> AbilityType
+triggered_ wm = ReactionAbility wm Free mempty
+
+forced :: WindowMatcher -> AbilityType
+forced = ForcedAbility
+
+delayed :: AbilityType -> AbilityType
+delayed = DelayedAbility
+
+silent :: WindowMatcher -> AbilityType
+silent = SilentForcedAbility
+
+class HasCost c where
+  overCost :: (Cost -> Cost) -> c -> c
+
+pattern FastAbility :: Cost -> AbilityType
+pattern FastAbility cost <- FastAbility' cost (AndActions [])
+  where
+    FastAbility cost = FastAbility' cost (AndActions [])
+
+freeTrigger_ :: AbilityType
+freeTrigger_ = FastAbility' Free mempty
+
+freeTrigger :: Cost -> AbilityType
+freeTrigger c = FastAbility' c mempty
+
+data AbilitySkills
+  = AbilitySkill SkillType
+  | AndAbilitySkills [AbilitySkills]
+  | OrAbilitySkills [AbilitySkills]
+  deriving stock (Show, Eq, Ord, Data)
+
+instance IsLabel "willpower" AbilitySkills where
+  fromLabel = AbilitySkill #willpower
+
+instance IsLabel "intellect" AbilitySkills where
+  fromLabel = AbilitySkill #intellect
+
+instance IsLabel "combat" AbilitySkills where
+  fromLabel = AbilitySkill #combat
+
+instance IsLabel "agility" AbilitySkills where
+  fromLabel = AbilitySkill #agility
+
+instance IsLabel "willpower" (Maybe AbilitySkills) where
+  fromLabel = Just #willpower
+
+instance IsLabel "intellect" (Maybe AbilitySkills) where
+  fromLabel = Just #intellect
+
+instance IsLabel "combat" (Maybe AbilitySkills) where
+  fromLabel = Just #combat
+
+instance IsLabel "agility" (Maybe AbilitySkills) where
+  fromLabel = Just #agility
+
+data AbilityType
+  = FastAbility' {cost :: Cost, actions :: Actions}
+  | ReactionAbility {window :: WindowMatcher, cost :: Cost, actions :: Actions}
+  | ConstantReaction {label :: Text, window :: WindowMatcher, cost :: Cost}
+  | CustomizationReaction {label :: Text, window :: WindowMatcher, cost :: Cost}
+  | ActionAbility {actions :: Actions, skillTypes :: Maybe AbilitySkills, cost :: Cost}
+  | ServitorAbility {action :: Action}
+  | SilentForcedAbility {window :: WindowMatcher}
+  | ForcedAbility {window :: WindowMatcher}
+  | DelayedAbility {abilityType :: AbilityType}
+  | ForcedAbilityWithCost {window :: WindowMatcher, cost :: Cost}
+  | AbilityEffect {actions :: Actions, cost :: Cost}
+  | Objective {abilityType :: AbilityType}
+  | Haunted
+  | Cosmos
+  | ForcedWhen {criteria :: Criterion, abilityType :: AbilityType}
+  | ConstantAbility
+  deriving stock (Show, Ord, Eq, Data)
+
+instance HasField "fast" AbilityType Bool where
+  getField = isFastAbilityType
+
+overAbilityTypeActions :: ([Action] -> [Action]) -> AbilityType -> AbilityType
+overAbilityTypeActions f = \case
+  FastAbility' cost actions -> FastAbility' cost (andActions $ f $ actionsToList actions)
+  ActionAbility actions skillTypes cost -> ActionAbility (andActions $ f $ actionsToList actions) skillTypes cost
+  AbilityEffect actions cost -> AbilityEffect (andActions $ f $ actionsToList actions) cost
+  Objective abilityType -> Objective (overAbilityTypeActions f abilityType)
+  DelayedAbility abilityType -> DelayedAbility (overAbilityTypeActions f abilityType)
+  ForcedWhen criteria abilityType -> ForcedWhen criteria (overAbilityTypeActions f abilityType)
+  ReactionAbility window cost actions -> ReactionAbility window cost (andActions $ f $ actionsToList actions)
+  CustomizationReaction label window cost -> CustomizationReaction label window cost
+  ConstantReaction label window cost -> ConstantReaction label window cost
+  ServitorAbility action -> ServitorAbility action
+  SilentForcedAbility window -> SilentForcedAbility window
+  ForcedAbility window -> ForcedAbility window
+  ForcedAbilityWithCost window cost -> ForcedAbilityWithCost window cost
+  Haunted -> Haunted
+  Cosmos -> Cosmos
+  ConstantAbility -> ConstantAbility
+
+instance HasCost AbilityType where
+  overCost f = \case
+    FastAbility' cost actions -> FastAbility' (f cost) actions
+    ReactionAbility window cost actions -> ReactionAbility window (f cost) actions
+    CustomizationReaction label window cost -> CustomizationReaction label window (f cost)
+    ConstantReaction label window cost -> ConstantReaction label window (f cost)
+    ActionAbility actions skillTypes cost -> ActionAbility actions skillTypes (f cost)
+    ServitorAbility action -> ServitorAbility action
+    SilentForcedAbility window -> SilentForcedAbility window
+    ForcedAbility window -> ForcedAbility window
+    ForcedAbilityWithCost window cost -> ForcedAbilityWithCost window (f cost)
+    AbilityEffect as cost -> AbilityEffect as (f cost)
+    Objective abilityType -> Objective (overCost f abilityType)
+    DelayedAbility abilityType -> DelayedAbility (overCost f abilityType)
+    Haunted -> Haunted
+    Cosmos -> Cosmos
+    ForcedWhen criteria abilityType -> ForcedWhen criteria (overCost f abilityType)
+    ConstantAbility -> ConstantAbility
+
+pattern Anytime :: AbilityType
+pattern Anytime <- SilentForcedAbility AnyWindow
+  where
+    Anytime = SilentForcedAbility AnyWindow
+
+isFastAbilityType :: AbilityType -> Bool
+isFastAbilityType = \case
+  FastAbility' {} -> True
+  ForcedAbility {} -> False
+  SilentForcedAbility {} -> False
+  ForcedAbilityWithCost {} -> False
+  Objective aType -> isFastAbilityType aType
+  DelayedAbility aType -> isFastAbilityType aType
+  ReactionAbility {} -> False
+  CustomizationReaction {} -> False
+  ConstantReaction {} -> False
+  ActionAbility {} -> False
+  AbilityEffect {} -> False
+  Haunted {} -> False
+  ServitorAbility {} -> False
+  Cosmos {} -> False
+  ForcedWhen _ aType -> isFastAbilityType aType
+  ConstantAbility -> False
+mconcat
+  [ deriveToJSON defaultOptions ''AbilityType
+  , deriveJSON defaultOptions ''AbilitySkills
+  ]
+
+instance FromJSON AbilityType where
+  parseJSON = withObject "AbilityType" $ \o -> do
+    tag :: Text <- o .: "tag"
+    case tag of
+      "ReactionAbility" -> do
+        w <- o .: "window"
+        c <- o .: "cost"
+        a <- o .:? "actions" .!= mempty
+        pure $ ReactionAbility {window = w, cost = c, actions = a}
+      "ActionAbility" -> do
+        actions <- o .: "actions"
+        cost <- o .: "cost"
+        skillTypes <- o .:? "skillTypes"
+        pure $ ActionAbility {..}
+      "ActionAbilityWithSkill" -> do
+        actions <- o .: "actions"
+        cost <- o .: "cost"
+        skillType <- o .: "skillType"
+        pure $ ActionAbility {actions, cost, skillTypes = Just (AbilitySkill skillType)}
+      "ActionAbilityWithBefore" -> do
+        actions <- o .: "actions"
+        cost <- o .: "cost"
+        pure $ ActionAbility {actions, cost, skillTypes = Nothing}
+      _ -> $(mkParseJSON defaultOptions ''AbilityType) (Object o)

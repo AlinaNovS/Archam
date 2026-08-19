@@ -1,0 +1,357 @@
+{-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE NoFieldSelectors #-}
+
+module Arkham.Source where
+
+import Arkham.Campaigns.TheScarletKeys.Key.Id (ScarletKeyId)
+import {-# SOURCE #-} Arkham.Card
+import Arkham.Card.CardType (playerCardTypes)
+import {-# SOURCE #-} Arkham.Card.PlayerCard
+import Arkham.ChaosToken.Types
+import Arkham.Id
+import Arkham.Matcher.Types (
+  AbilityMatcher (..),
+  ActMatcher,
+  AgendaMatcher,
+  AssetMatcher,
+  EnemyMatcher,
+  LocationMatcher,
+  SourceMatcher (..),
+ )
+import Arkham.Prelude
+import Arkham.Tarot
+import Arkham.Trait hiding (ElderThing)
+import Arkham.UltimatumsAndBoons.Types
+import Data.Aeson.TH
+import Data.UUID (nil)
+import GHC.OverloadedLabels
+import GHC.Records
+
+data Source
+  = IndexedSource Int Source
+  | AbilitySource Source Int
+  | UseAbilitySource InvestigatorId Source Int
+  | ActiveCostSource ActiveCostId
+  | DiscoverSource DiscoverId
+  | ActDeckSource
+  | ActSource ActId
+  | AgendaDeckSource
+  | AgendaSource AgendaId
+  | AgendaMatcherSource AgendaMatcher
+  | AssetMatcherSource AssetMatcher
+  | ActMatcherSource ActMatcher
+  | AssetSource AssetId
+  | CardCodeSource CardCode
+  | CardIdSource CardId
+  | DeckSource
+  | EffectSource EffectId
+  | EmptyDeckSource
+  | EncounterCardSource CardId
+  | EnemyAttackSource EnemyId
+  | EnemyDefeatSource EnemyId
+  | EnemySource EnemyId
+  | EventSource EventId
+  | GameSource
+  | InvestigatorSource InvestigatorId
+  | LocationMatcherSource LocationMatcher
+  | EnemyMatcherSource EnemyMatcher
+  | LocationSource LocationId
+  | ProxySource {source :: Source, originalSource :: Source}
+  | ResourceSource InvestigatorId
+  | ScenarioSource
+  | SkillSource SkillId
+  | SkillTestSource SkillTestId
+  | StorySource StoryId
+  | TestSource (Set Trait)
+  | ChaosTokenSource ChaosToken
+  | ChaosTokenEffectSource ChaosTokenFace
+  | ElderSignEffectSource InvestigatorId
+  | TreacherySource TreacheryId
+  | PaymentSource Source
+  | YouSource
+  | CampaignSource
+  | ThisCard
+  | CardCostSource CardId
+  | BothSource Source Source
+  | TarotSource TarotCard
+  | UltimatumOrBoonSource UltimatumOrBoon
+  | BatchSource BatchId
+  | ScarletKeySource ScarletKeyId
+  | ConcealedCardSource ConcealedCardId
+  deriving stock (Show, Eq, Ord, Data, Generic)
+instance HasField "asset" Source (Maybe AssetId) where
+  getField = \case
+    AssetSource aid -> Just aid
+    ProxySource (CardIdSource _) s -> s.asset
+    IndexedSource _ s -> s.asset
+    ProxySource s _ -> s.asset
+    AbilitySource s _ -> s.asset
+    UseAbilitySource _ s _ -> s.asset
+    PaymentSource s -> s.asset
+    _ -> Nothing
+
+instance HasField "investigator" Source (Maybe InvestigatorId) where
+  getField = \case
+    InvestigatorSource iid -> Just iid
+    ProxySource (CardIdSource _) s -> s.investigator
+    IndexedSource _ s -> s.investigator
+    ProxySource s _ -> s.investigator
+    AbilitySource s _ -> s.investigator
+    UseAbilitySource _ s _ -> s.investigator
+    PaymentSource s -> s.investigator
+    _ -> Nothing
+
+instance HasField "event" Source (Maybe EventId) where
+  getField = \case
+    EventSource eid -> Just eid
+    ProxySource (CardIdSource _) s -> s.event
+    IndexedSource _ s -> s.event
+    ProxySource s _ -> s.event
+    AbilitySource s _ -> s.event
+    UseAbilitySource _ s _ -> s.event
+    PaymentSource s -> s.event
+    _ -> Nothing
+
+instance HasField "location" Source (Maybe LocationId) where
+  getField = \case
+    LocationSource lid -> Just lid
+    ProxySource (CardIdSource _) s -> s.location
+    IndexedSource _ s -> s.location
+    ProxySource s _ -> s.location
+    AbilitySource s _ -> s.location
+    UseAbilitySource _ s _ -> s.location
+    PaymentSource s -> s.location
+    _ -> Nothing
+
+instance HasField "enemy" Source (Maybe EnemyId) where
+  getField = \case
+    EnemySource aid -> Just aid
+    ProxySource (CardIdSource _) s -> s.enemy
+    IndexedSource _ s -> s.enemy
+    ProxySource s _ -> s.enemy
+    AbilitySource s _ -> s.enemy
+    UseAbilitySource _ s _ -> s.enemy
+    EnemyAttackSource eid -> Just eid
+    EnemyDefeatSource eid -> Just eid
+    PaymentSource s -> s.enemy
+    _ -> Nothing
+
+instance HasField "treachery" Source (Maybe TreacheryId) where
+  getField = \case
+    TreacherySource aid -> Just aid
+    ProxySource (CardIdSource _) s -> s.treachery
+    IndexedSource _ s -> s.treachery
+    ProxySource s _ -> s.treachery
+    AbilitySource s _ -> s.treachery
+    UseAbilitySource _ s _ -> s.treachery
+    PaymentSource s -> s.treachery
+    _ -> Nothing
+
+$(deriveToJSON defaultOptions ''Source)
+
+instance FromJSON Source where
+  parseJSON = withObject "Source" $ \o -> do
+    tag :: Text <- o .: "tag"
+    case tag of
+      "CardSource" -> do
+        c :: Card <- o .: "contents"
+        pure $ CardIdSource c.id
+      "SkillTestSource" -> do
+        eSkillTestId <- (Left <$> o .: "contents") <|> (Right <$> pure ())
+        pure $ either SkillTestSource (\_ -> SkillTestSource (SkillTestId nil)) eSkillTestId
+      _ -> genericParseJSON defaultOptions (Object o)
+
+instance ToJSONKey Source
+instance FromJSONKey Source
+
+class Sourceable a where
+  toSource :: a -> Source
+  isSource :: a -> Source -> Bool
+  isSource = (==) . toSource
+
+isProxySource :: Sourceable a => a -> Source -> Bool
+isProxySource a (ProxySource _ source) = isSource a source
+isProxySource _ _ = False
+
+isIndexed :: Sourceable a => a -> Source -> Bool
+isIndexed a (IndexedSource _ source) = isSource a source
+isIndexed _ _ = False
+
+proxy :: (Sourceable a, Sourceable b) => a -> b -> Source
+proxy a b = ProxySource (toSource a) (toSource b)
+
+indexed :: Sourceable a => Int -> a -> Source
+indexed n = IndexedSource n . toSource
+
+isIndexedSource :: Sourceable a => Int -> a -> Source -> Bool
+isIndexedSource n a (IndexedSource m source) = n == m && isSource a source
+isIndexedSource _ _ _ = False
+
+bothSource :: (Sourceable a, Sourceable b) => a -> b -> Source
+bothSource a b = BothSource (toSource a) (toSource b)
+
+isPlayerCardSource :: Source -> Bool
+isPlayerCardSource = \case
+  AbilitySource s _ -> isPlayerCardSource s
+  UseAbilitySource _ s _ -> isPlayerCardSource s
+  PaymentSource s -> isPlayerCardSource s
+  IndexedSource _ s -> isPlayerCardSource s
+  AssetSource _ -> True
+  EventSource _ -> True
+  SkillSource _ -> True
+  InvestigatorSource _ -> True
+  _ -> False
+
+isEncounterCardSource :: Source -> Bool
+isEncounterCardSource = \case
+  AbilitySource s _ -> isEncounterCardSource s
+  UseAbilitySource _ s _ -> isEncounterCardSource s
+  PaymentSource s -> isEncounterCardSource s
+  IndexedSource _ s -> isEncounterCardSource s
+  ProxySource s _ -> isEncounterCardSource s
+  TreacherySource _ -> True
+  EnemySource _ -> True
+  LocationSource _ -> True
+  AgendaSource _ -> True
+  ActSource _ -> True
+  _ -> False
+
+{- | Static check: would this SourceMatcher potentially match a player card source?
+Used for playability checks where we don't have a specific source but need to know
+if player card sources are allowed through.
+-}
+allowsPlayerCardSource :: SourceMatcher -> Bool
+allowsPlayerCardSource = \case
+  SourceIsPlayerCard -> True
+  SourceIsPlayerCardAbility -> True
+  AnySource -> True
+  SourceIsAbility BasicAbility -> True
+  SourceIsAsset _ -> True
+  SourceIsEvent _ -> True
+  SourceWithTrait _ -> True
+  SourceWithCard _ -> True
+  SourceIsType t -> t `elem` playerCardTypes
+  SourceMatchesAny ms -> any allowsPlayerCardSource ms
+  SourceMatches ms -> all allowsPlayerCardSource ms
+  NotSource m -> not (allowsPlayerCardSource m)
+  _ -> False
+
+instance Sourceable Source where
+  toSource = id
+  isSource = (==)
+
+instance Sourceable a => Sourceable (a `With` b) where
+  toSource (a `With` _) = toSource a
+  isSource (a `With` _) = isSource a
+
+instance Sourceable ScarletKeyId where
+  toSource = ScarletKeySource
+
+instance Sourceable CardId where
+  toSource = CardIdSource
+
+instance Sourceable TreacheryId where
+  toSource = TreacherySource
+
+instance Sourceable InvestigatorId where
+  toSource = InvestigatorSource
+
+instance Sourceable ConcealedCardId where
+  toSource = ConcealedCardSource
+
+instance Sourceable LocationId where
+  toSource = LocationSource
+
+instance Sourceable ActId where
+  toSource = ActSource
+
+instance Sourceable AssetId where
+  toSource = AssetSource
+
+instance Sourceable SkillId where
+  toSource = SkillSource
+
+instance Sourceable AgendaId where
+  toSource = AgendaSource
+
+instance Sourceable StoryId where
+  toSource = StorySource
+
+instance Sourceable EnemyId where
+  toSource = EnemySource
+
+instance Sourceable EventId where
+  toSource = EventSource
+
+instance Sourceable SkillTestId where
+  toSource = SkillTestSource
+
+instance Sourceable ChaosTokenFace where
+  toSource = ChaosTokenEffectSource
+
+instance Sourceable PlayerCard where
+  toSource = CardIdSource . toCardId
+
+instance Sourceable AssetMatcher where
+  toSource = AssetMatcherSource
+
+instance Sourceable ActMatcher where
+  toSource = ActMatcherSource
+
+instance Sourceable LocationMatcher where
+  toSource = LocationMatcherSource
+
+instance Sourceable EnemyMatcher where
+  toSource = EnemyMatcherSource
+
+toAbilitySource :: Sourceable a => a -> Int -> Source
+toAbilitySource a n = case toSource a of
+  AbilitySource b n' -> AbilitySource b n'
+  UseAbilitySource _ b n' -> AbilitySource b n'
+  b -> AbilitySource b n
+
+isAbilitySource :: Sourceable a => a -> Int -> Source -> Bool
+isAbilitySource a idx (AbilitySource b idx') | idx == idx' = isSource a b
+isAbilitySource a idx (PaymentSource inner) = isAbilitySource a idx inner
+isAbilitySource a idx (UseAbilitySource _ b idx') | idx == idx' = isSource a b
+isAbilitySource _ _ _ = False
+
+isProxyAbilitySource :: Sourceable a => a -> Int -> Source -> Bool
+isProxyAbilitySource a idx (AbilitySource (ProxySource _ b) idx') | idx == idx' = isSource a b
+isProxyAbilitySource a idx (UseAbilitySource _ (ProxySource _ b) idx') | idx == idx' = isSource a b
+isProxyAbilitySource _ _ _ = False
+
+pattern CultistEffect :: Source
+pattern CultistEffect <- ChaosTokenEffectSource Arkham.ChaosToken.Types.Cultist
+  where
+    CultistEffect = ChaosTokenEffectSource Arkham.ChaosToken.Types.Cultist
+
+pattern TabletEffect :: Source
+pattern TabletEffect <- ChaosTokenEffectSource Tablet
+  where
+    TabletEffect = ChaosTokenEffectSource Tablet
+
+pattern ElderThingEffect :: Source
+pattern ElderThingEffect <- ChaosTokenEffectSource ElderThing
+  where
+    ElderThingEffect = ChaosTokenEffectSource ElderThing
+
+instance IsLabel "elderSign" Source where
+  fromLabel = ChaosTokenEffectSource ElderSign
+
+data SourceableWithCardCode where
+  SourceableWithCardCode :: (HasCardCode a, Sourceable b) => a -> b -> SourceableWithCardCode
+
+instance HasCardCode SourceableWithCardCode where
+  toCardCode (SourceableWithCardCode a _) = toCardCode a
+
+instance Sourceable SourceableWithCardCode where
+  toSource (SourceableWithCardCode _ b) = toSource b
+  isSource (SourceableWithCardCode _ b) = isSource b
+
+proxied :: (HasCardCode a, Sourceable a, Sourceable b) => b -> a -> SourceableWithCardCode
+proxied b a = SourceableWithCardCode a (proxy b a)
+
+source_ :: Source -> Source
+source_ = id
