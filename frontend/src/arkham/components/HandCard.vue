@@ -1,0 +1,369 @@
+<script lang="ts" setup>
+import { computed, inject, onMounted, Ref, ref, watch } from 'vue'
+import { CardContents, type Card } from '@/arkham/types/Card'
+import type { Game } from '@/arkham/types/Game'
+import type { AbilityLabel, AbilityMessage, Message } from '@/arkham/types/Message'
+import { MessageType } from '@/arkham/types/Message'
+import { imgsrc } from '@/arkham/helpers'
+import { cardImage } from '@/arkham/cardImages'
+import AbilityButton from '@/arkham/components/AbilityButton.vue'
+import AbilitiesMenu from '@/arkham/components/AbilitiesMenu.vue'
+import * as ArkhamGame from '@/arkham/types/Game'
+import { IsMobile } from '@/arkham/isMobile'
+import { useDebug } from '@/arkham/debug'
+import { useCardStore } from '@/stores/cards'
+
+export interface Props {
+  game: Game
+  card: Card
+  playerId: string
+  ownerId: string
+  mobileHandOpen?: boolean
+}
+
+const props = defineProps<Props>()
+const debug = useDebug()
+const cardStore = useCardStore()
+
+onMounted(() => {
+  if (!cardStore.loaded) cardStore.fetchCards()
+})
+
+const { isMobile } = IsMobile()
+const cardFrame = ref<HTMLElement | null>(null)
+const showAbilities = ref(false)
+
+watch(
+  () => props.mobileHandOpen,
+  (open) => {
+    if (open === false) showAbilities.value = false
+  },
+)
+const investigator = computed(() =>
+  Object.values(props.game.investigators).find((i) => i.playerId === props.playerId),
+)
+const investigatorId = computed(() => investigator.value?.id)
+
+const cardContents = computed<CardContents>(() =>
+  props.card.tag == 'VengeanceCard' ? props.card.contents.contents : props.card.contents,
+)
+
+const id = computed(() => cardContents.value.id)
+const choices = computed(() => ArkhamGame.choices(props.game, props.playerId))
+
+const revealed = computed(() => {
+  const meta = investigator.value?.meta
+  if (meta && typeof meta === 'object' && 'revealedCards' in meta) {
+    return Object.values(meta.revealedCards).some((v) => (v as string[]).includes(id.value))
+  }
+
+  return false
+})
+
+const cardAction = computed(() => {
+  return choices.value.findIndex((choice) => {
+    if (choice.tag === MessageType.TARGET_LABEL) {
+      return choice.target.contents === id.value
+    }
+
+    return false
+  })
+})
+
+const solo = inject<Ref<boolean>>('solo')
+const showOtherPlayersHands = inject<Ref<boolean>>('showOtherPlayersHands')
+
+function isAbility(v: Message): v is AbilityLabel {
+  if (v.tag !== 'AbilityLabel') {
+    return false
+  }
+
+  const { source } = v.ability
+
+  if (source.sourceTag === 'ProxySource') {
+    if ('contents' in source.source) {
+      return source.source.contents === id.value
+    }
+  } else if (source.tag === 'CardIdSource') {
+    return source.contents === id.value
+  } else if (source.tag === 'EventSource') {
+    return source.contents === id.value
+  } else if (source.tag === 'AssetSource') {
+    if (source.contents === id.value) {
+      return true
+    }
+    if (!source.contents) return false
+    const asset = props.game.assets[source.contents]
+    if (asset) {
+      return asset.cardId === id.value && asset.placement.tag === 'StillInHand'
+    }
+  } else if (source.tag === 'SkillSource') {
+    return source.contents === id.value
+  }
+
+  return false
+}
+
+const abilities = computed(() => {
+  return choices.value.reduce<AbilityMessage[]>((acc, v, i) => {
+    if (isAbility(v)) {
+      return [...acc, { contents: v, displayAsAction: false, index: i }]
+    }
+
+    return acc
+  }, [])
+})
+
+const classObject = computed(() => {
+  return {
+    'card--can-interact': cardAction.value !== -1 || (isMobile.value && abilities.value.length > 0),
+  }
+})
+
+function handleCardClick() {
+  if (isMobile.value && abilities.value.length > 0) {
+    showAbilities.value = true
+    return
+  }
+
+  emit('choose', cardAction.value)
+}
+
+const emit = defineEmits<{ choose: [value: number] }>()
+
+const cardBack = computed(() => {
+  return imgsrc('backs/back_player.jpg')
+})
+
+const image = computed(() => {
+  const { cardCode, mutated } = cardContents.value
+  return cardImage(cardCode, mutated ? `_${mutated}` : '')
+})
+
+const cardDef = computed(() =>
+  cardStore.cards.find((c) => c.cardCode === cardContents.value.cardCode),
+)
+const canDebugCustomize = computed(
+  () => debug.active && (cardDef.value?.customizations?.length ?? 0) > 0,
+)
+
+function debugCustomize() {
+  debug.send(props.game.id, { tag: 'DebugCustomize', contents: [props.ownerId, id.value] })
+}
+
+/*
+const painted = computed(() => {
+  return true
+})
+
+const canvas = ref<HTMLCanvasElement | null>(null)
+
+
+
+watch(canvas, (painted) => {
+  let c = canvas.value
+  if (c === null || c === undefined) {
+    return
+  }
+  if (painted) {
+    const ctx = c.getContext('2d') as CanvasRenderingContext2D
+    const img = new Image()
+    img.addEventListener('load', () => {
+      c.width = img.width
+      c.height = img.height
+      ctx.drawImage(img, 0, 0, c.width, c.height)
+      oilPaintEffect(c, 4, 55);
+    })
+    img.src = image.value
+  }
+})
+
+
+
+function oilPaintEffect(canvas, radius, intensity) {
+    const ctx = canvas.getContext('2d') as CanvasRenderingContext2D
+    var width = canvas.width,
+        height = canvas.height,
+        imgData = ctx.getImageData(0, 0, width, height),
+        pixData = imgData.data,
+        pixelIntensityCount = [];
+
+    var centerX = canvas.width / 2,
+        centerY = canvas.height / 4;
+
+    var intensityLUT = [],
+        rgbLUT = [];
+
+    for (var y = 0; y < height; y++) {
+        intensityLUT[y] = [];
+        rgbLUT[y] = [];
+        for (var x = 0; x < width; x++) {
+            var idx = (y * width + x) * 4,
+                r = pixData[idx],
+                g = pixData[idx + 1],
+                b = pixData[idx + 2],
+                avg = (r + g + b) / 3;
+
+            intensityLUT[y][x] = Math.round((avg * intensity) / 255);
+            rgbLUT[y][x] = {
+                r: r,
+                g: g,
+                b: b
+            };
+        }
+    }
+
+
+    for (y = 0; y < height; y++) {
+        for (x = 0; x < width; x++) {
+            pixelIntensityCount = [];
+
+            // Find intensities of nearest pixels within radius.
+            for (var yy = -radius; yy <= radius; yy++) {
+                for (var xx = -radius; xx <= radius; xx++) {
+                    if (y + yy > 0 && y + yy < height && x + xx > 0 && x + xx < width) {
+                        var intensityVal = intensityLUT[y + yy][x + xx];
+
+                        if (!pixelIntensityCount[intensityVal]) {
+                            pixelIntensityCount[intensityVal] = {
+                                val: 1,
+                                r: rgbLUT[y + yy][x + xx].r,
+                                g: rgbLUT[y + yy][x + xx].g,
+                                b: rgbLUT[y + yy][x + xx].b
+                            }
+                        } else {
+                            pixelIntensityCount[intensityVal].val++;
+                            pixelIntensityCount[intensityVal].r += rgbLUT[y + yy][x + xx].r;
+                            pixelIntensityCount[intensityVal].g += rgbLUT[y + yy][x + xx].g;
+                            pixelIntensityCount[intensityVal].b += rgbLUT[y + yy][x + xx].b;
+                        }
+                    }
+                }
+            }
+
+            pixelIntensityCount.sort(function (a, b) {
+                return b.val - a.val;
+            });
+
+            var curMax = pixelIntensityCount[0].val,
+                dIdx = (y * width + x) * 4;
+
+
+            const ry = canvas.width / 3;
+            const rx = canvas.height / 3.7;
+
+            if ((Math.pow(x - centerX, 2)/Math.pow(rx, 2)) + (Math.pow(y - centerY, 2)/Math.pow(ry, 2)) <= 1) {
+              pixData[dIdx] = ~~ (pixelIntensityCount[0].r / curMax);
+              pixData[dIdx + 1] = ~~ (pixelIntensityCount[0].g / curMax);
+              pixData[dIdx + 2] = ~~ (pixelIntensityCount[0].b / curMax);
+              pixData[dIdx + 3] = 255;
+            }
+
+        }
+    }
+
+    // change this to ctx to instead put the data on the original canvas
+    ctx.putImageData(imgData, 0, 0);
+}
+
+    <canvas v-show="painted" ref="canvas" class="card" :data-index="id" :data-card-code="cardContents.cardCode" :data-image="image">
+    </canvas>
+*/
+</script>
+
+<template>
+  <div
+    class="card-container"
+    :data-index="id"
+    v-if="solo || showOtherPlayersHands || investigatorId == ownerId || revealed"
+  >
+    <img
+      ref="cardFrame"
+      :class="classObject"
+      class="card in-hand"
+      :src="image"
+      :data-customizations="JSON.stringify(cardContents.customizations)"
+      :data-chained="cardContents.chained || undefined"
+      :data-playability-game-id="cardAction === -1 ? game.id : undefined"
+      :data-playability-investigator-id="cardAction === -1 ? investigatorId : undefined"
+      :data-playability-card-id="cardAction === -1 ? id : undefined"
+      @click="handleCardClick"
+    />
+
+    <button
+      v-if="canDebugCustomize"
+      class="debug-customize"
+      type="button"
+      title="Debug customize"
+      @click.stop="debugCustomize"
+    >
+      <font-awesome-icon icon="wrench" />
+    </button>
+
+    <AbilityButton
+      v-if="!isMobile"
+      v-for="ability in abilities"
+      :key="ability.index"
+      :ability="ability.contents"
+      :data-image="image"
+      :game="game"
+      @click="$emit('choose', ability.index)"
+    />
+
+    <AbilitiesMenu
+      v-if="isMobile && abilities.length > 0"
+      v-model="showAbilities"
+      :game="game"
+      :abilities="abilities"
+      :frame="cardFrame"
+      :play-action="cardAction !== -1 ? cardAction : undefined"
+      position="top"
+      @choose="$emit('choose', $event)"
+    />
+  </div>
+  <div class="card-container" v-else>
+    <img class="card in-hand" :src="cardBack" />
+  </div>
+</template>
+
+<style scoped>
+.card {
+  width: var(--card-width);
+  min-width: var(--card-width);
+  border-radius: 6px;
+}
+
+.card--can-interact {
+  border: 2px solid var(--select);
+  cursor: pointer;
+}
+
+.card-container {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.debug-customize {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  z-index: var(--z-index-20);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid #111;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  color: #111;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.debug-customize:hover {
+  background: #fff;
+}
+</style>

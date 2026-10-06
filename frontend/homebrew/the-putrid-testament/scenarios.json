@@ -1,0 +1,345 @@
+[
+  {
+    "id": ":the-putrid-testament:Curse of the Rougarou",
+    "name": "Curse of the Rougarou",
+    "campaign": ":the-putrid-testament",
+    "standalone": false,
+    "i18n": "curse-of-the-rougarou"
+  },
+  {
+    "id": ":the-putrid-testament:Carnevale of Horrors",
+    "name": "Carnevale of Horrors",
+    "campaign": ":the-putrid-testament",
+    "standalone": false,
+    "i18n": "carnevale-of-horrors"
+  },
+  {
+    "id": ":the-putrid-testament:The Labyrinths of Lunacy",
+    "name": "The Labyrinths of Lunacy",
+    "campaign": ":the-putrid-testament",
+    "standalone": false,
+    "i18n": "the-labyrinths-of-lunacy"
+  },
+  {
+    "id": ":the-putrid-testament:Guardians of the Abyss",
+    "name": "Guardians of the Abyss",
+    "campaign": ":the-putrid-testament",
+    "standalone": false,
+    "i18n": "guardians-of-the-abyss"
+  },
+  {
+    "id": ":the-putrid-testament:Murder at the Excelsior Hotel",
+    "name": "Murder at the Excelsior Hotel",
+    "campaign": ":the-putrid-testament",
+    "standalone": false,
+    "i18n": "murder-at-the-excelsior-hotel"
+  },
+  {
+    "id": ":the-putrid-testament:The Blob that Ate Everything",
+    "name": "The Blob that Ate Everything",
+    "campaign": ":the-putrid-testament",
+    "standalone": false,
+    "i18n": "the-blob-that-ate-everything"
+  },
+  {
+    "id": ":the-putrid-testament:War of the Outer Gods",
+    "name": "War of the Outer Gods",
+    "campaign": ":the-putrid-testament",
+    "standalone": false,
+    "i18n": "war-of-the-outer-gods"
+  },
+  {
+    "id": ":the-putrid-testament:Machinations Through Time",
+    "name": "Machinations Through Time",
+    "campaign": ":the-putrid-testament",
+    "standalone": false,
+    "i18n": "machinations-through-time"
+  },
+  {
+    "id": ":the-putrid-testament:Fortune and Folly",
+    "name": "Fortune and Folly",
+    "campaign": ":the-putrid-testament",
+    "standalone": false,
+    "i18n": "fortune-and-folly"
+  },
+  {
+    "id": ":the-putrid-testament:The Midwinter Gala",
+    "name": "The Midwinter Gala",
+    "campaign": ":the-putrid-testament",
+    "standalone": false,
+    "i18n": "the-midwinter-gala"
+  },
+  {
+    "id": ":the-putrid-testament:Film Fatale",
+    "name": "Film Fatale",
+    "campaign": ":the-putrid-testament",
+    "standalone": false,
+    "i18n": "film-fatale"
+  },
+  {
+    "id": ":the-putrid-testament:Challenge Scenario - All or Nothing",
+    "name": "Challenge Scenario - All or Nothing",
+    "campaign": ":the-putrid-testament",
+    "standalone": false,
+    "i18n": "challenge-scenario-all-or-nothing"
+  },
+  {
+    "id": ":the-putrid-testament:Challenge Scenario - Bad Blood",
+    "name": "Challenge Scenario - Bad Blood",
+    "campaign": ":the-putrid-testament",
+    "standalone": false,
+    "i18n": "challenge-scenario-bad-blood"
+  },
+  {
+    "id": ":the-putrid-testament:Challenge Scenario - By the Book",
+    "name": "Challenge Scenario - By the Book",
+    "campaign": ":the-putrid-testament",
+    "standalone": false,
+    "i18n": "challenge-scenario-by-the-book"
+  },
+  {
+    "id": ":the-putrid-testament:Challenge Scenario - Laid to Rest",
+    "name": "Challenge Scenario - Laid to Rest",
+    "campaign": ":the-putrid-testament",
+    "standalone": false,
+    "i18n": "challenge-scenario-laid-to-rest"
+  },
+  {
+    "id": ":the-putrid-testament:Challenge Scenario - Read or Die",
+    "name": "Challenge Scenario - Read or Die",
+    "campaign": ":the-putrid-testament",
+    "standalone": false,
+    "i18n": "challenge-scenario-read-or-die"
+  },
+  {
+    "id": ":the-putrid-testament:Challenge Scenario - Red Tide Rising",
+    "name": "Challenge Scenario - Red Tide Rising",
+    "campaign": ":the-putrid-testament",
+    "standalone": false,
+    "i18n": "challenge-scenario-red-tide-rising"
+  },
+  {
+    "id": ":the-putrid-testament:Challenge Scenario - Relics of the Past",
+    "name": "Challenge Scenario - Relics of the Past",
+    "campaign": ":the-putrid-testament",
+    "standalone": false,
+    "i18n": "challenge-scenario-relics-of-the-past"
+  },
+  {
+    "id": ":the-putrid-testament:Challenge Scenario - Enthralling Encore",
+    "name": "Challenge Scenario - Enthralling Encore",
+    "campaign": ":the-putrid-testament",
+    "standalone": false,
+    "i18n": "challenge-scenario-enthralling-encore"
+  },
+  {
+    "id": ":the-putrid-testament:Barkham Horror - The Meddling of Meowlathotep",
+    "name": "Barkham Horror - The Meddling of Meowlathotep",
+    "campaign": ":the-putrid-testament",
+    "standalone": false,
+    "i18n": "barkham-horror-the-meddling-of-meowlathotep"
+  },
+  {
+    "id": ":the-putrid-testament:Against the Wendigo",
+    "name": "Against the Wendigo",
+    "campaign": ":the-putrid-testament",
+    "standalone": false,
+    "i18n": "against-the-wendigo"
+  },
+  {
+    "id": ":the-putrid-testament:And Then There Were None",
+    "name": "And Then There Were None",
+    "campaign": ":the-putrid-testament",
+    "standalone": false,
+    "i18n": "and-then-there-were-none"
+  },
+  {
+    "id": ":the-putrid-testament:Carnevale of Spiders",
+    "name": "Carnevale of Spiders",
+    "campaign": ":the-putrid-testament",
+    "standalone": false,
+    "i18n": "carnevale-of-spiders"
+  },
+  {
+    "id": ":the-putrid-testament:Clueless Cultist Coup",
+    "name": "Clueless Cultist Coup",
+    "campaign": ":the-putrid-testament",
+    "standalone": false,
+    "i18n": "clueless-cultist-coup"
+  },
+  {
+    "id": ":the-putrid-testament:Code Red at Bleeding Heart",
+    "name": "Code Red at Bleeding Heart",
+    "campaign": ":the-putrid-testament",
+    "standalone": false,
+    "i18n": "code-red-at-bleeding-heart"
+  },
+  {
+    "id": ":the-putrid-testament:Consternation on the Constellation",
+    "name": "Consternation on the Constellation",
+    "campaign": ":the-putrid-testament",
+    "standalone": false,
+    "i18n": "consternation-on-the-constellation"
+  },
+  {
+    "id": ":the-putrid-testament:Cosmic Pantheon",
+    "name": "Cosmic Pantheon",
+    "campaign": ":the-putrid-testament",
+    "standalone": false,
+    "i18n": "cosmic-pantheon"
+  },
+  {
+    "id": ":the-putrid-testament:Defense of the Arkham",
+    "name": "Defense of the Arkham",
+    "campaign": ":the-putrid-testament",
+    "standalone": false,
+    "i18n": "defense-of-the-arkham"
+  },
+  {
+    "id": ":the-putrid-testament:Devils In The Canyon",
+    "name": "Devils In The Canyon",
+    "campaign": ":the-putrid-testament",
+    "standalone": false,
+    "i18n": "devils-in-the-canyon"
+  },
+  {
+    "id": ":the-putrid-testament:Don't Starve - Scenario",
+    "name": "Don't Starve - Scenario",
+    "campaign": ":the-putrid-testament",
+    "standalone": false,
+    "i18n": "don-t-starve-scenario"
+  },
+  {
+    "id": ":the-putrid-testament:Election Night",
+    "name": "Election Night",
+    "campaign": ":the-putrid-testament",
+    "standalone": false,
+    "i18n": "election-night"
+  },
+  {
+    "id": ":the-putrid-testament:The Facts in the Case of M. Valdemar",
+    "name": "The Facts in the Case of M. Valdemar",
+    "campaign": ":the-putrid-testament",
+    "standalone": false,
+    "i18n": "the-facts-in-the-case-of-m-valdemar"
+  },
+  {
+    "id": ":the-putrid-testament:The Fall of the House of Usher",
+    "name": "The Fall of the House of Usher",
+    "campaign": ":the-putrid-testament",
+    "standalone": false,
+    "i18n": "the-fall-of-the-house-of-usher"
+  },
+  {
+    "id": ":the-putrid-testament:Fortune or Folly - Parallel Rex Murphy",
+    "name": "Fortune or Folly - Parallel Rex Murphy",
+    "campaign": ":the-putrid-testament",
+    "standalone": false,
+    "i18n": "fortune-or-folly-parallel-rex-murphy"
+  },
+  {
+    "id": ":the-putrid-testament:The Grand Oak Hotel",
+    "name": "The Grand Oak Hotel",
+    "campaign": ":the-putrid-testament",
+    "standalone": false,
+    "i18n": "the-grand-oak-hotel"
+  },
+  {
+    "id": ":the-putrid-testament:The Invisible Man",
+    "name": "The Invisible Man",
+    "campaign": ":the-putrid-testament",
+    "standalone": false,
+    "i18n": "the-invisible-man"
+  },
+  {
+    "id": ":the-putrid-testament:The Legend of Sleepy Hollow",
+    "name": "The Legend of Sleepy Hollow",
+    "campaign": ":the-putrid-testament",
+    "standalone": false,
+    "i18n": "the-legend-of-sleepy-hollow"
+  },
+  {
+    "id": ":the-putrid-testament:The Living Labyrinth",
+    "name": "The Living Labyrinth",
+    "campaign": ":the-putrid-testament",
+    "standalone": false,
+    "i18n": "the-living-labyrinth"
+  },
+  {
+    "id": ":the-putrid-testament:The Midwinter Gala - Fashionably Late",
+    "name": "The Midwinter Gala - Fashionably Late",
+    "campaign": ":the-putrid-testament",
+    "standalone": false,
+    "i18n": "the-midwinter-gala-fashionably-late"
+  },
+  {
+    "id": ":the-putrid-testament:Miskatonic Mouse",
+    "name": "Miskatonic Mouse",
+    "campaign": ":the-putrid-testament",
+    "standalone": false,
+    "i18n": "miskatonic-mouse"
+  },
+  {
+    "id": ":the-putrid-testament:Mythos Deviations",
+    "name": "Mythos Deviations",
+    "campaign": ":the-putrid-testament",
+    "standalone": false,
+    "i18n": "mythos-deviations"
+  },
+  {
+    "id": ":the-putrid-testament:Return to the Consternation on the Constellation",
+    "name": "Return to the Consternation on the Constellation",
+    "campaign": ":the-putrid-testament",
+    "standalone": false,
+    "i18n": "return-to-the-consternation-on-the-constellation"
+  },
+  {
+    "id": ":the-putrid-testament:Return to the Wendigo",
+    "name": "Return to the Wendigo",
+    "campaign": ":the-putrid-testament",
+    "standalone": false,
+    "i18n": "return-to-the-wendigo"
+  },
+  {
+    "id": ":the-putrid-testament:Snakes and Ladders",
+    "name": "Snakes and Ladders",
+    "campaign": ":the-putrid-testament",
+    "standalone": false,
+    "i18n": "snakes-and-ladders"
+  },
+  {
+    "id": ":the-putrid-testament:The Strange Case of Dr. Jekyll and Mr. Hyde",
+    "name": "The Strange Case of Dr. Jekyll and Mr. Hyde",
+    "campaign": ":the-putrid-testament",
+    "standalone": false,
+    "i18n": "the-strange-case-of-dr-jekyll-and-mr-hyde"
+  },
+  {
+    "id": ":the-putrid-testament:'Tis The Season",
+    "name": "'Tis The Season",
+    "campaign": ":the-putrid-testament",
+    "standalone": false,
+    "i18n": "tis-the-season"
+  },
+  {
+    "id": ":the-putrid-testament:When the World Screamed",
+    "name": "When the World Screamed",
+    "campaign": ":the-putrid-testament",
+    "standalone": false,
+    "i18n": "when-the-world-screamed"
+  },
+  {
+    "id": ":the-putrid-testament:The Witcher Horror",
+    "name": "The Witcher Horror",
+    "campaign": ":the-putrid-testament",
+    "standalone": false,
+    "i18n": "the-witcher-horror"
+  },
+  {
+    "id": ":the-putrid-testament:The Woods of the Black Goat",
+    "name": "The Woods of the Black Goat",
+    "campaign": ":the-putrid-testament",
+    "standalone": false,
+    "i18n": "the-woods-of-the-black-goat"
+  }
+]

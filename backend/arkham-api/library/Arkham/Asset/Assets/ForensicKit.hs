@@ -1,0 +1,40 @@
+module Arkham.Asset.Assets.ForensicKit (forensicKit) where
+
+import Arkham.Ability
+import Arkham.Asset.Cards qualified as Cards
+import Arkham.Asset.Import.Lifted
+import Arkham.Asset.Uses
+import Arkham.Helpers.Investigator (canHaveHorrorHealed)
+import Arkham.I18n
+import Arkham.Investigate
+import Arkham.Matcher
+import Arkham.Message.Lifted.Choose
+import Arkham.Modifier
+
+newtype ForensicKit = ForensicKit AssetAttrs
+  deriving anyclass (IsAsset, HasModifiersFor)
+  deriving newtype (Show, Eq, ToJSON, FromJSON, Entity)
+
+forensicKit :: AssetCard ForensicKit
+forensicKit = asset ForensicKit Cards.forensicKit
+
+instance HasAbilities ForensicKit where
+  getAbilities (ForensicKit a) =
+    [controlled a 1 (exists $ YourLocation <> InvestigatableLocation) $ investigateActionWithAlternate #agility $ assetUseCost a Supply 1]
+
+instance RunMessage ForensicKit where
+  runMessage msg a@(ForensicKit attrs) = runQueueT $ case msg of
+    UseThisAbility iid (isSource attrs -> True) 1 -> do
+      sid <- getRandom
+      investigate' <- mkInvestigate sid iid (attrs.ability 1)
+      skillTestModifier sid (attrs.ability 1) iid (AnySkillValue 1)
+      chooseOneM iid do
+        (withI18n $ skillVar #agility $ labeled' "useSkill") $ push $ withSkillType #agility investigate'
+        (withI18n $ skillVar #intellect $ labeled' "useSkill") $ push investigate'
+      pure a
+    PassedThisSkillTest iid (isAbilitySource attrs 1 -> True) -> do
+      whenAny (ExhaustedEnemy <> at_ (locationWithInvestigator iid)) do
+        canHeal <- canHaveHorrorHealed attrs iid
+        when canHeal $ healHorror iid attrs 1
+      pure a
+    _ -> ForensicKit <$> liftRunMessage msg attrs

@@ -1,0 +1,315 @@
+{-# LANGUAGE TemplateHaskell #-}
+
+module Arkham.ScenarioLogKey where
+
+import Arkham.Card.CardCode
+import Arkham.Classes.GameLogger
+import Arkham.Id
+import Arkham.Name
+import Arkham.Prelude hiding (toLower)
+import Control.Monad.Fail
+import Data.Aeson.TH
+import Data.Char (isUpper, toLower)
+
+data ScenarioLogKey
+  = HadADrink (Labeled InvestigatorId)
+  | -- | The House Always Wins
+    Cheated (Labeled InvestigatorId)
+  | FoundAStrangeDoll
+  | -- | Curse of the Rougarou
+    FoundAnAncientBindingStone
+  | -- | The Essex County Exress
+    StolenAPassengersLuggage
+  | -- | Curtain Call
+    StoleFromTheBoxOffice
+  | InterviewedConstance
+  | InterviewedJordan
+  | InterviewedHaruko
+  | InterviewedSebastien
+  | -- | The Last King
+    InterviewedAshleigh
+  | SetAFireInTheKitchen
+  | IncitedAFightAmongstThePatients
+  | DistractedTheGuards
+  | ReleasedADangerousPatient
+  | KnowTheGuardsPatrols
+  | RecalledTheWayOut
+  | -- | The Unspeakable Oath
+    YouTookTheKeysByForce
+  | -- | The Pallid Mask
+    YouOpenedASecretPassageway
+  | FoundAGuide
+  | -- | Black Stars Rise
+    FoundTheTowerKey
+  | -- | DimCarcosa
+    KnowTheSecret
+  | IchtachaIsLeadingTheWay
+  | -- | The Untamed Wilds
+    YouFoughtWithIchtaca
+  | YouListenedToIchtacasTale
+  | IchtacaLeftWithoutYou
+  | IchtacasPrey (Labeled EnemyId `With` Envelope "cardCode" CardCode)
+  | -- | Threads of Fate
+    IchtacasDestination (Labeled LocationId `With` Envelope "cardCode" CardCode)
+  | -- | The City of Archives
+    FoundTheProcess
+  | DissectedAnOrgan
+  | InterviewedASubject
+  | RealizedWhatYearItIs
+  | ActivatedTheDevice
+  | -- | The Depths of Yoth
+    CollectedAStrangeLiquid
+  | MeddledWithThePast (Labeled InvestigatorId)
+  | -- | The Search for Kadath
+    KnowWhatHappenedToIb
+  | ObtainedSuppliesFromBaharna
+  | BeseechedTheKing
+  | -- | A Thousand Shapes of Horror
+    FoundACrackedMirror
+  | StudiedADesecratedPortrait
+  | NoticedTheMissingBones
+  | RecoveredAStrangeKey
+  | -- | Where the Gods Dwell
+    ManeuveredThePriestCloser
+  | StunnedThePriest
+  | -- | The Lair of Dagon
+    UnlockedTheEntranceToTheCaves
+  | UnlockedTheThirdFloor
+  | UnlockedTheFinalDepths
+  | -- | City of the ElderThings
+    TheTeamStudiedTheHistoryOfTheElderThings
+  | TheTeamDiscernedTheOriginOfTheShoggoths
+  | TheTeamDiscoveredAHiddenPower
+  | -- | Sanguine Shadows
+    MatiasBolivarTrustsYou
+  | MatiasBolivarDoesntTrustYou
+  | -- | Shades of Suffering
+    TradedForAKitten
+  | FoundACheapMemento
+  | EmbarrassedTheConsulate
+  | PeeredBeyond
+  | SharedADeepPain
+  | FoundHiddenBones
+  | -- | Prelude Dawn of the SecondDay
+    YouAreRunningAnErrand
+  | -- | Prelude Dawn of the Final Day
+    YouAreDeliveringAPackage
+  | -- | Prelude The Final Evening
+    TheHemlocksAreHashingItOut
+  | -- | Hemlock House
+    JudithIsRemodeling
+  | FoundLittleSylvie
+  | YouAreHelpingGideon
+  | -- | The Lost Sister
+    FoundATornDogLeash
+  | FoundASetOfFootprints
+  | TheoIsArguingWithHelen
+  | GideonIsSearchingForAnHeirloom
+  | -- | Fate of the Vale
+    BertieIsFleeing
+  | TheInvestigatorsFoundGas
+  | TheRoadIsClear
+  | TheSamplesWereFound
+  | TheSurveyNotesWereRecovered
+  | TheInvestigatorsFoundTheosTruck
+  | -- | Return to the City of Archives
+    ReadAboutEarth
+  | SawAFamiliarSpecimen
+  | -- | The Blob That Ate Everything
+    TheChemistWasSaved
+  | TheFormulaWasNotCompleted
+  | TheSampleWasRecovered
+  | TheSampleWasLost
+  | TheMiGoWereDrivenOff
+  | TheSecretOfTheOozeWasStolen
+  | TheExplosivesWereDefused
+  | TheExplosivesWereDetonated
+  | TheCarReachedItsTarget
+  | TheEscortFailed
+  | TheBrainWasRecovered
+  | TheBrainWasTaken
+  | TheMiGoResearchWasStopped
+  | TheMiGoCompletedTheirResearch
+  | -- | Murder at the Excelsior Hotel
+    CleanedUpTheBlood
+  | HidTheBody
+  | TidiedUpTheRoom
+  | ThePoliceDon'tBelieveYou
+  | ThePoliceAreOnYourSide
+  | -- | Fortune and Folly
+    CleanedOutTheHouse
+  | ImpersonatedAHighRoller
+  | FoundAVent
+  | ConvincedIsamaraToParticipateInTheHeist
+  | ObtainedAnEmployeeUniform
+  | StoleAbarransKeys
+  | WonACultistMedallion
+  | ObservedTheStaff
+  | FoundAbarransSigil
+  | ObtainedASchematic
+  | ImpersonatedAGuard
+  | StayedOutOfSight
+  | DeliveredADecoyPackage
+  | IsamaraMesmerizedTheGuardsWithHerSong
+  | TheInvestigatorsNeedTimeToRest
+  | TheVentIsOpen
+  | -- | Film Fatale
+    TheInvestigatorsMadeTheirCallTime
+  | -- | Machinations Through Time
+    ThomasAndMaryHaveMet
+  | ThomasAndMaryAreInspiredByNikolaTesla
+  | FundingForAnObservatoryHasBegun
+  | TheObservatoryIsBuilt
+  | TeleportationResearchHasBegun
+  | CorriganIndustriesHasBeenFounded
+  | ThomasAndMaryHaveMadeAHistoricDiscovery
+  | ThomasAndMaryHaveWonANobelPrize
+  | ATreeSeedHasBeenPlanted
+  | ThomasAndMaryHaveMarried
+  | TheDebtHasBeenPaid
+  | -- | The Labyrinths of Lunacy
+    BeenInjected (Labeled InvestigatorId)
+  | PulledTheLeftLever (Labeled InvestigatorId)
+  | PulledTheMiddleLever (Labeled InvestigatorId)
+  | PulledTheRightLever (Labeled InvestigatorId)
+  | TurnedTheValve (Labeled InvestigatorId)
+  | -- | Guardians of the Abyss
+    FoundADoorMarkedWithBlood
+  | BoughtAnOddTrinket
+  | DiscoveredAnAncientTablet
+  | SabotagedTheTrain
+  | BrokenIntoADesertedTemple
+  | FreedTheNightgaunts
+  | ExecutedTheNightgaunts
+  | WarnedTheDenizensOfSarkomand
+  | CutOffAllEscape
+  | PledForHelp
+  | AffrontedTheRulerOfThisRealm
+  | -- Investigator Cards
+    YouOweBiancaResources (Labeled InvestigatorId) Int
+  deriving stock (Eq, Show, Ord, Data)
+
+data ScenarioCountKey
+  = CurrentDepth
+  | SignOfTheGods
+  | Distortion
+  | Barriers LocationId LocationId
+  | CiviliansSlain
+  | StrengthOfTheAbyss
+  | CluesAroundHubDimension
+  | {- | The Doom of Arkham, Part II. Cthulhu's anger toward the investigators;
+    the skull token, every action card's test difficulty, and the act ratchet
+    all read it.
+    -}
+    CthulhuRage
+  | -- Epic Multiplayer: a per-group mirror of an event-wide shared counter,
+    -- keyed by 'Arkham.Epic.Types.sharedKeyText'. Refreshed from the locked
+    -- event row at the start of each action so the scenario/enemy can read the
+    -- current shared value purely. See "Arkham.Epic".
+    EpicShared Text
+  | -- Epic Multiplayer: a LOCAL (per-group, never-synced) count of how many times
+    -- the act at this stage has advanced. Unlike 'EpicShared', this is never
+    -- mirrored from the event row, so it is safe to increment per group. It lets a
+    -- cumulative shared clue pool drive a looping act ('ResetActDeckToStage'):
+    -- the Nth advance fires at shared progress >= 2 * total * N, so no shared
+    -- counter ever has to be reset. Lives on the scenario, so it survives the act
+    -- being replaced when the deck loops.
+    EpicActAdvances Int
+  | -- The Feast of Hemlock Vale, Standalone Mode. There is no campaign to carry
+    -- the day/time, so the scenario settles them during PreScenarioSetup and
+    -- records them here. 1-3 for the day; 1 for Night, 0 (or absent) for Day.
+    -- Read via 'Arkham.Campaigns.TheFeastOfHemlockVale.Helpers.getHemlockMeta'.
+    -- Deliberately NOT a scenario modifier: several Hemlock enemies read the day
+    -- from inside 'HasModifiersFor', so a modifier-backed store would recurse.
+    HemlockStandaloneDay
+  | HemlockStandaloneNight
+  deriving stock (Eq, Show, Ord, Data)
+
+instance ToGameLoggerFormat ScenarioLogKey where
+  format = \case
+    YouOweBiancaResources (Labeled name iid) n ->
+      "{investigator:\""
+        <> display name
+        <> "\":"
+        <> tshow iid
+        <> "} owes Bianca "
+        <> tshow n
+        <> " resources"
+    IchtacasPrey (Labeled name eid `With` Envelope cardCode) ->
+      "{enemy:\"" <> display name <> "\":" <> tshow eid <> ":" <> tshow cardCode <> "} is Ichtaca's Prey"
+    IchtacasDestination (Labeled name lid `With` Envelope cardCode) ->
+      "{location:\""
+        <> display name
+        <> "\":"
+        <> tshow lid
+        <> ":"
+        <> tshow cardCode
+        <> "} is Ichtaca's Destination"
+    HadADrink (Labeled name iid) -> "{investigator:\"" <> display name <> "\":" <> tshow iid <> "} had a drink"
+    Cheated (Labeled name iid) -> "{investigator:\"" <> display name <> "\":" <> tshow iid <> "} cheated"
+    MeddledWithThePast (Labeled name iid) -> "{investigator:\"" <> display name <> "\":" <> tshow iid <> "} meddled with the past"
+    BeenInjected (Labeled name iid) -> "{investigator:\"" <> display name <> "\":" <> tshow iid <> "} has been injected"
+    PulledTheLeftLever (Labeled name iid) -> "{investigator:\"" <> display name <> "\":" <> tshow iid <> "} pulled the left lever"
+    PulledTheMiddleLever (Labeled name iid) -> "{investigator:\"" <> display name <> "\":" <> tshow iid <> "} pulled the middle lever"
+    PulledTheRightLever (Labeled name iid) -> "{investigator:\"" <> display name <> "\":" <> tshow iid <> "} pulled the right lever"
+    TurnedTheValve (Labeled name iid) -> "{investigator:\"" <> display name <> "\":" <> tshow iid <> "} turned the valve"
+    other -> pack . go $ show other
+   where
+    go :: String -> String
+    go [] = []
+    go (x : xs) = toLower x : go' xs
+
+    go' :: String -> String
+    go' [] = []
+    go' (x : xs) | isUpper x = ' ' : toLower x : go' xs
+    go' (x : xs) = x : go' xs
+
+$(deriveToJSON defaultOptions ''ScenarioLogKey)
+
+instance FromJSON ScenarioLogKey where
+  parseJSON = withObject "ScenarioLogKey" \o -> do
+    tag :: Text <- o .: "tag"
+    case tag of
+      "IchtacasDestination" -> do
+        econtents <- (Right <$> o .: "contents") <|> (Left <$> o .: "contents")
+        pure $ case econtents of
+          Right contents -> IchtacasDestination contents
+          Left contents -> IchtacasDestination $ contents `With` Envelope @"cardCode" "01130"
+      _ -> $(mkParseJSON defaultOptions ''ScenarioLogKey) (Object o)
+
+$(deriveToJSON defaultOptions ''ScenarioCountKey)
+
+instance FromJSON ScenarioCountKey where
+  parseJSON = \case
+    String "CurrentDepth" -> pure CurrentDepth
+    String "SignOfTheGods" -> pure SignOfTheGods
+    String "Distortion" -> pure Distortion
+    String "StrengthOfTheAbyss" -> pure StrengthOfTheAbyss
+    String "CluesAroundHubDimension" -> pure CluesAroundHubDimension
+    String "CthulhuRage" -> pure CthulhuRage
+    String "HemlockStandaloneDay" -> pure HemlockStandaloneDay
+    String "HemlockStandaloneNight" -> pure HemlockStandaloneNight
+    Object o -> do
+      tag :: Text <- o .: "tag"
+      case tag of
+        "Barriers" -> do
+          (x, y) <- o .: "contents"
+          pure $ Barriers x y
+        "EpicShared" -> EpicShared <$> o .: "contents"
+        "EpicActAdvances" -> EpicActAdvances <$> o .: "contents"
+        "CurrentDepth" -> pure CurrentDepth
+        "SignOfTheGods" -> pure SignOfTheGods
+        "Distortion" -> pure Distortion
+        "CiviliansSlain" -> pure CiviliansSlain
+        "StrengthOfTheAbyss" -> pure StrengthOfTheAbyss
+        "CluesAroundHubDimension" -> pure CluesAroundHubDimension
+        "CthulhuRage" -> pure CthulhuRage
+        "HemlockStandaloneDay" -> pure HemlockStandaloneDay
+        "HemlockStandaloneNight" -> pure HemlockStandaloneNight
+        _ -> fail "Unknown tag"
+    _ -> fail "Expected String or Object"
+
+instance ToJSONKey ScenarioLogKey
+instance FromJSONKey ScenarioLogKey
+instance ToJSONKey ScenarioCountKey
+instance FromJSONKey ScenarioCountKey

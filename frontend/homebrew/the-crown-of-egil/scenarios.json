@@ -1,0 +1,345 @@
+[
+  {
+    "id": ":the-crown-of-egil:Curse of the Rougarou",
+    "name": "Curse of the Rougarou",
+    "campaign": ":the-crown-of-egil",
+    "standalone": false,
+    "i18n": "curse-of-the-rougarou"
+  },
+  {
+    "id": ":the-crown-of-egil:Carnevale of Horrors",
+    "name": "Carnevale of Horrors",
+    "campaign": ":the-crown-of-egil",
+    "standalone": false,
+    "i18n": "carnevale-of-horrors"
+  },
+  {
+    "id": ":the-crown-of-egil:The Labyrinths of Lunacy",
+    "name": "The Labyrinths of Lunacy",
+    "campaign": ":the-crown-of-egil",
+    "standalone": false,
+    "i18n": "the-labyrinths-of-lunacy"
+  },
+  {
+    "id": ":the-crown-of-egil:Guardians of the Abyss",
+    "name": "Guardians of the Abyss",
+    "campaign": ":the-crown-of-egil",
+    "standalone": false,
+    "i18n": "guardians-of-the-abyss"
+  },
+  {
+    "id": ":the-crown-of-egil:Murder at the Excelsior Hotel",
+    "name": "Murder at the Excelsior Hotel",
+    "campaign": ":the-crown-of-egil",
+    "standalone": false,
+    "i18n": "murder-at-the-excelsior-hotel"
+  },
+  {
+    "id": ":the-crown-of-egil:The Blob that Ate Everything",
+    "name": "The Blob that Ate Everything",
+    "campaign": ":the-crown-of-egil",
+    "standalone": false,
+    "i18n": "the-blob-that-ate-everything"
+  },
+  {
+    "id": ":the-crown-of-egil:War of the Outer Gods",
+    "name": "War of the Outer Gods",
+    "campaign": ":the-crown-of-egil",
+    "standalone": false,
+    "i18n": "war-of-the-outer-gods"
+  },
+  {
+    "id": ":the-crown-of-egil:Machinations Through Time",
+    "name": "Machinations Through Time",
+    "campaign": ":the-crown-of-egil",
+    "standalone": false,
+    "i18n": "machinations-through-time"
+  },
+  {
+    "id": ":the-crown-of-egil:Fortune and Folly",
+    "name": "Fortune and Folly",
+    "campaign": ":the-crown-of-egil",
+    "standalone": false,
+    "i18n": "fortune-and-folly"
+  },
+  {
+    "id": ":the-crown-of-egil:The Midwinter Gala",
+    "name": "The Midwinter Gala",
+    "campaign": ":the-crown-of-egil",
+    "standalone": false,
+    "i18n": "the-midwinter-gala"
+  },
+  {
+    "id": ":the-crown-of-egil:Film Fatale",
+    "name": "Film Fatale",
+    "campaign": ":the-crown-of-egil",
+    "standalone": false,
+    "i18n": "film-fatale"
+  },
+  {
+    "id": ":the-crown-of-egil:Challenge Scenario - All or Nothing",
+    "name": "Challenge Scenario - All or Nothing",
+    "campaign": ":the-crown-of-egil",
+    "standalone": false,
+    "i18n": "challenge-scenario-all-or-nothing"
+  },
+  {
+    "id": ":the-crown-of-egil:Challenge Scenario - Bad Blood",
+    "name": "Challenge Scenario - Bad Blood",
+    "campaign": ":the-crown-of-egil",
+    "standalone": false,
+    "i18n": "challenge-scenario-bad-blood"
+  },
+  {
+    "id": ":the-crown-of-egil:Challenge Scenario - By the Book",
+    "name": "Challenge Scenario - By the Book",
+    "campaign": ":the-crown-of-egil",
+    "standalone": false,
+    "i18n": "challenge-scenario-by-the-book"
+  },
+  {
+    "id": ":the-crown-of-egil:Challenge Scenario - Laid to Rest",
+    "name": "Challenge Scenario - Laid to Rest",
+    "campaign": ":the-crown-of-egil",
+    "standalone": false,
+    "i18n": "challenge-scenario-laid-to-rest"
+  },
+  {
+    "id": ":the-crown-of-egil:Challenge Scenario - Read or Die",
+    "name": "Challenge Scenario - Read or Die",
+    "campaign": ":the-crown-of-egil",
+    "standalone": false,
+    "i18n": "challenge-scenario-read-or-die"
+  },
+  {
+    "id": ":the-crown-of-egil:Challenge Scenario - Red Tide Rising",
+    "name": "Challenge Scenario - Red Tide Rising",
+    "campaign": ":the-crown-of-egil",
+    "standalone": false,
+    "i18n": "challenge-scenario-red-tide-rising"
+  },
+  {
+    "id": ":the-crown-of-egil:Challenge Scenario - Relics of the Past",
+    "name": "Challenge Scenario - Relics of the Past",
+    "campaign": ":the-crown-of-egil",
+    "standalone": false,
+    "i18n": "challenge-scenario-relics-of-the-past"
+  },
+  {
+    "id": ":the-crown-of-egil:Challenge Scenario - Enthralling Encore",
+    "name": "Challenge Scenario - Enthralling Encore",
+    "campaign": ":the-crown-of-egil",
+    "standalone": false,
+    "i18n": "challenge-scenario-enthralling-encore"
+  },
+  {
+    "id": ":the-crown-of-egil:Barkham Horror - The Meddling of Meowlathotep",
+    "name": "Barkham Horror - The Meddling of Meowlathotep",
+    "campaign": ":the-crown-of-egil",
+    "standalone": false,
+    "i18n": "barkham-horror-the-meddling-of-meowlathotep"
+  },
+  {
+    "id": ":the-crown-of-egil:Against the Wendigo",
+    "name": "Against the Wendigo",
+    "campaign": ":the-crown-of-egil",
+    "standalone": false,
+    "i18n": "against-the-wendigo"
+  },
+  {
+    "id": ":the-crown-of-egil:And Then There Were None",
+    "name": "And Then There Were None",
+    "campaign": ":the-crown-of-egil",
+    "standalone": false,
+    "i18n": "and-then-there-were-none"
+  },
+  {
+    "id": ":the-crown-of-egil:Carnevale of Spiders",
+    "name": "Carnevale of Spiders",
+    "campaign": ":the-crown-of-egil",
+    "standalone": false,
+    "i18n": "carnevale-of-spiders"
+  },
+  {
+    "id": ":the-crown-of-egil:Clueless Cultist Coup",
+    "name": "Clueless Cultist Coup",
+    "campaign": ":the-crown-of-egil",
+    "standalone": false,
+    "i18n": "clueless-cultist-coup"
+  },
+  {
+    "id": ":the-crown-of-egil:Code Red at Bleeding Heart",
+    "name": "Code Red at Bleeding Heart",
+    "campaign": ":the-crown-of-egil",
+    "standalone": false,
+    "i18n": "code-red-at-bleeding-heart"
+  },
+  {
+    "id": ":the-crown-of-egil:Consternation on the Constellation",
+    "name": "Consternation on the Constellation",
+    "campaign": ":the-crown-of-egil",
+    "standalone": false,
+    "i18n": "consternation-on-the-constellation"
+  },
+  {
+    "id": ":the-crown-of-egil:Cosmic Pantheon",
+    "name": "Cosmic Pantheon",
+    "campaign": ":the-crown-of-egil",
+    "standalone": false,
+    "i18n": "cosmic-pantheon"
+  },
+  {
+    "id": ":the-crown-of-egil:Defense of the Arkham",
+    "name": "Defense of the Arkham",
+    "campaign": ":the-crown-of-egil",
+    "standalone": false,
+    "i18n": "defense-of-the-arkham"
+  },
+  {
+    "id": ":the-crown-of-egil:Devils In The Canyon",
+    "name": "Devils In The Canyon",
+    "campaign": ":the-crown-of-egil",
+    "standalone": false,
+    "i18n": "devils-in-the-canyon"
+  },
+  {
+    "id": ":the-crown-of-egil:Don't Starve - Scenario",
+    "name": "Don't Starve - Scenario",
+    "campaign": ":the-crown-of-egil",
+    "standalone": false,
+    "i18n": "don-t-starve-scenario"
+  },
+  {
+    "id": ":the-crown-of-egil:Election Night",
+    "name": "Election Night",
+    "campaign": ":the-crown-of-egil",
+    "standalone": false,
+    "i18n": "election-night"
+  },
+  {
+    "id": ":the-crown-of-egil:The Facts in the Case of M. Valdemar",
+    "name": "The Facts in the Case of M. Valdemar",
+    "campaign": ":the-crown-of-egil",
+    "standalone": false,
+    "i18n": "the-facts-in-the-case-of-m-valdemar"
+  },
+  {
+    "id": ":the-crown-of-egil:The Fall of the House of Usher",
+    "name": "The Fall of the House of Usher",
+    "campaign": ":the-crown-of-egil",
+    "standalone": false,
+    "i18n": "the-fall-of-the-house-of-usher"
+  },
+  {
+    "id": ":the-crown-of-egil:Fortune or Folly - Parallel Rex Murphy",
+    "name": "Fortune or Folly - Parallel Rex Murphy",
+    "campaign": ":the-crown-of-egil",
+    "standalone": false,
+    "i18n": "fortune-or-folly-parallel-rex-murphy"
+  },
+  {
+    "id": ":the-crown-of-egil:The Grand Oak Hotel",
+    "name": "The Grand Oak Hotel",
+    "campaign": ":the-crown-of-egil",
+    "standalone": false,
+    "i18n": "the-grand-oak-hotel"
+  },
+  {
+    "id": ":the-crown-of-egil:The Invisible Man",
+    "name": "The Invisible Man",
+    "campaign": ":the-crown-of-egil",
+    "standalone": false,
+    "i18n": "the-invisible-man"
+  },
+  {
+    "id": ":the-crown-of-egil:The Legend of Sleepy Hollow",
+    "name": "The Legend of Sleepy Hollow",
+    "campaign": ":the-crown-of-egil",
+    "standalone": false,
+    "i18n": "the-legend-of-sleepy-hollow"
+  },
+  {
+    "id": ":the-crown-of-egil:The Living Labyrinth",
+    "name": "The Living Labyrinth",
+    "campaign": ":the-crown-of-egil",
+    "standalone": false,
+    "i18n": "the-living-labyrinth"
+  },
+  {
+    "id": ":the-crown-of-egil:The Midwinter Gala - Fashionably Late",
+    "name": "The Midwinter Gala - Fashionably Late",
+    "campaign": ":the-crown-of-egil",
+    "standalone": false,
+    "i18n": "the-midwinter-gala-fashionably-late"
+  },
+  {
+    "id": ":the-crown-of-egil:Miskatonic Mouse",
+    "name": "Miskatonic Mouse",
+    "campaign": ":the-crown-of-egil",
+    "standalone": false,
+    "i18n": "miskatonic-mouse"
+  },
+  {
+    "id": ":the-crown-of-egil:Mythos Deviations",
+    "name": "Mythos Deviations",
+    "campaign": ":the-crown-of-egil",
+    "standalone": false,
+    "i18n": "mythos-deviations"
+  },
+  {
+    "id": ":the-crown-of-egil:Return to the Consternation on the Constellation",
+    "name": "Return to the Consternation on the Constellation",
+    "campaign": ":the-crown-of-egil",
+    "standalone": false,
+    "i18n": "return-to-the-consternation-on-the-constellation"
+  },
+  {
+    "id": ":the-crown-of-egil:Return to the Wendigo",
+    "name": "Return to the Wendigo",
+    "campaign": ":the-crown-of-egil",
+    "standalone": false,
+    "i18n": "return-to-the-wendigo"
+  },
+  {
+    "id": ":the-crown-of-egil:Snakes and Ladders",
+    "name": "Snakes and Ladders",
+    "campaign": ":the-crown-of-egil",
+    "standalone": false,
+    "i18n": "snakes-and-ladders"
+  },
+  {
+    "id": ":the-crown-of-egil:The Strange Case of Dr. Jekyll and Mr. Hyde",
+    "name": "The Strange Case of Dr. Jekyll and Mr. Hyde",
+    "campaign": ":the-crown-of-egil",
+    "standalone": false,
+    "i18n": "the-strange-case-of-dr-jekyll-and-mr-hyde"
+  },
+  {
+    "id": ":the-crown-of-egil:'Tis The Season",
+    "name": "'Tis The Season",
+    "campaign": ":the-crown-of-egil",
+    "standalone": false,
+    "i18n": "tis-the-season"
+  },
+  {
+    "id": ":the-crown-of-egil:When the World Screamed",
+    "name": "When the World Screamed",
+    "campaign": ":the-crown-of-egil",
+    "standalone": false,
+    "i18n": "when-the-world-screamed"
+  },
+  {
+    "id": ":the-crown-of-egil:The Witcher Horror",
+    "name": "The Witcher Horror",
+    "campaign": ":the-crown-of-egil",
+    "standalone": false,
+    "i18n": "the-witcher-horror"
+  },
+  {
+    "id": ":the-crown-of-egil:The Woods of the Black Goat",
+    "name": "The Woods of the Black Goat",
+    "campaign": ":the-crown-of-egil",
+    "standalone": false,
+    "i18n": "the-woods-of-the-black-goat"
+  }
+]

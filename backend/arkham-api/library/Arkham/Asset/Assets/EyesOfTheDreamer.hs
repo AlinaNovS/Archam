@@ -1,0 +1,71 @@
+module Arkham.Asset.Assets.EyesOfTheDreamer (eyesOfTheDreamer) where
+
+import Arkham.Ability
+import Arkham.Aspect.Types
+import Arkham.Asset.Cards qualified as Cards
+import Arkham.Asset.Import.Lifted
+import Arkham.Asset.Uses
+import Arkham.ChaosBagStepState
+import Arkham.ChaosToken.Types
+import Arkham.Helpers.ChaosBag (getChaosBagChoice, getSteps)
+import Arkham.Helpers.SkillTest (withSkillTest)
+import Arkham.Helpers.Window
+import Arkham.Investigate
+import Arkham.Matcher
+import Arkham.Modifier
+
+newtype EyesOfTheDreamer = EyesOfTheDreamer AssetAttrs
+  deriving anyclass (IsAsset, HasModifiersFor)
+  deriving newtype (Show, Eq, ToJSON, FromJSON, Entity)
+
+eyesOfTheDreamer :: AssetCard EyesOfTheDreamer
+eyesOfTheDreamer = asset EyesOfTheDreamer Cards.eyesOfTheDreamer
+
+instance HasAbilities EyesOfTheDreamer where
+  getAbilities (EyesOfTheDreamer a) =
+    [ controlled a 1 (exists $ YourLocation <> InvestigatableLocation) $ investigateActionWith_ #willpower
+    , controlled a 2 (DuringSkillTest $ SkillTestOnAsset (be a))
+        $ ConstantReaction "Spend Charges" (WouldRevealChaosTokens #when You) (UseCostUpTo (be a) Charge 1 3)
+    ]
+
+instance RunMessage EyesOfTheDreamer where
+  runMessage msg a@(EyesOfTheDreamer attrs) = runQueueT $ case msg of
+    UseThisAbility iid (isSource attrs -> True) 1 -> do
+      sid <- getRandom
+      let source = attrs.ability 1
+      aspect iid source (#willpower `InsteadOf` #intellect) (mkInvestigate sid iid source)
+      pure
+        $ EyesOfTheDreamer
+        $ setMetaKey "eyesGranted" False
+        $ setMetaKey "eyesIgnored" ([] :: [ChaosTokenFace])
+        $ setMetaKey "eyesSelected" ([] :: [ChaosTokenFace]) attrs
+    UseCardAbility iid (isSource attrs -> True) 2 (getDrawSource -> drawSource) (totalUsesPayment -> n) -> do
+      mchoice <- getChaosBagChoice
+      let steps = maybe [Undecided Draw] getSteps mchoice
+      let nested =
+            mchoice >>= \case
+              Resolved {} -> Nothing
+              Decided s -> guard (s /= Draw) $> s
+              Undecided s -> guard (s /= Draw) $> s
+              Deciding s -> guard (s /= Draw) $> s
+      push
+        $ ReplaceCurrentDraw drawSource iid
+        $ Choose (toSource attrs) 1 ResolveChoice (steps <> replicate n (Undecided Draw)) [] nested
+      cancelledOrIgnoredCardOrGameEffect (attrs.ability 1)
+      pure a
+    ChaosTokenSelected _ (isSource attrs -> True) chaosToken -> do
+      let otherTokens = getMetaKeyDefault "eyesSelected" [] attrs
+      pure $ EyesOfTheDreamer $ setMetaKey "eyesSelected" (chaosToken.face : otherTokens) attrs
+    ChaosTokenIgnored iid (isSource attrs -> True) chaosToken -> do
+      let selected :: [ChaosTokenFace] = getMetaKeyDefault "eyesSelected" [] attrs
+      let ignored :: [ChaosTokenFace] = getMetaKeyDefault "eyesIgnored" [] attrs
+      let granted :: Bool = getMetaKeyDefault "eyesGranted" False attrs
+      if not granted && chaosToken.face `elem` selected
+        then do
+          withSkillTest \sid -> priority $ skillTestModifier sid (attrs.ability 1) iid (DiscoveredClues 1)
+          pure
+            $ EyesOfTheDreamer
+            $ setMetaKey "eyesGranted" True
+            $ setMetaKey "eyesIgnored" (chaosToken.face : ignored) attrs
+        else pure $ EyesOfTheDreamer $ setMetaKey "eyesIgnored" (chaosToken.face : ignored) attrs
+    _ -> EyesOfTheDreamer <$> liftRunMessage msg attrs

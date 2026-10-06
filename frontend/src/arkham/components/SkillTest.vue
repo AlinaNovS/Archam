@@ -1,0 +1,1121 @@
+<script lang="ts" setup>
+import AbilityButton from '@/arkham/components/AbilityButton.vue'
+import Question from '@/arkham/components/Question.vue';
+import { useDebug } from '@/arkham/debug'
+import { computed } from 'vue';
+import { ChaosBag } from '@/arkham/types/ChaosBag';
+import * as Cards from '@/arkham/types/Card';
+import { chaosTokenImage, type TokenFace } from '@/arkham/types/ChaosToken';
+import { scenarioToI18n } from '@/arkham/types/Scenario';
+import { Game } from '@/arkham/types/Game';
+import { Enemy } from '@/arkham/types/Enemy';
+import { Modifier, cannotCommitCardsToWords } from '@/arkham/types/Modifier';
+import { SkillTest } from '@/arkham/types/SkillTest';
+import { AbilityLabel, AbilityMessage, Message } from '@/arkham/types/Message'
+import Draggable from '@/components/Draggable.vue';
+import Card from '@/arkham/components/Card.vue'
+import CommittedSkills from '@/arkham/components/CommittedSkills.vue';
+import { MessageType, StartSkillTestButton } from '@/arkham/types/Message';
+import * as ArkhamGame from '@/arkham/types/Game';
+import { imgsrc, formatContent } from '@/arkham/helpers';
+import { cardArt, portraitImage, sourceCardCode } from '@/arkham/cardImages';
+import ChaosBagView from '@/arkham/components/ChaosBag.vue';
+import Token from '@/arkham/components/Token.vue';
+import { useI18n } from 'vue-i18n';
+import { useMenu } from '@/composable/menu';
+import { useSettingsFocus } from '@/composable/settingsFocus';
+
+const debug = useDebug()
+const { t } = useI18n()
+const { menuItems } = useMenu()
+const { focusSetting } = useSettingsFocus()
+const props = defineProps<{
+  game: Game
+  skillTest: SkillTest
+  chaosBag: ChaosBag
+  playerId: string
+}>()
+
+const normalizeSkill = (skill: string) => {
+  switch (skill) {
+    case 'SkillWillpower': return 'willpower'
+    case 'SkillIntellect': return 'intellect'
+    case 'SkillCombat': return 'combat'
+    case 'SkillAgility': return 'agility'
+    default: return skill
+  }
+}
+
+const skills = computed(() => {
+  const { skillTest } = props
+  return skillTest.skills.map(normalizeSkill)
+})
+const skillTestResults = computed(() => props.game.skillTestResults)
+const emit = defineEmits(['choose'])
+const shouldRender = (mod: Modifier) => {
+  const { type } = mod
+  if (!('tag' in type)) return false
+  if (type.tag === 'DiscoveredClues') return true
+  if (type.tag === 'CancelEffects') return true
+  if (type.tag === 'DamageDealt') return true
+  if (type.tag === 'AnySkillValue') return true
+  if (type.tag === 'SkillModifier') return true
+  if (type.tag === 'ActionSkillModifier') return type.action === props.skillTest.action
+  if (type.tag === 'AddSkillValue') return true
+  if (type.tag === 'RevealAnotherChaosToken') return true
+  if (type.tag === 'DoubleSuccess') return true
+  if (type.tag === 'DoubleDifficulty') return true
+  if (type.tag === 'AutomaticallyFailIfSucceedByAtLeast') return true
+  if (type.tag === 'CannotCommitCards')
+    return props.playerId == props.game.investigators[props.skillTest.investigator].playerId
+  if (type.tag === 'OtherModifier' && type.contents === 'MayIgnoreLocationEffectsAndKeywords') return true
+  if (type.tag === 'OtherModifier' && type.contents === 'SkillIconsSubtract') return true
+  return false
+}
+
+const shouldRenderYourModifiers = (mod: Modifier) => {
+  const { type } = mod
+  if (!('tag' in type)) return false
+  if (props.game.investigators[props.skillTest.investigator].playerId === props.playerId) return false
+  if (type.tag === 'CannotCommitCards') return true
+  return false
+}
+
+const yourModifiers = computed(() => {
+  const investigator = Object.values(props.game.investigators).find((i) => i.playerId === props.playerId)
+  if (!investigator) return []
+  return (investigator.modifiers ?? []).filter(shouldRenderYourModifiers)
+})
+
+const modifiers = computed(() =>
+  [...(props.game.investigators[props.skillTest.investigator]?.modifiers ?? []).
+    filter(shouldRender), ...yourModifiers.value, ...(props.skillTest.modifiers ?? [])]) 
+const committedCards = computed(() => props.skillTest.committedCards)
+const choices = computed(() => ArkhamGame.choices(props.game, props.playerId))
+const skipTriggersAction = computed(() => choices.value.findIndex((c) => c.tag === MessageType.SKIP_TRIGGERS_BUTTON))
+
+const currentInvestigator = computed(() =>
+  Object.values(props.game.investigators).find((i) => i.playerId === props.playerId)
+)
+
+const skipTriggersEnabled = computed(() =>
+  Boolean(currentInvestigator.value?.settings?.globalSettings?.ignoreUnrelatedSkillTestTriggers)
+)
+
+const openSettings = () => {
+  focusSetting('skipTriggers')
+  const entry = menuItems.value?.find((e) => e.id === 'viewSettings')
+  if (entry) entry.action()
+}
+const investigatorPortrait = computed(() => {
+  const choice = choices.value.find((c): c is StartSkillTestButton => c.tag === MessageType.START_SKILL_TEST_BUTTON)
+  if (choice) {
+    const player = props.game.investigators[choice.investigatorId]
+    const code = (player.form.tag === "YithianForm" || player.form.tag === "HomunculusForm" || player.form.tag === "ShatteredForm")
+      ? choice.investigatorId
+      : player.cardCode
+    return portraitImage(code)
+  }
+
+  if (props.skillTest) {
+    const player = props.game.investigators[props.skillTest.investigator]
+    const code = (player.form.tag === "YithianForm" || player.form.tag === "HomunculusForm" || player.form.tag === "ShatteredForm")
+      ? props.skillTest.investigator
+      : player.cardCode
+    return portraitImage(code)
+  }
+
+  return null;
+})
+
+function isAbility(v: Message): v is AbilityLabel {
+  if ("ability" in v) {
+    const ability = v.ability
+    if ("source" in ability) {
+      const { source } = ability
+
+      if (source.sourceTag === 'ProxySource') {
+        return source.source.tag === 'SkillTestSource'
+      }
+    }
+  }
+
+  return false
+}
+
+const abilities = computed<AbilityMessage[]>(() => {
+  return choices.value
+    .reduce<AbilityMessage[]>((acc, v, i) =>
+      isAbility(v) ? [...acc, { contents: v, displayAsAction: false, index: i}] : acc
+    , [])
+})
+
+
+async function choose(idx: number) {
+  emit('choose', idx)
+}
+
+function modifierSource(mod: Modifier) {
+  if(mod.card) {
+    return cardArt(Cards.toCardContents(mod.card).cardCode)
+  }
+
+  return sourceCardCode(mod.source, props.game)
+}
+
+const targetCardId = computed(() => props.skillTest.targetCard ?? props.skillTest.sourceCard)
+
+const targetCard = computed(() => {
+  if (!targetCardId.value) return null
+  return props.game.cards[targetCardId.value]
+})
+
+const cardIsRevealed = (cardId: string | null | undefined) => {
+  if (!cardId) return true
+  const location = Object.values(props.game.locations).find(
+    (candidate) => candidate.cardId === cardId,
+  )
+  return location?.revealed ?? true
+}
+
+const targetCardRevealed = computed(() => cardIsRevealed(targetCardId.value))
+
+const isConcealed = computed(() => {
+  return props.skillTest.source.tag === 'AbilitySource' && props.skillTest.source.contents[0].tag === 'ConcealedCardSource'
+})
+
+type SwarmEnemy = Omit<Enemy, "placement"> & {
+  placement: { tag: "AsSwarm"; swarmHost: string; swarmCard: Cards.Card };
+};
+
+const swarmEnemy = computed<SwarmEnemy | null>(() => {
+  let enemy = Object.values(props.game.enemies).find((e): e is SwarmEnemy => {
+    if (e.placement.tag !== 'AsSwarm') return false
+    return Cards.toCardContents(e.placement.swarmCard).id === props.skillTest.targetCard
+  })
+  if (!enemy) return null
+  return {...enemy}
+})
+
+const swarmHost = computed(() => {
+  if (!swarmEnemy.value) return null
+  return props.game.cards[props.game.enemies[swarmEnemy.value.placement.swarmHost].cardId]
+})
+
+const sourceCard = computed(() => {
+  if (!props.skillTest.sourceCard) return null
+  if (props.skillTest.sourceCard === props.skillTest.targetCard) return null
+  const card = props.game.cards[props.skillTest.sourceCard]
+  if (targetCard.value === card) return null
+  return card
+})
+
+const sourceCardRevealed = computed(() => cardIsRevealed(props.skillTest.sourceCard))
+
+const applyResultsAction = computed(() => {
+  return choices.value.findIndex((c) => c.tag === "SkillTestApplyResultsButton");
+})
+
+const skillValue = computed(() => {
+  const result = skillTestResults.value
+  const cap = (a: number) => Math.max(0, a)
+  if (result !== null) {
+    const {skillTestResultsSkillValue, skillTestResultsIconValue, skillTestResultsChaosTokensValue } = result
+    return cap(skillTestResultsSkillValue + skillTestResultsIconValue + skillTestResultsChaosTokensValue)
+  } else {
+    return cap(props.skillTest.modifiedSkillValue)
+  }
+})
+
+const testResult = computed(() => {
+  const result = skillTestResults.value
+  if (result !== null) {
+    const {skillTestResultsDifficulty} = result
+    return skillValue.value - skillTestResultsDifficulty
+  } else {
+    return null
+  }
+})
+
+const focusedChaosTokens = computed(() => {
+  const skillTestTokenIds = new Set(props.game.skillTestChaosTokens.map((token) => token.id))
+  return props.game.focusedChaosTokens.filter((token) => !skillTestTokenIds.has(token.id))
+})
+
+const tokenEffects = computed(() => {
+  const scenario = props.game.scenario
+  if(!scenario) return []
+  const tokens = props.skillTest.resolvedChaosTokens.length > 0
+    ? props.skillTest.resolvedChaosTokens
+    : props.skillTest.revealedChaosTokens
+  const skillTestTokens = new Map(props.game.skillTestChaosTokens.map((token) => [token.id, token]))
+  const faces = tokens.flatMap((token) => {
+    const displayedToken = skillTestTokens.get(token.id) ?? token
+    return displayedToken.modifiedFaces?.length ? displayedToken.modifiedFaces : [token.face]
+  })
+
+  const difficulty = ['Easy', 'Standard'].includes(scenario.difficulty) ? 'easyStandard' : 'hardExpert'
+
+  // lowercase the first letter
+  const lowerFirst = (str: string) => str.charAt(0).toLowerCase() + str.slice(1)
+
+  const baseRef = scenario.reference.replace(/b$/, '')
+
+  const tokenScope =
+    baseRef === 'c10501' || baseRef === 'c10502'
+      ? (scenario.reference.endsWith('b') ? '.act2' : '.act1')
+      : ''
+
+
+  return (["Skull", "Cultist", "Tablet", "ElderThing"] as TokenFace[]).filter((face) => faces.includes(face)).map((face) => 
+    `<img src='${chaosTokenImage(face)}' /><span>`
+          + formatContent(t(`${scenarioToI18n(scenario)}${tokenScope}.tokens.${difficulty}.${lowerFirst(face)}`)) + `</span>`
+          )
+})
+
+const createModifier = (target: {tag: string, contents: string}, modifier: {tag: string, contents: unknown}) => 
+  debug.send(props.game.id,
+    { tag: 'CreateWindowModifierEffect'
+    , contents:
+      [ {tag: 'EffectSkillTestWindow', contents: props.skillTest.id}
+      , { tag: 'EffectModifiers'
+        , contents:
+          [ { source: {tag: 'GameSource'}
+            , type: modifier
+            , activeDuringSetup: false
+            , card: null}
+          ]
+        }
+      , {tag: 'GameSource'}
+      , target
+      ]
+    })
+
+const adjustDebugSkillValue = (event: MouseEvent, direction: 1 | -1) => {
+  const amount = event.shiftKey ? 5 : 1
+  createModifier(
+    { tag: 'InvestigatorTarget', contents: props.skillTest.investigator },
+    { tag: 'AnySkillValue', contents: direction * amount },
+  )
+}
+</script>
+
+<template>
+  <Draggable
+    avoid-selector=".concealed-card--can-interact, .location-cell--can-interact, .location-cell--can-interact .location-wrapper, .location-cell--can-interact .card-frame"
+  >
+    <template #handle>
+      <h2>{{ $t('skillTestTitle') }}</h2>
+    </template>
+    <div class="skill-test">
+      <div class="steps">
+        <div v-tooltip="$t('skillTest.determineSkillOfTestStep')" class="step" :class="{ active: skillTest.step === 'DetermineSkillOfTestStep' }">ST.1</div>
+        <div v-tooltip="{content: formatContent($t('skillTest.fastPlayerWindow')), html: true }" class="step" :class="{ active: skillTest.step === 'SkillTestFastWindow1' }" v-html="formatContent('{fast}')" />
+        <div v-tooltip="$t('skillTest.commitCardsFromHandToSkillTestStep')" class="step" :class="{ active: skillTest.step === 'CommitCardsFromHandToSkillTestStep' }">ST.2</div>
+        <div v-tooltip="{content: formatContent($t('skillTest.fastPlayerWindow')), html: true}" class="step" :class="{ active: skillTest.step === 'SkillTestFastWindow2' }" v-html="formatContent('{fast}')" />
+        <div v-tooltip="$t('skillTest.revealChaosTokenStep')" class="step" :class="{ active: skillTest.step === 'RevealChaosTokenStep' }">ST.3</div>
+        <div v-tooltip="$t('skillTest.resolveChaosSymbolEffectsStep')" class="step" :class="{ active: skillTest.step === 'ResolveChaosSymbolEffectsStep' }">ST.4</div>
+        <div v-tooltip="$t('skillTest.determineInvestigatorsModifiedSkillValueStep')" class="step" :class="{ active: skillTest.step === 'DetermineInvestigatorsModifiedSkillValueStep' }">ST.5</div>
+        <div v-tooltip="$t('skillTest.determineSuccessOrFailureOfSkillTestStep')" class="step" :class="{ active: skillTest.step === 'DetermineSuccessOrFailureOfSkillTestStep' }">ST.6</div>
+        <div v-tooltip="$t('skillTest.applySkillTestResultsStep')" class="step" :class="{ active: skillTest.step === 'ApplySkillTestResultsStep' }">ST.7</div>
+        <div v-tooltip="$t('skillTest.skillTestEndsStep')" class="step" :class="{ active: skillTest.step === 'SkillTestEndsStep' }">ST.8</div>
+      </div>
+      <div v-if="skipTriggersEnabled" class="skip-triggers-notice">
+        <span class="skip-triggers-notice__text">{{ $t('skillTest.skipTriggersActiveNotice') }}</span>
+        <button type="button" class="skip-triggers-notice__button" @click="openSettings">{{ $t('skillTest.skipTriggersAdjust') }}</button>
+      </div>
+      <div class="skill-test-contents">
+        <div v-if="swarmEnemy" class="target-card swarming">
+          <div class="swarm">
+            <img :src="imgsrc('backs/back_player.jpg')" class="card" />
+          </div>
+          <div v-if="swarmHost" class="host">
+            <Card :game="game" :card="swarmHost" :revealed="true" playerId="" />
+          </div>
+        </div>
+        <Card
+          v-else-if="targetCard"
+          :game="game"
+          :card="targetCard"
+          class="target-card"
+          :revealed="targetCardRevealed"
+          playerId=""
+        />
+        <img
+          v-else-if="isConcealed"
+          :src="imgsrc('mini-cards/concealed-card.jpg')"
+          class="target-card concealed"
+          :data-image="imgsrc('mini-cards/concealed-card.jpg')"
+        />
+        <div class="test-status">
+          <div class="test-difficulty">
+            <button
+                v-if="debug.active"
+                @click="createModifier({tag: 'SkillTestTarget', contents: skillTest.id}, {tag: 'Difficulty', contents: -1})"
+            >-</button>
+            <span class="difficulty">{{skillTest.modifiedDifficulty}}</span>
+            <button
+                v-if="debug.active"
+                @click="createModifier({tag: 'SkillTestTarget', contents: skillTest.id}, {tag: 'Difficulty', contents: 1})"
+            >+</button>
+          </div>
+          <div class="vs">
+            <div v-if="skills.length > 0" class="skills">
+              <div v-for="(skill, idx) in skills" :key="idx" :class="`${skill}-icon ${skill}-skill`">
+                <span>{{skill}}</span>
+              </div>
+            </div>
+            <div v-else-if="skillTest.baseValue.tag === 'HalfResourcesOf'" class="half-resources">
+              <img :src="imgsrc(`tokens/resource.png`)" /> / 2
+            </div>
+            <span>VS</span>
+          </div>
+          <div class="modified-skill">
+            <button
+                v-if="debug.active"
+                @click="adjustDebugSkillValue($event, -1)"
+            >-</button>
+            <span class="skill">{{skillValue}}</span>
+            <button
+                v-if="debug.active"
+                @click="adjustDebugSkillValue($event, 1)"
+            >+</button>
+          </div>
+        </div>
+        <div class="test-source">
+          <img
+            v-if="investigatorPortrait"
+            class="portrait"
+            :src="investigatorPortrait"
+          />
+          <Card
+            v-if="sourceCard"
+            :game="game"
+            :card="sourceCard"
+            :revealed="sourceCardRevealed"
+            playerId=""
+          />
+        </div>
+      </div>
+      <ChaosBagView
+        :game="game"
+        :chaosBag="chaosBag"
+        :skillTest="skillTest"
+        :playerId="playerId"
+        @choose="choose"
+      />
+      <div v-if="focusedChaosTokens.length > 0" class="focused-chaos-tokens">
+        <Token v-for="focusedToken in focusedChaosTokens" :key="focusedToken.id" :token="focusedToken" :playerId="playerId" :game="game" @choose="choose" />
+      </div>
+      <div v-if="tokenEffects.length > 0" class="token-effects">
+        <div class="token-effect" v-for="effect in tokenEffects" :key="effect" v-html="effect"></div>
+      </div>
+      <div v-if="debug.active && skillTest.result?.tag == 'Unrun' && !['SkillTestFastWindow1', 'SkillTestFastWindow2'].includes(skillTest.step)">
+        <button @click="debug.send(game.id, {tag: 'SkillTestMessage', contents: {tag: 'PassSkillTest_'}})">{{ $t('skillTestActions.passSkillTest') }}</button>
+        <button @click="debug.send(game.id, {tag: 'SkillTestMessage', contents: {tag: 'FailSkillTest_'}})">{{ $t('skillTestActions.failSkillTest') }}</button>
+      </div>
+      <div v-if="committedCards.length > 0" class="committed-skills" key="committed-skills">
+        <template v-if="skillTest.step === 'CommitCardsFromHandToSkillTestStep'">
+          <h2>{{t('toBeCommitted')}}</h2>
+          <p class='note'>{{t('toBeCommittedNote')}}</p>
+        </template>
+        <template v-else>
+          <h2>{{t('committedCards')}}</h2>
+        </template>
+        <div class="skills-container">
+          <CommittedSkills
+            :game="game"
+            :cards="committedCards"
+            :playerId="playerId"
+            @choose="$emit('choose', $event)"
+          />
+        </div>
+      </div>
+      <div v-if="modifiers.length > 0" class="modifiers">
+        <div v-for="(modifier, idx) in modifiers" :key="idx" class="modifier" :class="{ 'sideways': modifier.source.tag === 'InvestigatorSource' }" :data-image-id="modifierSource(modifier)">
+          <template v-if="modifier.type.tag === 'CannotCommitCards'">
+            <span>{{cannotCommitCardsToWords(modifier.type)}}</span>
+          </template>
+          <template v-if="modifier.type.tag === 'Difficulty'">
+            <span><template v-if="modifier.type.contents >= 0">+</template>{{modifier.type.contents}}</span>
+            {{ $t('modifier.difficulty') }}
+          </template>
+          <template v-if="modifier.type.tag === 'CancelEffects'">
+            <span class="text">{{ $t('modifier.cancelEffects') }}</span>
+          </template>
+          <template v-if="modifier.type.tag === 'CannotPerformSkillTest'">
+            <span class="text">{{ $t('modifier.cannotPerformSkillTest') }}</span>
+          </template>
+          <template v-if="modifier.type.tag === 'DiscoveredClues'">
+            <span>+{{modifier.type.contents}}</span>
+            <img :src="imgsrc(`tokens/clue.png`)" />
+          </template>
+          <template v-if="modifier.type.tag === 'SkillTestResultValueModifier'">
+            <span class="text">{{ $t('modifier.result') }}</span> <span>{{modifier.type.contents > 0 ? '+' : ''}}{{modifier.type.contents}}</span>
+          </template>
+          <template v-if="modifier.type.tag === 'DamageDealt'">
+            <span>+{{modifier.type.contents}}</span>
+            <img :src="imgsrc(`damage.png`)" />
+          </template>
+          <template v-if="modifier.type.tag === 'AddSkillValue'">
+            <span>+</span>
+            <i
+               :class="`${normalizeSkill(modifier.type.contents)}-icon`"
+               :style="{ color: `var(--${normalizeSkill(modifier.type.contents)})` }"
+            ></i>
+          </template>
+          <template v-if="modifier.type.tag === 'SkillModifier'">
+            <span>+ {{modifier.type.value}}</span>
+            <i
+               :class="`${normalizeSkill(modifier.type.skillType)}-icon`"
+               :style="{ color: `var(--${normalizeSkill(modifier.type.skillType)})` }"
+            ></i>
+          </template>
+          <template v-if="modifier.type.tag === 'ActionSkillModifier'">
+            <span>+ {{modifier.type.value}}</span>
+            <i
+               :class="`${normalizeSkill(modifier.type.skillType)}-icon`"
+               :style="{ color: `var(--${normalizeSkill(modifier.type.skillType)})` }"
+            ></i>
+          </template>
+          <template v-if="modifier.type.tag === 'AnySkillValue'">
+            <span> {{modifier.type.contents}}</span>
+            <span class="text">{{ $t('modifier.skillValue') }}</span>
+          </template>
+          <template v-if="modifier.type.tag === 'DoubleSuccess'">
+            <span class="text">{{ $t('modifier.doubleSuccess') }}</span>
+          </template>
+          <template v-if="modifier.type.tag === 'DoubleDifficulty'">
+            <span class="text">{{ $t('modifier.doubleDifficulty') }}</span>
+          </template>
+          <template v-if="modifier.type.tag === 'AutomaticallyFailIfSucceedByAtLeast'">
+            <span class="text">{{ $t('modifier.automaticallyFailIfSucceedByAtLeast', { amount: modifier.type.contents }) }}</span>
+          </template>
+          <template v-if="modifier.type.tag === 'OtherModifier' && modifier.type.contents === 'CancelAnyChaosToken'">
+            <span class="text">{{ $t('modifier.cancelMatchingChaosTokensShort') }}</span>
+          </template>
+          <template v-if="modifier.type.tag === 'OtherModifier' && modifier.type.contents === 'MayIgnoreLocationEffectsAndKeywords'">
+            <span class="text">{{ $t('modifier.mayIgnoreLocationEffects') }}</span>
+          </template>
+          <template v-if="modifier.type.tag === 'OtherModifier' && modifier.type.contents === 'SkillIconsSubtract'">
+            <span class="text">{{ $t('modifier.skillIconsSubtract') }}</span>
+          </template>
+          <template v-if="modifier.type.tag === 'OtherModifier' && modifier.type.contents === 'SkillTestAutomaticallySucceeds'">
+            <span class="text">{{ $t('modifier.skillTestAutomaticallySucceeds') }}</span>
+          </template>
+          <template v-if="modifier.type.tag === 'OtherModifier' && modifier.type.contents === 'RevealAnotherChaosToken'">
+            <span class="text">{{ $t('modifier.revealAnotherChaosToken') }}</span>
+          </template>
+          <template v-if="modifier.type.tag === 'OtherModifier' && modifier.type.contents === 'CancelAnyChaosTokenAndDrawAnother'">
+            <span class="text">{{ $t('modifier.cancelMatchingChaosTokens') }}</span>
+          </template>
+        </div>
+      </div>
+      <AbilityButton
+        v-for="ability in abilities"
+        :key="ability.index"
+        :ability="ability.contents"
+        :tooltipIsButtonText="true"
+        :game="game"
+        @click="choose(ability.index)"
+        />
+
+      <div v-if="skillTestResults" class="skill-test-results" :class="{ success: skillTestResults.skillTestResultsSuccess, failure: !skillTestResults.skillTestResultsSuccess}">
+        <span v-if="skillTestResults.skillTestResultsSuccess">
+          {{ $t('succeededBy', { amount: (testResult ?? 0) + (skillTestResults.skillTestResultsResultModifiers || 0) }) }}
+        </span>
+        <span v-else-if="testResult !== null">
+          {{ $t('failedBy', { amount: testResult - (skillTestResults.skillTestResultsResultModifiers || 0) }) }}
+        </span>
+      </div>
+
+      <div v-if="skillTestResults" class="skill-test-results-break"></div>
+      <button
+        v-if="skipTriggersAction !== -1"
+        @click="$emit('choose', skipTriggersAction)"
+        class="skip-triggers-button"
+      >{{ $t('investigator.skipTriggers') }}</button>
+      <Question :game="game" :playerId="playerId" @choose="choose" :isSkillTest="true" />
+      <button
+        class="apply-results"
+        v-if="applyResultsAction !== -1"
+        @click="choose(applyResultsAction)"
+      >{{ $t('label.applyResults') }}</button>
+    </div>
+  </Draggable>
+</template>
+
+<style lang="scss" scoped>
+.skill-test {
+  backdrop-filter: blur(0px);
+  -webkit-backdrop-filter: blur(0px); /* Safari support */
+  background: #75968600;
+  min-width: fit-content;
+  text-align: center;
+  z-index: var(--z-index-10);
+  overflow: auto;
+
+  .choices, :deep(.choices) {
+    gap: 0px;
+  }
+
+  .question-choices, :deep(.question-choices) {
+    gap: 0px;
+  }
+}
+
+.skill-test-contents {
+  padding: 10px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  justify-items: center;
+  gap: 5px;
+  color: white;
+  background-color: rgb(0, 0, 0, 0.6);
+  backdrop-filter: blur(80px);
+  -webkit-backdrop-filter: blur(80px); /* Safari support */
+}
+
+.test-status {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: min(30px, 2vw);
+  padding: 0 min(30px, 2vw);
+  text-transform: uppercase;
+}
+
+.test-difficulty {
+  display: flex;
+  flex-direction: row;
+  gap: 5px;
+  align-items: center;
+  button {
+    width: fit-content;
+    height: auto;
+    display: inline-block;
+    aspect-ratio: 2;
+    padding: 2px 4px;
+    box-sizing: border-box;
+    border-radius: 2px;
+    min-width: 1.5em;
+  }
+}
+
+.difficulty {
+  background-color: darkred;
+  color: white;
+  font-weight: bold;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--pool-token-width);
+  height: var(--pool-token-width);
+  border-radius: 50%;
+}
+
+.skill {
+  background-color: darkgreen;
+  color: white;
+  font-weight: bold;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--pool-token-width);
+  height: var(--pool-token-width);
+  border-radius: 50%;
+}
+
+.modified-skill {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 5px;
+  button {
+    width: fit-content;
+    height: auto;
+    display: inline-block;
+    aspect-ratio: 2;
+    padding: 2px 4px;
+    box-sizing: border-box;
+    border-radius: 2px;
+    min-width: 1.5em;
+  }
+}
+
+.portrait {
+  width: var(--card-width);
+  height: auto;
+  border-radius: 5px;
+  box-shadow: 1px 1px 6px rgba(0, 0, 0, 0.45);
+
+  &:has(+ .card-container) {
+    margin-right: 0;
+  }
+}
+
+.committed-skills {
+  background: rgba(0, 0, 0, 0.6);
+
+  h2 {
+    background: #111;
+    color: #666;
+    text-transform: uppercase;
+    margin: 0
+  }
+}
+
+.skills-container {
+  padding: 6px 10px;
+  @media (max-width: 800px) and (orientation: portrait) {
+    .card-row-cards {
+      height: auto;
+    }
+    :deep(.card) {
+      width: 10.71vw ;
+      height: 14.994vw;
+      max-width: 10.71vw;
+    }
+  }
+}
+
+.skill-test-results {
+  padding: 10px;
+  text-align: left;
+}
+
+.skill-test-results-break {
+  flex-basis: 100%;
+  height: 0;
+}
+
+.apply-results {
+  width: 100%;
+  border: 0;
+  text-align: center;
+  text-transform: uppercase;
+  transition: all 0.3s ease-in;
+  border: 0;
+  padding: 10px;
+  background-color: var(--button-2);
+  color: #EEE;
+}
+
+button {
+  width: 100%;
+  border: 0;
+  text-align: center;
+  text-transform: uppercase;
+  transition: all 0.2s ease-in;
+  border: 0;
+  padding: 10px;
+  background-color: var(--select-dark-30);
+  &:hover {
+    background-color: var(--select-dark-20);
+  }
+  color: #EEE;
+}
+
+.success {
+  background-color: darkgreen;
+  text-transform: uppercase;
+  text-align: center;
+  color: white;
+}
+
+.failure {
+  background-color: darkred;
+  text-transform: uppercase;
+  text-align: center;
+  color: white;
+}
+
+i {
+  font-family: 'Arkham';
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+  -webkit-font-smoothing: antialiased;
+  position: relative;
+}
+
+i.iconSkull {
+  &:before {
+    font-family: "Arkham";
+    content: "\004E";
+  }
+}
+
+i.iconCultist {
+  &:before {
+    font-family: "Arkham";
+    content: "\0042";
+  }
+}
+
+i.iconTablet {
+  &:before {
+    font-family: "Arkham";
+    content: "\0056";
+  }
+}
+
+i.iconElderThing {
+  &:before {
+    font-family: "Arkham";
+    content: "\0043";
+  }
+}
+
+i.iconSkillWillpower {
+  &:before {
+    font-family: "Arkham";
+    content: "\0041";
+  }
+}
+
+i.iconSkillIntellect {
+  &:before {
+    font-family: "Arkham";
+    content: "\0046";
+  }
+}
+
+i.iconSkillCombat {
+  &:before {
+    font-family: "Arkham";
+    content: "\0044";
+  }
+}
+
+i.iconSkillAgility {
+  &:before {
+    font-family: "Arkham";
+    content: "\0053";
+  }
+}
+
+.button {
+  display: inline-block;
+  padding: 5px 10px;
+  margin: 2px;
+  background-color: var(--neutral-dark);
+  color: white;
+  border: 1px solid #666;
+  cursor: pointer;
+
+  &:hover {
+    background-color: #111;
+  }
+
+  &:active {
+    background-color: #666;
+    border-color: #111;
+  }
+
+  flex: 1;
+}
+
+.skill-test :deep(.choices) {
+  display: flex;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  gap: 0;
+  font-size: 0.7em;
+
+  .message-label {
+    flex: 1;
+    margin: 0;
+  }
+
+  button {
+    display: block;
+    border: 0;
+    text-align: left;
+    text-transform: uppercase;
+    transition: all 0.2s ease-in;
+    border: 0;
+    padding: 10px;
+    margin: 0 !important;
+    border-radius: 0;
+    background-color: var(--select-dark-30);
+    &:hover {
+      background-color: var(--select-dark-20);
+    }
+    color: #EEE;
+  }
+}
+
+
+.message-label {
+  flex: 1;
+}
+
+.vs {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.steps {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+
+  .step {
+    flex: 1;
+    text-align: center;
+    @media (max-width: 800px) and (orientation: portrait) {
+      font-size:0.9em;
+    }
+  }
+
+  .step:nth-child(odd) {
+    background: rgba(0, 0, 0, 0.4);
+    color: white;
+  }
+
+  .step:nth-child(even) {
+    background: rgba(0, 0, 0, 0.2);
+    color: white;
+  }
+
+  .step.active {
+    background: rgba(255, 0, 255, 0.5);
+  }
+
+}
+
+.willpower-skill {
+  color: var(--willpower);
+  background: var(--willpower-light);
+}
+
+.intellect-skill {
+  color: var(--intellect);
+  background: var(--intellect-light);
+}
+
+.combat-skill {
+  color: var(--combat);
+  background: var(--combat-light);
+}
+
+.agility-skill {
+  color: var(--agility);
+  background: var(--agility-light);
+}
+
+.willpower-skill, .intellect-skill, .combat-skill, .agility-skill {
+  font-size: 1.5em;
+  width:1.2em;
+  height:1.2em;
+  line-height: 1.2em;
+  border-radius: 50%;
+}
+
+.willpower-skill span, .intellect-skill span, .combat-skill span, .agility-skill span {
+  display: none;
+}
+
+.swarming {
+  display: flex;
+  flex-direction: row;
+  gap: 5px;
+
+  .swarm img {
+    width: var(--card-width);
+    min-width: var(--card-width);
+    border-radius: 7px;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.23), 0 3px 6px rgba(0,0,0,0.53);
+    border-radius: 6px;
+  }
+
+  .host :deep(img) {
+    box-sizing: border-box;
+    border: 2px dashed var(--title);
+    border-radius: 7px;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.23), 0 3px 6px rgba(0,0,0,0.53);
+    border-radius: 6px;
+  }
+}
+
+
+.skills {
+  display: flex;
+  flex-direction: row;
+  gap: 5px;
+}
+
+.half-resources {
+  img {
+    width: 30px;
+  }
+  align-items: center;
+  display: flex;
+  gap: 5px;
+}
+
+.modifier {
+  flex-shrink: 0;
+  align-items: center;
+  background: #000;
+  border-radius: 100px;
+  border: none;
+  color: var(--title);
+  display: flex;
+  gap: 4px;
+  padding: 2px 10px;
+  text-align: center;
+  user-select: none;
+  text-decoration: none;
+  text-transform: uppercase;
+  font-family: sans-serif;
+  > * {
+    pointer-events: none;
+  }
+
+  img {
+    height: 15px;
+  }
+
+  i {
+    align-self: flex-end;
+  }
+
+  .text {
+    font-size: 0.8em;
+  }
+}
+
+.modifiers {
+  align-self: flex-start;
+  display: flex;
+  flex-wrap: wrap;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 6px 10px;
+  gap: 5px;
+  font-size: 1em;
+}
+
+.focused-chaos-tokens {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.token-effects {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.token-effect {
+  background: transparent;
+  display: flex;
+  gap: 10px;
+  padding: 10px;
+  align-items: start;
+  color: var(--title);
+  justify-content: start;
+  text-align: left;
+  :deep(img) {
+    width: 25px;
+    flex-shrink: 0;
+  }
+}
+
+.test-source {
+  display: flex;
+  flex-direction: row;
+  gap: 5px;
+}
+
+.target-card {
+  width: 100%;
+  align-items: flex-end;
+  &.concealed {
+    width: 50%;
+    max-width: calc(var(--card-width) * 0.75);
+  }
+}
+
+.test-source {
+  width: 100%;
+  align-items: flex-start;
+}
+
+.note {
+  background: var(--neutral-extra-dark);
+  color: #888;
+  padding: 5px;
+}
+
+.skip-triggers-notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 14px;
+  background: rgba(45, 25, 55, 0.75);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.4);
+  color: #e8dff0;
+  font-size: 0.85em;
+  text-align: left;
+  letter-spacing: 0.02em;
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+}
+
+.skip-triggers-notice__text {
+  flex: 1;
+  line-height: 1.35;
+}
+
+.skip-triggers-notice__button {
+  flex-shrink: 0;
+  width: auto;
+  padding: 5px 14px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 999px;
+  color: #f4ecf8;
+  font-family: Teutonic, serif;
+  font-size: 0.85em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.skip-triggers-notice__button:hover {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.45);
+  color: #ffffff;
+}
+
+.skip-triggers-notice__button:active {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+@media (max-width: 600px) {
+  .skip-triggers-notice {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    text-align: center;
+  }
+  .skip-triggers-notice__button {
+    align-self: center;
+  }
+}
+
+</style>

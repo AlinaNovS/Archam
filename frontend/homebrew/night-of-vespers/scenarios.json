@@ -1,0 +1,58 @@
+[
+  {
+    "id": ":night-of-vespers:001",
+    "name": "Scenario 1",
+    "campaign": ":night-of-vespers",
+    "standalone": false,
+    "i18n": "scenario1"
+  },
+  {
+    "id": ":night-of-vespers:002",
+    "name": "Scenario 2",
+    "campaign": ":night-of-vespers",
+    "standalone": false,
+    "i18n": "scenario2"
+  },
+  {
+    "id": ":night-of-vespers:003",
+    "name": "Scenario 3",
+    "campaign": ":night-of-vespers",
+    "standalone": false,
+    "i18n": "scenario3"
+  },
+  {
+    "id": ":night-of-vespers:004",
+    "name": "Scenario 4",
+    "campaign": ":night-of-vespers",
+    "standalone": false,
+    "i18n": "scenario4"
+  },
+  {
+    "id": ":night-of-vespers:005",
+    "name": "Scenario 5",
+    "campaign": ":night-of-vespers",
+    "standalone": false,
+    "i18n": "scenario5"
+  },
+  {
+    "id": ":night-of-vespers:006",
+    "name": "Scenario 6",
+    "campaign": ":night-of-vespers",
+    "standalone": false,
+    "i18n": "scenario6"
+  },
+  {
+    "id": ":night-of-vespers:007",
+    "name": "Scenario 7",
+    "campaign": ":night-of-vespers",
+    "standalone": false,
+    "i18n": "scenario7"
+  },
+  {
+    "id": ":night-of-vespers:008",
+    "name": "Scenario 8",
+    "campaign": ":night-of-vespers",
+    "standalone": false,
+    "i18n": "scenario8"
+  }
+]

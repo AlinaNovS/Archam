@@ -1,0 +1,65 @@
+[
+  {
+    "id": ":rise-rapture-rise:001",
+    "name": "Scenario 1",
+    "campaign": ":rise-rapture-rise",
+    "standalone": false,
+    "i18n": "scenario1"
+  },
+  {
+    "id": ":rise-rapture-rise:002",
+    "name": "Scenario 2",
+    "campaign": ":rise-rapture-rise",
+    "standalone": false,
+    "i18n": "scenario2"
+  },
+  {
+    "id": ":rise-rapture-rise:003",
+    "name": "Scenario 3",
+    "campaign": ":rise-rapture-rise",
+    "standalone": false,
+    "i18n": "scenario3"
+  },
+  {
+    "id": ":rise-rapture-rise:004",
+    "name": "Scenario 4",
+    "campaign": ":rise-rapture-rise",
+    "standalone": false,
+    "i18n": "scenario4"
+  },
+  {
+    "id": ":rise-rapture-rise:005",
+    "name": "Scenario 5",
+    "campaign": ":rise-rapture-rise",
+    "standalone": false,
+    "i18n": "scenario5"
+  },
+  {
+    "id": ":rise-rapture-rise:006",
+    "name": "Scenario 6",
+    "campaign": ":rise-rapture-rise",
+    "standalone": false,
+    "i18n": "scenario6"
+  },
+  {
+    "id": ":rise-rapture-rise:007",
+    "name": "Scenario 7",
+    "campaign": ":rise-rapture-rise",
+    "standalone": false,
+    "i18n": "scenario7"
+  },
+  {
+    "id": ":rise-rapture-rise:008",
+    "name": "Scenario 8",
+    "campaign": ":rise-rapture-rise",
+    "standalone": false,
+    "i18n": "scenario8"
+  },
+  {
+    "id": ":rise-rapture-rise:009",
+    "name": "Scenario 9",
+    "campaign": ":rise-rapture-rise",
+    "standalone": false,
+    "i18n": "scenario9"
+  }
+]

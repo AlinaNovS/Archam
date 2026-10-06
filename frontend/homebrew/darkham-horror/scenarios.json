@@ -1,0 +1,345 @@
+[
+  {
+    "id": ":darkham-horror:Curse of the Rougarou",
+    "name": "Curse of the Rougarou",
+    "campaign": ":darkham-horror",
+    "standalone": false,
+    "i18n": "curse-of-the-rougarou"
+  },
+  {
+    "id": ":darkham-horror:Carnevale of Horrors",
+    "name": "Carnevale of Horrors",
+    "campaign": ":darkham-horror",
+    "standalone": false,
+    "i18n": "carnevale-of-horrors"
+  },
+  {
+    "id": ":darkham-horror:The Labyrinths of Lunacy",
+    "name": "The Labyrinths of Lunacy",
+    "campaign": ":darkham-horror",
+    "standalone": false,
+    "i18n": "the-labyrinths-of-lunacy"
+  },
+  {
+    "id": ":darkham-horror:Guardians of the Abyss",
+    "name": "Guardians of the Abyss",
+    "campaign": ":darkham-horror",
+    "standalone": false,
+    "i18n": "guardians-of-the-abyss"
+  },
+  {
+    "id": ":darkham-horror:Murder at the Excelsior Hotel",
+    "name": "Murder at the Excelsior Hotel",
+    "campaign": ":darkham-horror",
+    "standalone": false,
+    "i18n": "murder-at-the-excelsior-hotel"
+  },
+  {
+    "id": ":darkham-horror:The Blob that Ate Everything",
+    "name": "The Blob that Ate Everything",
+    "campaign": ":darkham-horror",
+    "standalone": false,
+    "i18n": "the-blob-that-ate-everything"
+  },
+  {
+    "id": ":darkham-horror:War of the Outer Gods",
+    "name": "War of the Outer Gods",
+    "campaign": ":darkham-horror",
+    "standalone": false,
+    "i18n": "war-of-the-outer-gods"
+  },
+  {
+    "id": ":darkham-horror:Machinations Through Time",
+    "name": "Machinations Through Time",
+    "campaign": ":darkham-horror",
+    "standalone": false,
+    "i18n": "machinations-through-time"
+  },
+  {
+    "id": ":darkham-horror:Fortune and Folly",
+    "name": "Fortune and Folly",
+    "campaign": ":darkham-horror",
+    "standalone": false,
+    "i18n": "fortune-and-folly"
+  },
+  {
+    "id": ":darkham-horror:The Midwinter Gala",
+    "name": "The Midwinter Gala",
+    "campaign": ":darkham-horror",
+    "standalone": false,
+    "i18n": "the-midwinter-gala"
+  },
+  {
+    "id": ":darkham-horror:Film Fatale",
+    "name": "Film Fatale",
+    "campaign": ":darkham-horror",
+    "standalone": false,
+    "i18n": "film-fatale"
+  },
+  {
+    "id": ":darkham-horror:Challenge Scenario - All or Nothing",
+    "name": "Challenge Scenario - All or Nothing",
+    "campaign": ":darkham-horror",
+    "standalone": false,
+    "i18n": "challenge-scenario-all-or-nothing"
+  },
+  {
+    "id": ":darkham-horror:Challenge Scenario - Bad Blood",
+    "name": "Challenge Scenario - Bad Blood",
+    "campaign": ":darkham-horror",
+    "standalone": false,
+    "i18n": "challenge-scenario-bad-blood"
+  },
+  {
+    "id": ":darkham-horror:Challenge Scenario - By the Book",
+    "name": "Challenge Scenario - By the Book",
+    "campaign": ":darkham-horror",
+    "standalone": false,
+    "i18n": "challenge-scenario-by-the-book"
+  },
+  {
+    "id": ":darkham-horror:Challenge Scenario - Laid to Rest",
+    "name": "Challenge Scenario - Laid to Rest",
+    "campaign": ":darkham-horror",
+    "standalone": false,
+    "i18n": "challenge-scenario-laid-to-rest"
+  },
+  {
+    "id": ":darkham-horror:Challenge Scenario - Read or Die",
+    "name": "Challenge Scenario - Read or Die",
+    "campaign": ":darkham-horror",
+    "standalone": false,
+    "i18n": "challenge-scenario-read-or-die"
+  },
+  {
+    "id": ":darkham-horror:Challenge Scenario - Red Tide Rising",
+    "name": "Challenge Scenario - Red Tide Rising",
+    "campaign": ":darkham-horror",
+    "standalone": false,
+    "i18n": "challenge-scenario-red-tide-rising"
+  },
+  {
+    "id": ":darkham-horror:Challenge Scenario - Relics of the Past",
+    "name": "Challenge Scenario - Relics of the Past",
+    "campaign": ":darkham-horror",
+    "standalone": false,
+    "i18n": "challenge-scenario-relics-of-the-past"
+  },
+  {
+    "id": ":darkham-horror:Challenge Scenario - Enthralling Encore",
+    "name": "Challenge Scenario - Enthralling Encore",
+    "campaign": ":darkham-horror",
+    "standalone": false,
+    "i18n": "challenge-scenario-enthralling-encore"
+  },
+  {
+    "id": ":darkham-horror:Barkham Horror - The Meddling of Meowlathotep",
+    "name": "Barkham Horror - The Meddling of Meowlathotep",
+    "campaign": ":darkham-horror",
+    "standalone": false,
+    "i18n": "barkham-horror-the-meddling-of-meowlathotep"
+  },
+  {
+    "id": ":darkham-horror:Against the Wendigo",
+    "name": "Against the Wendigo",
+    "campaign": ":darkham-horror",
+    "standalone": false,
+    "i18n": "against-the-wendigo"
+  },
+  {
+    "id": ":darkham-horror:And Then There Were None",
+    "name": "And Then There Were None",
+    "campaign": ":darkham-horror",
+    "standalone": false,
+    "i18n": "and-then-there-were-none"
+  },
+  {
+    "id": ":darkham-horror:Carnevale of Spiders",
+    "name": "Carnevale of Spiders",
+    "campaign": ":darkham-horror",
+    "standalone": false,
+    "i18n": "carnevale-of-spiders"
+  },
+  {
+    "id": ":darkham-horror:Clueless Cultist Coup",
+    "name": "Clueless Cultist Coup",
+    "campaign": ":darkham-horror",
+    "standalone": false,
+    "i18n": "clueless-cultist-coup"
+  },
+  {
+    "id": ":darkham-horror:Code Red at Bleeding Heart",
+    "name": "Code Red at Bleeding Heart",
+    "campaign": ":darkham-horror",
+    "standalone": false,
+    "i18n": "code-red-at-bleeding-heart"
+  },
+  {
+    "id": ":darkham-horror:Consternation on the Constellation",
+    "name": "Consternation on the Constellation",
+    "campaign": ":darkham-horror",
+    "standalone": false,
+    "i18n": "consternation-on-the-constellation"
+  },
+  {
+    "id": ":darkham-horror:Cosmic Pantheon",
+    "name": "Cosmic Pantheon",
+    "campaign": ":darkham-horror",
+    "standalone": false,
+    "i18n": "cosmic-pantheon"
+  },
+  {
+    "id": ":darkham-horror:Defense of the Arkham",
+    "name": "Defense of the Arkham",
+    "campaign": ":darkham-horror",
+    "standalone": false,
+    "i18n": "defense-of-the-arkham"
+  },
+  {
+    "id": ":darkham-horror:Devils In The Canyon",
+    "name": "Devils In The Canyon",
+    "campaign": ":darkham-horror",
+    "standalone": false,
+    "i18n": "devils-in-the-canyon"
+  },
+  {
+    "id": ":darkham-horror:Don't Starve - Scenario",
+    "name": "Don't Starve - Scenario",
+    "campaign": ":darkham-horror",
+    "standalone": false,
+    "i18n": "don-t-starve-scenario"
+  },
+  {
+    "id": ":darkham-horror:Election Night",
+    "name": "Election Night",
+    "campaign": ":darkham-horror",
+    "standalone": false,
+    "i18n": "election-night"
+  },
+  {
+    "id": ":darkham-horror:The Facts in the Case of M. Valdemar",
+    "name": "The Facts in the Case of M. Valdemar",
+    "campaign": ":darkham-horror",
+    "standalone": false,
+    "i18n": "the-facts-in-the-case-of-m-valdemar"
+  },
+  {
+    "id": ":darkham-horror:The Fall of the House of Usher",
+    "name": "The Fall of the House of Usher",
+    "campaign": ":darkham-horror",
+    "standalone": false,
+    "i18n": "the-fall-of-the-house-of-usher"
+  },
+  {
+    "id": ":darkham-horror:Fortune or Folly - Parallel Rex Murphy",
+    "name": "Fortune or Folly - Parallel Rex Murphy",
+    "campaign": ":darkham-horror",
+    "standalone": false,
+    "i18n": "fortune-or-folly-parallel-rex-murphy"
+  },
+  {
+    "id": ":darkham-horror:The Grand Oak Hotel",
+    "name": "The Grand Oak Hotel",
+    "campaign": ":darkham-horror",
+    "standalone": false,
+    "i18n": "the-grand-oak-hotel"
+  },
+  {
+    "id": ":darkham-horror:The Invisible Man",
+    "name": "The Invisible Man",
+    "campaign": ":darkham-horror",
+    "standalone": false,
+    "i18n": "the-invisible-man"
+  },
+  {
+    "id": ":darkham-horror:The Legend of Sleepy Hollow",
+    "name": "The Legend of Sleepy Hollow",
+    "campaign": ":darkham-horror",
+    "standalone": false,
+    "i18n": "the-legend-of-sleepy-hollow"
+  },
+  {
+    "id": ":darkham-horror:The Living Labyrinth",
+    "name": "The Living Labyrinth",
+    "campaign": ":darkham-horror",
+    "standalone": false,
+    "i18n": "the-living-labyrinth"
+  },
+  {
+    "id": ":darkham-horror:The Midwinter Gala - Fashionably Late",
+    "name": "The Midwinter Gala - Fashionably Late",
+    "campaign": ":darkham-horror",
+    "standalone": false,
+    "i18n": "the-midwinter-gala-fashionably-late"
+  },
+  {
+    "id": ":darkham-horror:Miskatonic Mouse",
+    "name": "Miskatonic Mouse",
+    "campaign": ":darkham-horror",
+    "standalone": false,
+    "i18n": "miskatonic-mouse"
+  },
+  {
+    "id": ":darkham-horror:Mythos Deviations",
+    "name": "Mythos Deviations",
+    "campaign": ":darkham-horror",
+    "standalone": false,
+    "i18n": "mythos-deviations"
+  },
+  {
+    "id": ":darkham-horror:Return to the Consternation on the Constellation",
+    "name": "Return to the Consternation on the Constellation",
+    "campaign": ":darkham-horror",
+    "standalone": false,
+    "i18n": "return-to-the-consternation-on-the-constellation"
+  },
+  {
+    "id": ":darkham-horror:Return to the Wendigo",
+    "name": "Return to the Wendigo",
+    "campaign": ":darkham-horror",
+    "standalone": false,
+    "i18n": "return-to-the-wendigo"
+  },
+  {
+    "id": ":darkham-horror:Snakes and Ladders",
+    "name": "Snakes and Ladders",
+    "campaign": ":darkham-horror",
+    "standalone": false,
+    "i18n": "snakes-and-ladders"
+  },
+  {
+    "id": ":darkham-horror:The Strange Case of Dr. Jekyll and Mr. Hyde",
+    "name": "The Strange Case of Dr. Jekyll and Mr. Hyde",
+    "campaign": ":darkham-horror",
+    "standalone": false,
+    "i18n": "the-strange-case-of-dr-jekyll-and-mr-hyde"
+  },
+  {
+    "id": ":darkham-horror:'Tis The Season",
+    "name": "'Tis The Season",
+    "campaign": ":darkham-horror",
+    "standalone": false,
+    "i18n": "tis-the-season"
+  },
+  {
+    "id": ":darkham-horror:When the World Screamed",
+    "name": "When the World Screamed",
+    "campaign": ":darkham-horror",
+    "standalone": false,
+    "i18n": "when-the-world-screamed"
+  },
+  {
+    "id": ":darkham-horror:The Witcher Horror",
+    "name": "The Witcher Horror",
+    "campaign": ":darkham-horror",
+    "standalone": false,
+    "i18n": "the-witcher-horror"
+  },
+  {
+    "id": ":darkham-horror:The Woods of the Black Goat",
+    "name": "The Woods of the Black Goat",
+    "campaign": ":darkham-horror",
+    "standalone": false,
+    "i18n": "the-woods-of-the-black-goat"
+  }
+]

@@ -1,0 +1,58 @@
+[
+  {
+    "id": ":the-matter-of-britain:001",
+    "name": "Scenario 1",
+    "campaign": ":the-matter-of-britain",
+    "standalone": false,
+    "i18n": "scenario1"
+  },
+  {
+    "id": ":the-matter-of-britain:002",
+    "name": "Scenario 2",
+    "campaign": ":the-matter-of-britain",
+    "standalone": false,
+    "i18n": "scenario2"
+  },
+  {
+    "id": ":the-matter-of-britain:003",
+    "name": "Scenario 3",
+    "campaign": ":the-matter-of-britain",
+    "standalone": false,
+    "i18n": "scenario3"
+  },
+  {
+    "id": ":the-matter-of-britain:004",
+    "name": "Scenario 4",
+    "campaign": ":the-matter-of-britain",
+    "standalone": false,
+    "i18n": "scenario4"
+  },
+  {
+    "id": ":the-matter-of-britain:005",
+    "name": "Scenario 5",
+    "campaign": ":the-matter-of-britain",
+    "standalone": false,
+    "i18n": "scenario5"
+  },
+  {
+    "id": ":the-matter-of-britain:006",
+    "name": "Scenario 6",
+    "campaign": ":the-matter-of-britain",
+    "standalone": false,
+    "i18n": "scenario6"
+  },
+  {
+    "id": ":the-matter-of-britain:007",
+    "name": "Scenario 7",
+    "campaign": ":the-matter-of-britain",
+    "standalone": false,
+    "i18n": "scenario7"
+  },
+  {
+    "id": ":the-matter-of-britain:008",
+    "name": "Scenario 8",
+    "campaign": ":the-matter-of-britain",
+    "standalone": false,
+    "i18n": "scenario8"
+  }
+]

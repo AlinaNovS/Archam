@@ -1,0 +1,647 @@
+import * as JsonDecoder from 'ts.data.json';
+import { Message, messageDecoder } from '@/arkham/types/Message';
+import { Cost, costDecoder } from '@/arkham/types/Cost';
+import { FlavorText, flavorTextDecoder } from '@/arkham/types/FlavorText';
+import { TarotCard, tarotCardDecoder } from '@/arkham/types/TarotCard';
+import { Token, tokenDecoder } from '@/arkham/types/Token';
+import { Source, sourceDecoder } from '@/arkham/types/Source';
+
+type QuestionCommon = {
+  choices?: Message[]
+  question?: Question
+  readCards?: string[] | null
+  label?: string
+}
+
+export type Question = QuestionCommon & (
+  | ChooseOne 
+  | ChooseUpToN 
+  | ChooseSome 
+  | ChooseSome1 
+  | ChooseN 
+  | ChooseOneAtATime 
+  | ChooseOneAtATimeWithAuto 
+  | ChooseDeck 
+  | ChooseUpgradeDeck 
+  | ChoosePaymentAmounts 
+  | ChooseAmounts 
+  | QuestionLabel
+  | PayCostQuestion
+  | QuestionWithSource
+  | Read
+  | ChooseOneWizard
+  | PickSupplies 
+  | DropDown 
+  | PickScenarioSettings 
+  | PickCampaignSettings 
+  | ChooseOneFromEach 
+  | PickDestiny
+  | PickCampaignSpecific
+  | PickScenarioSpecific
+  | ChooseExchangeAmounts
+  | ContinueCampaign
+)
+
+export enum QuestionType {
+  CHOOSE_ONE = 'ChooseOne',
+  PLAYER_WINDOW_CHOOSE_ONE = 'PlayerWindowChooseOne',
+  // A reaction/forced window ask. Renders as a plain ChooseOne; the distinct tag
+  // exists so the backend can drop stale seats of a multi-player window AskMap.
+  WINDOW_CHOOSE_ONE = 'WindowChooseOne',
+  CHOOSE_ONE_FROM_EACH = 'ChooseOneFromEach',
+  CHOOSE_UP_TO_N = 'ChooseUpToN',
+  CHOOSE_SOME = 'ChooseSome',
+  CHOOSE_SOME_1 = 'ChooseSome1',
+  CHOOSE_N = 'ChooseN',
+  CHOOSE_ONE_AT_A_TIME = 'ChooseOneAtATime',
+  CHOOSE_ONE_AT_A_TIME_WITH_AUTO = 'ChooseOneAtATimeWithAuto',
+  CHOOSE_UPGRADE_DECK = 'ChooseUpgradeDeck',
+  CHOOSE_DECK = 'ChooseDeck',
+  CHOOSE_PAYMENT_AMOUNTS = 'ChoosePaymentAmounts',
+  CHOOSE_AMOUNTS = 'ChooseAmounts',
+  QUESTION_LABEL = 'QuestionLabel',
+  PAY_COST_QUESTION = 'PayCostQuestion',
+  QUESTION_WITH_SOURCE = 'QuestionWithSource',
+  READ = 'Read',
+  CHOOSE_ONE_WIZARD = 'ChooseOneWizard',
+  PICK_SUPPLIES = 'PickSupplies',
+  PICK_DESTINY = 'PickDestiny',
+  DROP_DOWN = 'DropDown',
+  PICK_SCENARIO_SETTINGS = 'PickScenarioSettings',
+  PICK_CAMPAIGN_SETTINGS = 'PickCampaignSettings',
+  PICK_CAMPAIGN_SPECIFIC = 'PickCampaignSpecific',
+  PICK_SCENARIO_SPECIFIC = 'PickScenarioSpecific',
+  CHOOSE_EXCHANGE_AMOUNTS = 'ChooseExchangeAmounts',
+  CONTINUE_CAMPAIGN = 'ContinueCampaign'
+}
+
+export type ContinueCampaign = {
+  tag: QuestionType.CONTINUE_CAMPAIGN;
+}
+
+export type ChooseExchangeAmounts = {
+  tag: QuestionType.CHOOSE_EXCHANGE_AMOUNTS;
+  investigator1Id: string;
+  investigator2Id: string;
+  investigator1InitialAmount: number;
+  investigator2InitialAmount: number;
+  token: Token
+  source: Source
+}
+
+export type PickScenarioSettings = {
+  tag: QuestionType.PICK_SCENARIO_SETTINGS;
+}
+
+export type PickCampaignSettings = {
+  tag: QuestionType.PICK_CAMPAIGN_SETTINGS;
+}
+
+export type ChooseOne = {
+  tag: QuestionType.CHOOSE_ONE;
+  choices: Message[];
+  // True when the backend produced a `PlayerWindowChooseOne` (a fast/action player
+  // window). We normalize the tag to `ChooseOne` for rendering, but preserve this flag
+  // so consumers can tell a genuine play window from an unrelated single-choice prompt.
+  isPlayerWindow?: boolean;
+  isWindow?: boolean;
+}
+
+// The backend represents this as a nest list, but we flatten it and pass the flattened index
+export type ChooseOneFromEach = {
+  tag: QuestionType.CHOOSE_ONE_FROM_EACH;
+  choices: Message[];
+}
+
+export type QuestionLabel = {
+  tag: QuestionType.QUESTION_LABEL
+  card: string | null
+  label: string
+  question: Question
+}
+
+export type PayCostQuestion = {
+  tag: QuestionType.PAY_COST_QUESTION
+  cost: Cost
+  question: Question
+}
+
+export type QuestionWithSource = {
+  tag: QuestionType.QUESTION_WITH_SOURCE
+  source: Source
+  tooltip: string | null
+  question: Question
+}
+
+export type Read = {
+  tag: QuestionType.READ
+  flavorText: FlavorText
+  readChoices: ReadChoices
+  readCards: string[] | null;
+}
+
+export type WizardChoice = {
+  label: string
+  flavorText: FlavorText
+  messages: unknown[]
+}
+
+export type ChooseOneWizard = {
+  tag: QuestionType.CHOOSE_ONE_WIZARD
+  flavorText: FlavorText
+  wizardChoices: WizardChoice[]
+  confirmLabel: string
+  backLabel: string
+}
+
+type Supply
+  = 'Provisions'
+  | 'Medicine'
+  | 'Rope'
+  | 'Blanket'
+  | 'Canteen'
+  | 'Torches'
+  | 'Compass'
+  | 'Map'
+  | 'Binoculars'
+  | 'Chalk'
+  | 'Pendant'
+  | 'Gasoline'
+  | 'Pocketknife'
+  | 'Pickaxe'
+  | 'MysteriousScepter'
+  | 'StickyGoop'
+
+export const supplyDecoder = JsonDecoder.oneOf<Supply>([
+  JsonDecoder.literal('Provisions'),
+  JsonDecoder.literal('Medicine'),
+  JsonDecoder.literal('Rope'),
+  JsonDecoder.literal('Blanket'),
+  JsonDecoder.literal('Canteen'),
+  JsonDecoder.literal('Torches'),
+  JsonDecoder.literal('Compass'),
+  JsonDecoder.literal('Map'),
+  JsonDecoder.literal('Binoculars'),
+  JsonDecoder.literal('Chalk'),
+  JsonDecoder.literal('Pendant'),
+  JsonDecoder.literal('Gasoline'),
+  JsonDecoder.literal('Pocketknife'),
+  JsonDecoder.literal('Pickaxe'),
+  JsonDecoder.literal('MysteriousScepter'),
+  JsonDecoder.literal('StickyGoop')
+], 'Supply')
+
+export type PickSupplies = {
+  tag: QuestionType.PICK_SUPPLIES
+  pointsRemaining: number
+  chosenSupplies: Supply[]
+  choices: Message[]
+  resupply: boolean
+}
+
+export type DestinyDrawing = {
+  scenario: string
+  tarot: TarotCard
+}
+
+export type PickDestiny = {
+  tag: QuestionType.PICK_DESTINY
+  drawings: DestinyDrawing[]
+}
+
+export type PickCampaignSpecific = {
+  tag: QuestionType.PICK_CAMPAIGN_SPECIFIC
+  contents: unknown
+}
+
+export type PickScenarioSpecific = {
+  tag: QuestionType.PICK_SCENARIO_SPECIFIC
+  contents: unknown
+}
+
+export type DropDown = {
+  tag: QuestionType.DROP_DOWN
+  options: string[]
+}
+
+export type ChooseN = {
+  tag: QuestionType.CHOOSE_N
+  amount: number
+  choices: Message[]
+}
+
+export type ChooseSome = {
+  tag: QuestionType.CHOOSE_SOME
+  choices: Message[]
+}
+
+export type ChooseSome1 = {
+  tag: QuestionType.CHOOSE_SOME_1
+  choices: Message[]
+}
+
+export type ChooseUpToN = {
+  tag: QuestionType.CHOOSE_UP_TO_N
+  amount: number
+  choices: Message[]
+}
+
+export type ChooseOneAtATime = {
+  tag: QuestionType.CHOOSE_ONE_AT_A_TIME
+  choices: Message[]
+}
+
+export type ChooseOneAtATimeWithAuto = {
+  tag: QuestionType.CHOOSE_ONE_AT_A_TIME_WITH_AUTO
+  label: string
+  choices: Message[]
+}
+
+export type ChoosePaymentAmounts = {
+  tag: QuestionType.CHOOSE_PAYMENT_AMOUNTS
+  label: string
+  paymentAmountTargetValue: AmountTarget | null
+  paymentAmountChoices: PaymentAmountChoice[]
+}
+
+export type AmountTarget
+  = { tag: 'MaxAmountTarget', contents: number }
+  | { tag: 'TotalAmountTarget', contents: number }
+  | { tag: "MinAmountTarget", contents: number }
+  | { tag: 'AmountOneOf', contents: number[] }
+
+// Returns true when `total` violates `target`'s constraint, or false when it
+// satisfies (or the target is absent/zero). Centralises the logic that used
+// to be three identical switch blocks in Question.vue.
+export function amountTargetUnmet(target: AmountTarget | null | undefined, total: number): boolean {
+  if (!target) return false
+  switch (target.tag) {
+    case 'MaxAmountTarget':
+      return target.contents ? total > target.contents : false
+    case 'MinAmountTarget':
+      return target.contents ? total < target.contents : false
+    case 'TotalAmountTarget':
+      return target.contents ? total !== target.contents : false
+    case 'AmountOneOf':
+      return target.contents.length > 0 ? !target.contents.includes(total) : false
+  }
+}
+
+export type ChooseAmounts = {
+  tag: QuestionType.CHOOSE_AMOUNTS
+  label: string
+  amountTargetValue: AmountTarget
+  amountChoices: AmountChoice[]
+}
+
+export type ChooseUpgradeDeck = {
+  tag: QuestionType.CHOOSE_UPGRADE_DECK
+}
+
+export type ChooseDeck = {
+  tag: QuestionType.CHOOSE_DECK
+}
+
+export type AmountChoice = {
+  choiceId: string
+  label: string
+  minBound: number
+  maxBound: number
+}
+
+export const amountChoiceDecoder = JsonDecoder.object<AmountChoice>({
+  choiceId: JsonDecoder.string(),
+  label: JsonDecoder.string(),
+  minBound: JsonDecoder.number(),
+  maxBound: JsonDecoder.number(),
+}, 'AmountChoice')
+
+export const amountTargetDecoder = JsonDecoder.oneOf<AmountTarget>(
+  [ JsonDecoder.object({ tag: JsonDecoder.literal('MaxAmountTarget'), contents: JsonDecoder.number()}, 'MaxAmountTarget')
+  , JsonDecoder.object({ tag: JsonDecoder.literal('MinAmountTarget'), contents: JsonDecoder.number()}, 'MinAmountTarget')
+  , JsonDecoder.object({ tag: JsonDecoder.literal('TotalAmountTarget'), contents: JsonDecoder.number()}, 'TotalAmountTarget')
+  , JsonDecoder.object({ tag: JsonDecoder.literal('AmountOneOf'), contents: JsonDecoder.array(JsonDecoder.number(), 'number[]')}, 'AmountOneOf')
+  ]
+, 'AmountTarget')
+
+export const chooseAmountsDecoder = JsonDecoder.object<ChooseAmounts>(
+  {
+    tag: JsonDecoder.literal(QuestionType.CHOOSE_AMOUNTS),
+    label: JsonDecoder.string(),
+    amountTargetValue: amountTargetDecoder,
+    amountChoices: JsonDecoder.array(amountChoiceDecoder, 'AmountChoice[]'),
+  }, 'ChooseAmounts',
+)
+
+export type PaymentAmountChoice = {
+  choiceId: string
+  investigatorId: string
+  minBound: number
+  maxBound: number
+  title: string
+}
+
+export const paymentAmountChoiceDecoder = JsonDecoder.object<PaymentAmountChoice>({
+  choiceId: JsonDecoder.string(),
+  investigatorId: JsonDecoder.string(),
+  minBound: JsonDecoder.number(),
+  maxBound: JsonDecoder.number(),
+  title: JsonDecoder.string(),
+}, 'PaymentAmountChoice')
+
+export const chooseExchangeAmountsDecoder = JsonDecoder.object<ChooseExchangeAmounts>(
+  {
+    tag: JsonDecoder.literal(QuestionType.CHOOSE_EXCHANGE_AMOUNTS),
+    investigator1Id: JsonDecoder.string(),
+    investigator2Id: JsonDecoder.string(),
+    investigator1InitialAmount: JsonDecoder.number(),
+    investigator2InitialAmount: JsonDecoder.number(),
+    token: tokenDecoder,
+    source: sourceDecoder,
+  },
+  'ChooseExchangeAmounts',
+);
+
+export const choosePaymentAmountsDecoder = JsonDecoder.object<ChoosePaymentAmounts>(
+  {
+    tag: JsonDecoder.literal(QuestionType.CHOOSE_PAYMENT_AMOUNTS),
+    label: JsonDecoder.string(),
+    paymentAmountTargetValue: JsonDecoder.nullable(amountTargetDecoder),
+    paymentAmountChoices: JsonDecoder.array(paymentAmountChoiceDecoder, 'PaymentAmountChoice[]'),
+  }, 'ChoosePaymentAmounts',
+);
+
+export const chooseUpgradeDeckDecoder = JsonDecoder.object<ChooseUpgradeDeck>(
+  {
+    tag: JsonDecoder.literal(QuestionType.CHOOSE_UPGRADE_DECK),
+  },
+  'ChooseUpgradeDeck',
+);
+
+export const chooseDeckDecoder = JsonDecoder.object<ChooseDeck>(
+  {
+    tag: JsonDecoder.literal(QuestionType.CHOOSE_DECK),
+  },
+  'ChooseDeck',
+);
+
+export const pickScenarioSettingsDecoder = JsonDecoder.object<PickScenarioSettings>(
+  {
+    tag: JsonDecoder.literal(QuestionType.PICK_SCENARIO_SETTINGS),
+  },
+  'PickScenarioSettings',
+);
+
+export const pickCampaignSettingsDecoder = JsonDecoder.object<PickCampaignSettings>(
+  {
+    tag: JsonDecoder.literal(QuestionType.PICK_CAMPAIGN_SETTINGS),
+  },
+  'PickCampaignSettings',
+);
+
+export const questionLabelDecoder: JsonDecoder.Decoder<QuestionLabel> = JsonDecoder.object<QuestionLabel>(
+  {
+    tag: JsonDecoder.literal(QuestionType.QUESTION_LABEL),
+    label: JsonDecoder.string(),
+    card: JsonDecoder.nullable(JsonDecoder.string()),
+    question: JsonDecoder.lazy(() => questionDecoder)
+  },
+  'QuestionLabel',
+);
+
+export const payCostQuestionDecoder: JsonDecoder.Decoder<PayCostQuestion> = JsonDecoder.object<PayCostQuestion>(
+  {
+    tag: JsonDecoder.literal(QuestionType.PAY_COST_QUESTION),
+    cost: costDecoder,
+    question: JsonDecoder.lazy(() => questionDecoder)
+  },
+  'PayCostQuestion',
+);
+
+export const questionWithSourceDecoder: JsonDecoder.Decoder<QuestionWithSource> = JsonDecoder.object<QuestionWithSource>(
+  {
+    tag: JsonDecoder.literal(QuestionType.QUESTION_WITH_SOURCE),
+    source: sourceDecoder,
+    tooltip: JsonDecoder.nullable(JsonDecoder.string()),
+    question: JsonDecoder.lazy(() => questionDecoder)
+  },
+  'QuestionWithSource',
+);
+
+
+export type ReadChoices
+  = { tag: "BasicReadChoices", contents: Message[] }
+  | { tag: "LeadInvestigatorMustDecide", contents: Message [] }
+
+
+export const readChoicesDecoder: JsonDecoder.Decoder<ReadChoices> = JsonDecoder.oneOf<ReadChoices>( [
+  JsonDecoder.object({
+    tag: JsonDecoder.literal('BasicReadChoices'),
+    contents: JsonDecoder.array(messageDecoder, 'Message[]')
+  }, 'BasicReadChoices'),
+  JsonDecoder.object({
+    tag: JsonDecoder.literal('BasicReadChoicesN'),
+    contents: JsonDecoder.tuple([JsonDecoder.number(), JsonDecoder.array(messageDecoder, 'Message[]')], 'contents')
+  }, 'BasicReadChoicesN').map(({ contents }) => ({ tag: 'BasicReadChoices', contents: contents[1] })),
+  JsonDecoder.object({
+    tag: JsonDecoder.literal('BasicReadChoicesUpToN'),
+    contents: JsonDecoder.tuple([JsonDecoder.number(), JsonDecoder.array(messageDecoder, 'Message[]')], 'contents')
+  }, 'BasicReadChoicesUpToN').map(({ contents }) => ({ tag: 'BasicReadChoices', contents: contents[1] })),
+  JsonDecoder.object({
+    tag: JsonDecoder.literal('LeadInvestigatorMustDecide'),
+    contents: JsonDecoder.array(messageDecoder, 'Message[]')
+    }, 'LeadInvestigatorMustDecide')
+], 'ReadChoices');
+
+export const readDecoder: JsonDecoder.Decoder<Read> = JsonDecoder.object<Read>(
+  {
+    tag: JsonDecoder.literal(QuestionType.READ),
+    flavorText: flavorTextDecoder,
+    readChoices: readChoicesDecoder,
+    readCards: JsonDecoder.nullable(JsonDecoder.array(JsonDecoder.string(), 'CardCodes[]'))
+  },
+  'Read',
+);
+
+export const chooseOneWizardDecoder: JsonDecoder.Decoder<ChooseOneWizard> = JsonDecoder.object<ChooseOneWizard>(
+  {
+    tag: JsonDecoder.literal(QuestionType.CHOOSE_ONE_WIZARD),
+    flavorText: flavorTextDecoder,
+    wizardChoices: JsonDecoder.array(JsonDecoder.object<WizardChoice>(
+      {
+        label: JsonDecoder.string(),
+        flavorText: flavorTextDecoder,
+        messages: JsonDecoder.array(JsonDecoder.succeed(), 'unknown[]'),
+      },
+      'WizardChoice',
+    ), 'WizardChoice[]'),
+    confirmLabel: JsonDecoder.string(),
+    backLabel: JsonDecoder.string(),
+  },
+  'ChooseOneWizard',
+);
+
+export const pickSuppliesDecoder = JsonDecoder.object<PickSupplies>(
+  {
+    tag: JsonDecoder.literal(QuestionType.PICK_SUPPLIES),
+    pointsRemaining: JsonDecoder.number(),
+    chosenSupplies: JsonDecoder.array<Supply>(supplyDecoder, 'Supply[]'),
+    choices: JsonDecoder.array<Message>(messageDecoder, 'Message[]'),
+    resupply: JsonDecoder.boolean()
+  },
+  'PickSupplies',
+);
+
+export const pickDestinyDecoder = JsonDecoder.object<PickDestiny>(
+  {
+    tag: JsonDecoder.literal(QuestionType.PICK_DESTINY),
+    drawings: JsonDecoder.array<DestinyDrawing>(JsonDecoder.object<DestinyDrawing>(
+      {
+        scenario: JsonDecoder.string(),
+        tarot: tarotCardDecoder,
+      }, 'DestinyDrawing'), 'DestinyDrawing[]')
+  },
+  'PickSupplies',
+);
+
+export const pickCampaignSpecificDecoder = JsonDecoder.object<PickCampaignSpecific>(
+  {
+    tag: JsonDecoder.literal(QuestionType.PICK_CAMPAIGN_SPECIFIC),
+    contents: JsonDecoder.succeed()
+  },
+  'PickCampaignSpecific',
+);
+
+export const pickScenarioSpecificDecoder = JsonDecoder.object<PickScenarioSpecific>(
+  {
+    tag: JsonDecoder.literal(QuestionType.PICK_SCENARIO_SPECIFIC),
+    contents: JsonDecoder.succeed()
+  },
+  'PickScenarioSpecific',
+);
+
+export const dropDownDecoder = JsonDecoder.object<DropDown>(
+  {
+    tag: JsonDecoder.literal(QuestionType.DROP_DOWN),
+    options: JsonDecoder.array(JsonDecoder.tuple([JsonDecoder.string(), JsonDecoder.succeed()], '[string, message]').map(([s,]) => s), 'string[]') //eslint-disable-line
+  },
+  'DropDown',
+);
+
+export const chooseOneDecoder = JsonDecoder.object<{ tag: QuestionType, choices: Message[] }>(
+  {
+    tag: JsonDecoder.oneOf(
+        [JsonDecoder.literal(QuestionType.CHOOSE_ONE)
+        , JsonDecoder.literal(QuestionType.PLAYER_WINDOW_CHOOSE_ONE)
+        , JsonDecoder.literal(QuestionType.WINDOW_CHOOSE_ONE)
+        ], "ChooseOne.tag"),
+    choices: JsonDecoder.array<Message>(messageDecoder, 'Message[]'),
+  },
+  'ChooseOne',
+).map<ChooseOne>(({ tag, choices }) => ({
+  tag: QuestionType.CHOOSE_ONE,
+  choices,
+  isPlayerWindow: tag === QuestionType.PLAYER_WINDOW_CHOOSE_ONE,
+  isWindow: tag === QuestionType.WINDOW_CHOOSE_ONE,
+}));
+
+export const chooseOneFromEachDecoder = JsonDecoder.object<ChooseOneFromEach>(
+  {
+    tag: JsonDecoder.literal(QuestionType.CHOOSE_ONE_FROM_EACH),
+    choices: JsonDecoder.array<Message[]>(JsonDecoder.array<Message>(messageDecoder, 'Message[]'), 'Message[][]').map(xs => xs.flat()),
+  },
+  'ChooseOneFromEach',
+);
+
+export const chooseSomeDecoder = JsonDecoder.object<ChooseSome>(
+  {
+    tag: JsonDecoder.literal(QuestionType.CHOOSE_SOME),
+    choices: JsonDecoder.array<Message>(messageDecoder, 'Message[]'),
+  },
+  'ChooseSome',
+);
+
+export const chooseSome1Decoder = JsonDecoder.object<ChooseSome1>(
+  {
+    tag: JsonDecoder.literal(QuestionType.CHOOSE_SOME_1),
+    choices: JsonDecoder.array<Message>(messageDecoder, 'Message[]'),
+  },
+  'ChooseSome1',
+);
+
+export const chooseNDecoder = JsonDecoder.object<ChooseN>(
+  {
+    tag: JsonDecoder.literal(QuestionType.CHOOSE_N),
+    amount: JsonDecoder.number(),
+    choices: JsonDecoder.array<Message>(messageDecoder, 'Message[]'),
+  },
+  'ChooseN',
+);
+
+export const chooseUpToNDecoder = JsonDecoder.object<ChooseUpToN>(
+  {
+    tag: JsonDecoder.literal(QuestionType.CHOOSE_UP_TO_N),
+    amount: JsonDecoder.number(),
+    choices: JsonDecoder.array<Message>(messageDecoder, 'Message[]'),
+  },
+  'ChooseUpToN',
+);
+
+export const chooseOneAtATimeDecoder = JsonDecoder.object<ChooseOneAtATime>(
+  {
+    tag: JsonDecoder.literal(QuestionType.CHOOSE_ONE_AT_A_TIME),
+    choices: JsonDecoder.array<Message>(messageDecoder, 'Message[]'),
+  },
+  'ChooseOneAtATime',
+);
+
+export const chooseOneAtATimeWithAutoDecoder = JsonDecoder.object<ChooseOneAtATimeWithAuto>(
+  {
+    tag: JsonDecoder.literal(QuestionType.CHOOSE_ONE_AT_A_TIME_WITH_AUTO),
+    label: JsonDecoder.string(),
+    choices: JsonDecoder.array<Message>(messageDecoder, 'Message[]'),
+  },
+  'ChooseOneAtATimeWithAuto',
+);
+
+export const continueCampaignDecoder = JsonDecoder.object<ContinueCampaign>(
+  {
+    tag: JsonDecoder.literal(QuestionType.CONTINUE_CAMPAIGN),
+  },
+  'ContinueCampaign',
+);
+
+export const questionDecoder = JsonDecoder.oneOf<Question>(
+  [
+    chooseOneDecoder,
+    chooseOneFromEachDecoder,
+    chooseNDecoder,
+    chooseSomeDecoder,
+    chooseSome1Decoder,
+    chooseUpToNDecoder,
+    chooseOneAtATimeDecoder,
+    chooseOneAtATimeWithAutoDecoder,
+    chooseUpgradeDeckDecoder,
+    chooseDeckDecoder,
+    chooseAmountsDecoder,
+    choosePaymentAmountsDecoder,
+    chooseExchangeAmountsDecoder,
+    questionLabelDecoder,
+    payCostQuestionDecoder,
+    questionWithSourceDecoder,
+    readDecoder,
+    chooseOneWizardDecoder,
+    pickSuppliesDecoder,
+    pickDestinyDecoder,
+    pickCampaignSpecificDecoder,
+    pickScenarioSpecificDecoder,
+    dropDownDecoder,
+    pickScenarioSettingsDecoder,
+    pickCampaignSettingsDecoder,
+    continueCampaignDecoder,
+    JsonDecoder.succeed().flatMap((f) => {
+      return JsonDecoder.fail(f)
+    })
+  ],
+  'Question',
+);

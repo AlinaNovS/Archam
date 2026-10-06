@@ -1,0 +1,43 @@
+{
+    "title": "История",
+    "round": "Раунд",
+    "phase": "Фаза",
+    "turn": "Ход",
+    "empty": "Для этой области пока ничего не записано.",
+    "section": {
+        "counts": "Количество",
+        "playedCards": "Разыгранные карты",
+        "treacheriesDrawn": "Взятые карты вреда",
+        "enemiesDrawn": "Взятые враги",
+        "enemiesDefeated": "Побеждённые враги",
+        "enemiesAttackedBy": "Атаковавшие враги",
+        "dealtDamageTo": "Нанесён урон",
+        "locationsInvestigated": "Исследованные локации",
+        "cluesDiscovered": "Обнаруженные улики",
+        "skillTests": "Проверки навыков"
+    },
+    "field": {
+        "actionsCompleted": "Совершено действий",
+        "actionsSpent": "Потрачено действий",
+        "moved": "Перемещений",
+        "cardsDrawn": "Взято карт",
+        "resourcesGained": "Получено ресурсов",
+        "attacksOfOpportunity": "Атак в ответ на действие",
+        "successfulAttacks": "Успешных атак",
+        "successfulEvasions": "Успешных уклонений",
+        "successfulInvestigations": "Успешных исследований",
+        "successfulExplore": "Успешных исследований"
+    },
+    "skillResult": {
+        "unrun": "Не проводилась",
+        "succeededBy": "Успех с запасом {n}",
+        "failedBy": "Провал на {n}"
+    },
+    "enemy": {
+        "health": "Здоровье: {n}",
+        "defeated": "Побеждён"
+    },
+    "clues": {
+        "count": "Улики: {n}"
+    }
+}

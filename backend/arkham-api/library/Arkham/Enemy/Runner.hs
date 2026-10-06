@@ -1,0 +1,2495 @@
+{-# LANGUAGE OverloadedLabels #-}
+{-# OPTIONS_GHC -Wno-orphans #-}
+
+module Arkham.Enemy.Runner (module Arkham.Enemy.Runner, module X) where
+
+import Arkham.Ability as X
+import Arkham.Behavior.Defeat qualified as Defeat
+import Arkham.Behavior.Evade qualified as Evade
+import Arkham.Behavior.Fight qualified as Fight
+import Arkham.Behavior.Heal qualified as Heal
+import Arkham.Calculation as X
+import Arkham.Enemy.Helpers as X
+
+-- Hide the GADT Field constructors that previously clashed with the Message
+-- constructors (now generic 'Damaged'/'DealDamage'/'Defeated'). Files that need
+-- the Field projections (about a dozen) import 'Arkham.Enemy.Types' directly.
+import Arkham.Enemy.Types as X hiding (EnemyDamage, EnemyDefeated)
+import Arkham.GameValue as X
+import Arkham.Helpers.Effect as X
+import Arkham.Helpers.Enemy as X
+import Arkham.Helpers.Message as X hiding (
+  EnemyAttacks,
+  EnemyEvaded,
+  InvestigatorDefeated,
+  PaidCost,
+  PhaseStep,
+ )
+import Arkham.Helpers.SkillTest as X
+import Arkham.Id as X
+import Arkham.Name (display, toName)
+import Arkham.SkillTest.Base as X (SkillTestDifficulty (..))
+import Arkham.Source as X
+import Arkham.Spawn as X
+import Arkham.Target as X
+
+import Arkham.Action qualified as Action
+import Arkham.Attack
+import Arkham.Campaigns.TheForgottenAge.Helpers
+import Arkham.Campaigns.TheScarletKeys.Concealed.Helpers
+import Arkham.Card
+import Arkham.ChaosToken
+import Arkham.Classes
+import Arkham.Classes.HasGame
+import Arkham.Constants
+import Arkham.Damage
+import Arkham.DamageEffect
+import Arkham.Exhaust (Exhaustion (..), mkExhaustion)
+import Arkham.Fight
+import Arkham.ForMovement
+import Arkham.Game.Settings (settingsStrictAsIfAt)
+import {-# SOURCE #-} Arkham.GameEnv
+import Arkham.Helpers.Card
+import Arkham.Helpers.GameLog
+import Arkham.Helpers.GameValue
+import Arkham.Helpers.Investigator
+import Arkham.Helpers.Location (getLocationOf, placementLocation, withLocationOf)
+import Arkham.Helpers.Modifiers hiding (ModifierType (..))
+import Arkham.Helpers.Placement
+import Arkham.Helpers.Query
+import Arkham.Helpers.Ref
+import Arkham.Helpers.Source
+import Arkham.Helpers.Window
+import Arkham.History
+import Arkham.I18n
+import Arkham.Investigator.Types (Field (..))
+import Arkham.Keyword (_Swarming)
+import Arkham.Keyword qualified as Keyword
+import Arkham.Matcher (
+  AssetMatcher (..),
+  EnemyMatcher (..),
+  InvestigatorMatcher (..),
+  LocationFilter (..),
+  LocationMatcher (..),
+  MovesVia (..),
+  PreyMatcher (..),
+  be,
+  connectedFrom,
+  enemyEngagedWith,
+  investigatorAt,
+  investigatorEngagedWith,
+  locationWithEnemy,
+  locationWithInvestigator,
+  mapOneOf,
+  oneOf,
+  preyWith,
+  replaceThatEnemy,
+  replaceYouMatcher,
+  pattern AloofEnemy,
+  pattern InvestigatorCanDisengage,
+  pattern MassiveEnemy,
+ )
+import Arkham.Message
+import Arkham.Message qualified as Msg
+import Arkham.Message.Lifted (
+  batched,
+  capture,
+  do_,
+  evasionResult,
+  obtainCard,
+  placeKey,
+  removeEnemy,
+  scenarioSpecific,
+  selectEach,
+  successfulEvasion,
+ )
+import Arkham.Message.Lifted qualified as Lifted
+import Arkham.Modifier hiding (EnemyEvade, EnemyFight)
+import Arkham.Movement
+import Arkham.Prelude
+import Arkham.Projection
+import Arkham.SkillType ()
+import Arkham.Spawn qualified
+import Arkham.Token
+import Arkham.Token qualified as Token
+import Arkham.Trait
+import Arkham.Window (mkAfter, mkWhen)
+import Arkham.Window qualified as Window
+import Control.Lens (non, _Just, (||~))
+import Data.Function (on)
+import Data.List (nubBy)
+import Data.List qualified as List
+import Data.List.Extra (firstJust)
+import Data.Map.Strict qualified as Map
+import Data.Monoid (Any (..), First (..))
+import Data.Set qualified as Set
+
+{- | Where a disengaging enemy is physically placed. Under the Chapter 2 "as
+if" ruling (settingsStrictAsIfAt) the actual game state is never altered by
+AsIfAt, so use the investigator's physical placement; under Chapter 1 rules
+AsIfAt applies for the duration of the ability.
+-}
+disengageLocation
+  :: (HasCallStack, HasGame m) => InvestigatorId -> m LocationId
+disengageLocation iid = do
+  settings <- getSettings
+  mlid <-
+    if settingsStrictAsIfAt settings
+      then field InvestigatorPlacement iid >>= placementLocation
+      else field InvestigatorLocation iid
+  pure $ fromJustNote ("disengaging investigator " <> show iid <> " has no location") mlid
+
+{- | Handle when enemy no longer exists
+When an enemy is defeated we need to remove related messages from choices
+and if not more choices exist, remove the message entirely
+-}
+filterOutEnemyMessages :: EnemyId -> Message -> Maybe Message
+filterOutEnemyMessages eid ask'@(Ask pid q) = case q of
+  QuestionLabel {} -> Just ask'
+  PayCostQuestion {} -> Just ask'
+  QuestionWithSource {} -> Just ask'
+  Read {} -> Just ask'
+  ChooseOneWizard {} -> Just ask'
+  DropDown {} -> Just ask'
+  PickSupplies {} -> Just ask'
+  PickDestiny {} -> Just ask'
+  ChooseOne msgs -> case mapMaybe (filterOutEnemyUiMessages eid) msgs of
+    [] -> Nothing
+    x -> Just (Ask pid $ ChooseOne x)
+  PlayerWindowChooseOne msgs -> case mapMaybe (filterOutEnemyUiMessages eid) msgs of
+    [] -> Nothing
+    x -> Just (Ask pid $ PlayerWindowChooseOne x)
+  WindowChooseOne msgs -> case mapMaybe (filterOutEnemyUiMessages eid) msgs of
+    [] -> Nothing
+    x -> Just (Ask pid $ WindowChooseOne x)
+  ChooseOneFromEach groups -> case filter notNull $ map (mapMaybe (filterOutEnemyUiMessages eid)) groups of
+    [] -> Nothing
+    x -> Just (Ask pid $ ChooseOneFromEach x)
+  ChooseN n msgs -> case mapMaybe (filterOutEnemyUiMessages eid) msgs of
+    [] -> Nothing
+    x -> Just (Ask pid $ ChooseN n x)
+  ChooseSome msgs -> case mapMaybe (filterOutEnemyUiMessages eid) msgs of
+    [] -> Nothing
+    x -> Just (Ask pid $ ChooseSome x)
+  ChooseSome1 doneMsg msgs -> case mapMaybe (filterOutEnemyUiMessages eid) msgs of
+    [] -> Nothing
+    x -> Just (Ask pid $ ChooseSome1 doneMsg x)
+  ChooseUpToN n msgs -> case mapMaybe (filterOutEnemyUiMessages eid) msgs of
+    [] -> Nothing
+    x -> Just (Ask pid $ ChooseUpToN n x)
+  ChooseOneAtATime msgs -> case mapMaybe (filterOutEnemyUiMessages eid) msgs of
+    [] -> Nothing
+    x -> Just (Ask pid $ ChooseOneAtATime x)
+  ChooseOneAtATimeWithAuto k msgs -> case mapMaybe (filterOutEnemyUiMessages eid) msgs of
+    [] -> Nothing
+    -- Filtering can strip the question down to a single option, at which point the
+    -- auto ("resolve the rest") choice would just duplicate it.
+    [x] -> Just (Ask pid $ ChooseOneAtATime [x])
+    x -> Just (Ask pid $ ChooseOneAtATimeWithAuto k x)
+  ChooseUpgradeDeck -> Just (Ask pid ChooseUpgradeDeck)
+  ChooseDeck -> Just ask'
+  ChoosePaymentAmounts {} -> Just ask'
+  ChooseAmounts {} -> Just ask'
+  PickScenarioSettings -> Just (Ask pid PickScenarioSettings)
+  PickCampaignSettings -> Just (Ask pid PickCampaignSettings)
+  PickCampaignSpecific {} -> Just ask'
+  PickScenarioSpecific {} -> Just ask'
+  ChooseExchangeAmounts {} -> Just ask'
+  ContinueCampaign {} -> Just ask'
+filterOutEnemyMessages eid msg = case msg of
+  InitiateEnemyAttack details | eid == attackEnemy details -> Nothing
+  EnemyAttack details | eid == attackEnemy details -> Nothing
+  Discarded (EnemyTarget eid') _ _ | eid == eid' -> Nothing
+  Do (Discarded (EnemyTarget eid') _ _) | eid == eid' -> Nothing
+  PlaceEnemy eid' _ | eid' == eid -> Nothing
+  EnemyEntered eid' _ | eid' == eid -> Nothing
+  EnemyEnteredFollowing _ eid' _ | eid' == eid -> Nothing
+  EnemySpawn details | details.enemy == eid -> Nothing
+  EnemySpawned details | details.enemy == eid -> Nothing
+  m -> Just m
+
+filterOutEnemyUiMessages :: EnemyId -> UI Message -> Maybe (UI Message)
+filterOutEnemyUiMessages eid = \case
+  TargetLabel (EnemyTarget eid') _ | eid == eid' -> Nothing
+  EvadeLabel eid' _ | eid == eid' -> Nothing
+  FightLabel eid' _ | eid == eid' -> Nothing
+  FightLabelWithSkill eid' _ _ | eid == eid' -> Nothing
+  other -> Just other
+
+getInvestigatorsAtSameLocation :: HasGame m => EnemyAttrs -> m [InvestigatorId]
+getInvestigatorsAtSameLocation attrs = do
+  field EnemyLocation (toId attrs) >>= \case
+    Nothing -> pure []
+    Just loc -> select $ investigatorAt loc
+
+getPreyMatcher :: HasGame m => EnemyAttrs -> m PreyMatcher
+getPreyMatcher a = do
+  mods <- getModifiers a
+  pure $ foldl' applyModifier (enemyPrey a) mods
+ where
+  applyModifier _ (ForcePrey p) = p
+  applyModifier p _ = p
+
+isSwarm :: EnemyAttrs -> Bool
+isSwarm attrs = case enemyPlacement attrs of
+  AsSwarm {} -> True
+  _ -> False
+
+{- | How to take an enemy out of the game entirely. An enemy that is still in play
+has to leave play first, so that leave-play windows fire and anything attached to
+it gets cleaned up; one that is already out of play (victory display, removed
+zone) is just dropped.
+-}
+removeFromGameMessage :: EnemyAttrs -> Message
+removeFromGameMessage a
+  | isInPlayPlacement a.placement = RemoveFromPlay (toSource a)
+  | otherwise = RemoveEnemy a.id
+
+getCanReady :: HasGame m => EnemyAttrs -> m Bool
+getCanReady a = do
+  mods <- getModifiers a
+  phase <- getPhase
+  pure $ CannotReady `notElem` mods && (DoesNotReadyDuringUpkeep `notElem` mods || phase /= #upkeep)
+
+{- | Whether an enemy is currently barred from attacking. 'CannotAttack' is
+unconditional; 'CannotAttackDuringEnemyPhase' only bites in the enemy phase,
+since @Do EnemiesAttack@ is also pushed by card effects outside of it.
+-}
+getCannotAttackNow :: HasGame m => [ModifierType] -> m Bool
+getCannotAttackNow mods
+  | CannotAttack `elem` mods = pure True
+  | CannotAttackDuringEnemyPhase `elem` mods = (== #enemy) <$> getPhase
+  | otherwise = pure False
+
+getCanEngage :: HasGame m => EnemyAttrs -> m Bool
+getCanEngage a = do
+  keywords <- getModifiedKeywords a
+  unengaged <- selectNone $ investigatorEngagedWith a.id
+  pure $ all (`notElem` keywords) [#aloof, #massive] && unengaged
+
+getPaths :: HasGame m => EnemyAttrs -> [LocationId] -> m [LocationId]
+getPaths a destinations =
+  getLocationOf a >>= \case
+    Nothing -> pure []
+    Just loc -> do
+      mods <- getModifiers a
+      let locationMatcherModifier = if CanEnterEmptySpace `elem` mods then IncludeEmptySpace else id
+      let additionalConnections = [ConnectedToWhen (LocationWithId loc) (LocationWithId lid') | HunterConnectedTo lid' <- mods]
+
+      pathIds' <- withModifiers loc (toModifiers a additionalConnections) do
+        concatForM destinations
+          $ select
+          . locationMatcherModifier
+          . (LocationCanBeEnteredBy a.id <>)
+          . ClosestPathLocation loc
+
+      withModifiers loc (toModifiers a additionalConnections) do
+        if CanIgnoreBarriers `elem` mods
+          then do
+            barricadedPathIds <-
+              concatForM destinations
+                $ select
+                . locationMatcherModifier
+                . (LocationCanBeEnteredBy a.id <>)
+                . ClosestUnbarricadedPathLocation loc
+            pure $ if null barricadedPathIds then pathIds' else barricadedPathIds
+          else pure pathIds'
+
+getActualAvailablePrey :: HasGame m => EnemyAttrs -> m [InvestigatorId]
+getActualAvailablePrey a =
+  getPreyMatcher a >>= \case
+    OnlyPrey m -> select m
+    _ -> getAvailablePrey a
+
+getAvailablePrey :: HasGame m => EnemyAttrs -> m [InvestigatorId]
+getAvailablePrey a = runDefaultMaybeT [] do
+  enemyLocation <- MaybeT $ field EnemyLocation a.id
+  iids <- select $ investigatorAt enemyLocation <> InvestigatorCanBeEngagedBy a.id
+  guard $ notNull iids
+  liftGuardM $ getCanEngage a
+  let valids = mapOneOf InvestigatorWithId iids
+  getPreyMatcher a >>= \case
+    Prey m -> do
+      preyIds <- select $ Prey $ m <> valids
+      pure $ if null preyIds then iids else preyIds
+    OnlyPrey m -> select $ preyWith m valids
+    other@(BearerOf {}) -> do
+      mBearer <- selectOne other
+      pure $ maybe iids (\bearer -> if bearer `elem` iids then [bearer] else iids) mBearer
+    other@(RestrictedBearerOf {}) -> do
+      mBearer <- selectOne other
+      pure $ maybe [] (\bearer -> [bearer | bearer `elem` iids]) mBearer
+
+instance RunMessage EnemyAttrs where
+  runMessage msg a@EnemyAttrs {..} = runQueueT $ case msg of
+    UpdateEnemy eid upd | eid == enemyId -> do
+      -- TODO: we may want life cycles around this, generally this might just be a bad idea
+      pure $ updateEnemy [upd] a
+    SetOriginalCardCode cardCode -> pure $ a & originalCardCodeL .~ cardCode
+    EndPhase -> pure $ a & movedFromHunterKeywordL .~ False
+    SealedChaosToken token _ (isTarget a -> True) -> do
+      pure $ a & sealedChaosTokensL %~ (token :)
+    SealedChaosToken token _ _ -> do
+      pure $ a & sealedChaosTokensL %~ filter (/= token)
+    UnsealChaosToken token -> pure $ a & sealedChaosTokensL %~ filter (/= token)
+    RemoveAllChaosTokens face -> pure $ a & sealedChaosTokensL %~ filter ((/= face) . chaosTokenFace)
+    EnemySpawnEngagedWithPrey eid | eid == enemyId -> do
+      preyIds <- select =<< getPreyMatcher a
+      liftRunMessage (EnemySpawnEngagedWith eid $ oneOf $ map InvestigatorWithId preyIds) a
+    EnemySpawnEngagedWith eid investigatorMatcher | eid == enemyId -> do
+      push
+        $ EnemySpawn
+        $ (mkSpawnDetails eid $ SpawnEngagedWith investigatorMatcher)
+          { spawnDetailsOverridden = True
+          }
+      pure a
+    SetBearer (EnemyTarget eid) iid | eid == enemyId -> do
+      pure $ a & bearerL ?~ iid
+    PlacedSwarmCard eid card | eid == enemyId -> do
+      placement <- field EnemyPlacement eid
+      case toCard a of
+        EncounterCard ec -> do
+          (swid, smsg) <- createEnemyWithPlacement (EncounterCard $ ec {ecId = card.id}) (AsSwarm eid card)
+          case placement of
+            InThreatArea iid -> do
+              let (before, _, after) = frame (Window.EnemyEngaged iid swid)
+              pushAll [before, smsg, after]
+            _ -> push smsg
+        PlayerCard pc -> do
+          (swid, smsg) <- createEnemyWithPlacement (PlayerCard $ pc {pcId = card.id}) (AsSwarm eid card)
+          case placement of
+            InThreatArea iid -> do
+              let (before, _, after) = frame (Window.EnemyEngaged iid swid)
+              pushAll [before, smsg, after]
+            _ -> push smsg
+        VengeanceCard _ -> error "not valid"
+      pure a
+    EnemySpawn details | details.enemy == enemyId -> do
+      let
+        getSpawnLocation = \case
+          SpawnEngagedWith imatcher -> do
+            select imatcher >>= \case
+              [iid] -> do
+                let
+                  getModifiedSpawnAt [] = pure Nothing
+                  getModifiedSpawnAt (ChangeSpawnWith iid' m : _) | iid' == iid = pure $ Just m
+                  getModifiedSpawnAt (ChangeSpawnLocation mtch newMatch : _) = do
+                    ok <- selectAny $ mtch <> locationWithInvestigator iid
+                    pure $ guard ok $> SpawnAt newMatch
+                  getModifiedSpawnAt (_ : xs) = getModifiedSpawnAt xs
+                mods <- getCombinedModifiers [toTarget enemyId, toTarget (toCardId a)]
+
+                getModifiedSpawnAt mods >>= \case
+                  Just m -> getSpawnLocation m
+                  Nothing -> getLocationOf iid
+              _ -> pure Nothing
+          SpawnAt _matcher -> pure Nothing
+          SpawnAtLocation lid -> pure $ Just lid
+          SpawnPlaced placement -> placementLocation placement
+          _ -> error $ "Unhandled spawn: " <> show details.spawnAt
+
+        a' =
+          a
+            & (spawnDetailsL ?~ details)
+            & (exhaustedL ||~ spawnDetailsExhausted details)
+            & (delayEngagementL .~ False)
+            & (defeatedL .~ False)
+
+      getSpawnLocation details.spawnAt >>= \case
+        Nothing -> do
+          do_ msg
+          pure a'
+        Just lid -> do
+          batched \_ -> do
+            Lifted.checkWhen $ Window.EnemyWouldSpawnAt enemyId lid
+            whenM (enemyId <=~> IncludeOmnipotent (EnemyCanSpawnIn $ IncludeEmptySpace $ LocationWithId lid)) do
+              Lifted.checkWhen (Window.EnemySpawns enemyId lid)
+            do_ msg
+          pure $ a' & placementL .~ AtLocation lid
+    Do (EnemySpawn originalDetails) | originalDetails.enemy == enemyId && not enemyDefeated -> do
+      let details = fromMaybe originalDetails enemySpawnDetails
+      let miid = details.investigator
+      let eid = enemyId
+      keywords <- getModifiedKeywords a
+      mods <- getCombinedModifiers [toTarget eid, toTarget (toCardId a)]
+      let
+        isForcedEngagement = \case
+          ForceSpawn _ -> True
+          ForceSpawnLocation _ -> True
+          _ -> False
+
+      let forcedEngagement = any isForcedEngagement mods
+      let canSwarm = NoInitialSwarm `notElem` mods
+      let swarms = guard canSwarm *> mapMaybe (preview _Swarming) (toList keywords)
+      case details.spawnAt of
+        SpawnEngagedWith imatcher -> do
+          iids <- select imatcher
+          case iids of
+            [] -> pure ()
+            [iid] -> do
+              let
+                getModifiedSpawnAt [] = pure Nothing
+                getModifiedSpawnAt (ChangeSpawnWith iid' m : _) | iid' == iid = pure $ Just m
+                getModifiedSpawnAt (ChangeSpawnLocation mtch newMatch : _) = do
+                  ok <- selectAny $ mtch <> locationWithInvestigator iid
+                  pure $ guard ok $> SpawnAt newMatch
+                getModifiedSpawnAt (_ : xs) = getModifiedSpawnAt xs
+
+              getModifiedSpawnAt mods >>= \case
+                Just m -> push $ EnemySpawn details {spawnDetailsSpawnAt = m}
+                Nothing -> withLocationOf iid \lid -> do
+                  canSpawn <- canSpawnInLocation enemyId lid
+                  if canSpawn
+                    then do
+                      -- Engage before EnemyEntered so the enemy is already in the
+                      -- threat area when its after-enters windows fire (e.g.
+                      -- Doppelgänger 11058). Placement is AtLocation here so
+                      -- EngageEnemy won't re-emit EnemyEntered, and EnemyEntered
+                      -- then preserves the InThreatArea placement.
+                      pushAll
+                        $ [ Will (EnemyEngageInvestigator enemyId iid) | not (spawnDetailsUnengaged details) || forcedEngagement
+                          ]
+                        <> [EnemyEntered enemyId lid, EnemySpawned details]
+                      case swarms of
+                        [] -> pure ()
+                        [x] -> do
+                          n <- getGameValue x
+                          lead <- getLead
+                          push $ PlaceSwarmCards lead eid n
+                        _ -> error "more than one swarming value"
+                    else push (toDiscard GameSource eid)
+            _ -> do
+              lead <- getLeadPlayer
+              push
+                $ chooseOne
+                  lead
+                  [ targetLabel
+                      iid
+                      [EnemySpawn details {spawnDetailsSpawnAt = SpawnEngagedWith (InvestigatorWithId iid)}]
+                  | iid <- iids
+                  ]
+        SpawnAt matcher -> do
+          locations <- select matcher
+          if null locations
+            then push (toDiscard GameSource eid)
+            else do
+              player <- maybe getLeadPlayer getPlayer details.investigator
+              push
+                $ chooseOrRunOne
+                  player
+                  [ targetLabel lid [EnemySpawn details {spawnDetailsSpawnAt = SpawnAtLocation lid}]
+                  | lid <- locations
+                  ]
+        SpawnAtLocation lid -> do
+          locations' <- select $ IncludeEmptySpace Anywhere
+          canSpawn <- eid <=~> IncludeOmnipotent (EnemyCanSpawnIn $ IncludeEmptySpace $ LocationWithId lid)
+          if lid `notElem` locations' || not canSpawn
+            then push (toDiscard GameSource eid)
+            else do
+              case swarms of
+                [] -> pure ()
+                [x] -> do
+                  n <- getGameValue x
+                  lead <- getLead
+                  push $ PlaceSwarmCards lead eid n
+                _ -> error "more than one swarming value"
+
+              when (#massive `elem` keywords) do
+                investigatorIds <- select $ investigatorAt lid
+                pushAll
+                  $ [Will (EnemyEngageInvestigator eid iid) | iid <- investigatorIds]
+                  <> [EnemyEntered eid lid, EnemySpawned details]
+
+              if (all (`notElem` keywords) [#aloof, #massive] && not enemyExhausted) || forcedEngagement
+                then do
+                  prey <- getPreyMatcher a
+                  let
+                    onlyPrey = case prey of
+                      Prey {} -> False
+                      _ -> True
+                  preyIds <- select (preyWith prey $ investigatorAt lid)
+                  case miid of
+                    Just iid | not onlyPrey || iid `elem` preyIds -> do
+                      atSameLocation <- iid <=~> investigatorAt lid
+                      pushAll
+                        $ [Will (EnemyEngageInvestigator eid iid) | atSameLocation && not (spawnDetailsUnengaged details)]
+                        <> [EnemyEntered eid lid]
+                        <> [EnemyCheckEngagement eid | not atSameLocation && not (spawnDetailsUnengaged details)]
+                        <> [EnemySpawned details]
+                    _ -> do
+                      investigatorIds <- if null preyIds then select $ investigatorAt lid else pure []
+                      lead <- getLeadPlayer
+                      let allIds = preyIds <> investigatorIds
+                      let
+                        validInvestigatorIds =
+                          case miid of
+                            Just iid | iid `elem` allIds -> [iid]
+                            _ -> allIds
+                      case validInvestigatorIds of
+                        [] -> pushAll [EnemyEntered eid lid, EnemySpawned details]
+                        [iid] -> do
+                          pushAll
+                            $ [Will (EnemyEngageInvestigator eid iid) | not onlyPrey || iid `elem` preyIds]
+                            <> [EnemyEntered eid lid, EnemySpawned details]
+                        iids -> do
+                          let scoped = if not onlyPrey then iids else filter (`elem` preyIds) iids
+                          case scoped of
+                            [] -> pushAll [EnemyEntered eid lid, EnemySpawned details]
+                            choices ->
+                              push
+                                $ chooseOne lead
+                                $ [ targetLabel
+                                      iid
+                                      [ Will (EnemyEngageInvestigator eid iid)
+                                      , EnemyEntered eid lid
+                                      , EnemySpawned details
+                                      ]
+                                  | iid <- choices
+                                  ]
+                else
+                  unless (#massive `elem` keywords)
+                    $ pushAll [EnemyEntered eid lid, EnemySpawned details]
+        SpawnPlaced placement -> do
+          placementLocation placement >>= \case
+            Nothing -> push $ PlaceEnemy enemyId placement
+            Just lid ->
+              canSpawnInLocation enemyId lid >>= \case
+                True -> do
+                  afterSpawns <- checkWindows [mkAfter (Window.EnemySpawns enemyId lid)]
+                  pushAll [PlaceEnemy enemyId placement, afterSpawns, EnemySpawned details]
+                False -> push $ toDiscard GameSource enemyId
+        _ -> error $ "Unhandled spawn: " <> show details.spawnAt
+      pure a
+    EnemySpawned details | details.enemy == enemyId -> do
+      unless (null details.after) do
+        pushAll details.after
+      pure $ a & spawnDetailsL .~ Nothing
+    EnemyEntered eid lid | eid == enemyId && not enemyDefeated -> do
+      case enemyPlacement of
+        AsSwarm eid' _ -> do
+          push $ EnemyEntered eid' lid
+          pure a
+        -- The enemy was in play when this move was created but has since left
+        -- play (e.g. an act objective firing on its engagement set it aside).
+        -- Abort the entry so the stale move can't drag it back into play. Spawns
+        -- (which carry enemySpawnDetails) are a legitimate out-of-play entry.
+        _
+          | isNothing enemySpawnDetails
+              && maybe False moveFromInPlay enemyMovement
+              && isOutOfPlayPlacement enemyPlacement ->
+              pure a
+        _ -> do
+          swarm <- select $ SwarmOf eid
+          -- If enemySpawnDetails is present it means this enemy is using the
+          -- EnemySpawn flow which will handle these windows, otherwise it
+          -- means an enemy is moving from out of play into play in a
+          -- non-spawning method and we'll want to trigger them
+          when (isOutOfPlayPlacement a.placement) do
+            pushM $ checkWhen $ Window.EnemySpawns eid lid
+            pushM $ checkAfter $ Window.EnemySpawns eid lid
+
+          let entries = eid : swarm
+          -- Investigators already at lid drive `EnemyEntersYourLocation` (the
+          -- "an enemy entered MY location" flavor — Pursued, Cash Cart, etc.).
+          -- An investigator that is *simultaneously* entering lid (e.g. one
+          -- whose engaged enemy follows them via WhenWillEnterLocation) is
+          -- not yet at lid here — their placement update is queued behind
+          -- this message in `Do (WhenWillEnterLocation iid lid)`, so this
+          -- select naturally excludes them. Do not reorder those messages
+          -- without revisiting this exemption.
+          iidsHere <- select $ investigatorAt lid
+
+          whenWindows <-
+            traverse
+              (\eid' -> checkWindows [mkWhen (Window.EnemyEnters eid' lid)])
+              entries
+          yourLocationWhens <-
+            traverse
+              (\(iid', eid') -> checkWindows [mkWhen (Window.EnemyEntersYourLocation iid' eid' lid)])
+              [(iid', eid') | iid' <- iidsHere, eid' <- entries]
+          pushAll (whenWindows <> yourLocationWhens <> [After msg])
+          -- An enemy that is being *moved* out of a threat area leaves it. The
+          -- placement rewrite has to land here rather than in `Do (EnemyMove)`,
+          -- because `EnemyEntered` pushes `After msg` to the front of the queue
+          -- and `After (EnemyEntered)` runs `EnemyCheckEngagement` — which bails
+          -- on a still-engaged enemy, so the enemy would end up at the
+          -- destination silently unengaged (Redeem a Former Colleague pulling an
+          -- engaged Edwin Bennet to another investigator). Issue #5292.
+          --
+          -- Spawns are exempt: they deliberately engage *before* `EnemyEntered`
+          -- so their after-enters windows see the threat area (Doppelgänger
+          -- 11058). A no-op move to the location the enemy already occupies
+          -- never reaches here — `EnemyMove` filters those out (#5277) — so
+          -- engagement-preserving self-moves (Knight of the Inner Circle) are
+          -- unaffected.
+          case a.placement of
+            InThreatArea {} | isJust enemySpawnDetails -> pure a
+            _ -> pure $ a & placementL .~ AtLocation lid
+    After (EnemyEntered eid lid) | eid == enemyId -> do
+      case enemyPlacement of
+        AsSwarm eid' _ -> push $ After (EnemyEntered eid' lid)
+        _ -> do
+          swarm <- select $ SwarmOf eid
+          let entries = eid : swarm
+          iidsHere <- select $ investigatorAt lid
+          let spawnWindows = [mkAfter (Window.EnemySpawns eid lid) | isJust enemySpawnDetails]
+          afterWindows <-
+            checkWindows
+              $ spawnWindows
+              <> [mkAfter (Window.EnemyEnters eid' lid) | eid' <- entries]
+              <> [mkAfter (Window.EnemyEntersYourLocation iid' eid' lid) | iid' <- iidsHere, eid' <- entries]
+          -- A moving enemy engages investigators at its destination immediately
+          -- on entering, BEFORE the after-enters reaction window (e.g.
+          -- Doppelgänger 11058). Spawning enemies engage via the EnemySpawn flow
+          -- (Will EnemyEngageInvestigator) and are skipped here.
+          pushAll $ [EnemyCheckEngagement eid | isNothing enemySpawnDetails] <> [afterWindows]
+      pure a
+    EnemyEnteredFollowing movingIid eid lid | eid == enemyId && not enemyDefeated -> do
+      -- Variant of EnemyEntered for an engaged enemy following the moving
+      -- investigator. `iidsHere` excludes `movingIid` so the "your location"
+      -- flavour of EnemyEnters does not fire for the investigator the enemy
+      -- is already engaged with (they're entering simultaneously, not having
+      -- an enemy walk in on them).
+      case enemyPlacement of
+        AsSwarm eid' _ -> do
+          push $ EnemyEnteredFollowing movingIid eid' lid
+          pure a
+        _ -> do
+          swarm <- select $ SwarmOf eid
+          when (isOutOfPlayPlacement a.placement) do
+            pushM $ checkWhen $ Window.EnemySpawns eid lid
+            pushM $ checkAfter $ Window.EnemySpawns eid lid
+
+          let entries = eid : swarm
+          iidsHere <- filter (/= movingIid) <$> select (investigatorAt lid)
+
+          whenWindows <-
+            traverse
+              (\eid' -> checkWindows [mkWhen (Window.EnemyEnters eid' lid)])
+              entries
+          yourLocationWhens <-
+            traverse
+              (\(iid', eid') -> checkWindows [mkWhen (Window.EnemyEntersYourLocation iid' eid' lid)])
+              [(iid', eid') | iid' <- iidsHere, eid' <- entries]
+          pushAll (whenWindows <> yourLocationWhens <> [After msg])
+          case a.placement of
+            InThreatArea {} -> pure a
+            _ -> pure $ a & placementL .~ AtLocation lid
+    After (EnemyEnteredFollowing movingIid eid lid) | eid == enemyId -> do
+      case enemyPlacement of
+        AsSwarm eid' _ -> push $ After (EnemyEnteredFollowing movingIid eid' lid)
+        _ -> do
+          swarm <- select $ SwarmOf eid
+          let entries = eid : swarm
+          iidsHere <- filter (/= movingIid) <$> select (investigatorAt lid)
+          afterWindows <-
+            traverse
+              (\eid' -> checkWindows [mkAfter (Window.EnemyEnters eid' lid)])
+              entries
+          yourLocationAfters <-
+            traverse
+              (\(iid', eid') -> checkWindows [mkAfter (Window.EnemyEntersYourLocation iid' eid' lid)])
+              [(iid', eid') | iid' <- iidsHere, eid' <- entries]
+          pushAll (afterWindows <> yourLocationAfters)
+      pure a
+    Ready (isTarget a -> True) -> do
+      whenM (getCanReady a) do
+        wouldDo msg (Window.WouldReady $ toTarget a) (Window.Readies $ toTarget a)
+      pure a
+    Do (Ready (isTarget a -> True)) -> do
+      getCanReady a >>= \case
+        False -> pure a
+        True -> do
+          case enemyPlacement of
+            AsSwarm eid' _ -> do
+              hostExhausted <- eid' <=~> ExhaustedEnemy
+              when hostExhausted $ push (Ready (EnemyTarget eid'))
+            _ -> do
+              others <- select $ SwarmOf a.id <> ExhaustedEnemy
+              -- Ready all swarm cards directly via Do(Ready) which just
+              -- flips exhausted. Skip the per-card wouldDo window chain
+              -- entirely—the host already fires WouldReady/Readies windows,
+              -- and per-swarm-card windows would produce O(N) CheckWindows
+              -- batches each requiring a full getActions scan.
+              unless (null others) do
+                pushAll $ map (Do . Ready . toTarget) others
+
+          preyIds <- getAvailablePrey a
+          unless (null preyIds) $ do
+            lead <- getLeadPlayer
+            push $ chooseOrRunOne lead $ targetLabels preyIds (only . EnemyEngageInvestigator enemyId)
+          pure $ a & exhaustedL .~ False
+    ReadyExhausted | not enemyDefeated -> do
+      mods <- getModifiers a
+      -- swarm will be readied by host
+      case [source | AlternativeReady source <- mods] of
+        [] ->
+          when (enemyExhausted && DoesNotReadyDuringUpkeep `notElem` mods && not (isSwarm a))
+            $ push (Ready $ toTarget a)
+        [source] -> push (ReadyAlternative source (toTarget a))
+        _ -> error "Can not handle multiple targets yet"
+      pure a
+    MoveToward target locationMatcher | isTarget a target -> do
+      case enemyPlacement of
+        AsSwarm eid' _ -> push $ MoveToward (EnemyTarget eid') locationMatcher
+        _ -> withLocationOf a \loc -> do
+          lid <- fromJustNote "can't move toward" <$> selectOne locationMatcher
+          when (lid /= loc) $ do
+            lead <- getLeadPlayer
+            pathIds <- getPaths a [lid]
+            unless (null pathIds) do
+              pushAll [chooseOne lead [targetLabel lid' [EnemyMove enemyId lid'] | lid' <- pathIds]]
+      pure a
+    MoveUntil lid target | isTarget a target -> do
+      case enemyPlacement of
+        AsSwarm eid' _ -> push $ MoveUntil lid (EnemyTarget eid')
+        _ -> do
+          whenMatch a.id EnemyCanMove do
+            enemyLocation <- field EnemyLocation enemyId
+            for_ enemyLocation \loc -> when (lid /= loc) do
+              lead <- getLeadPlayer
+              adjacentLocationIds <- select $ AccessibleFrom NotForMovement $ LocationWithId loc
+              closestLocationIds <- select $ ClosestPathLocation loc lid
+              if lid `elem` adjacentLocationIds
+                then push $ chooseOne lead [targetLabel lid [EnemyMove enemyId lid]]
+                else when (notNull closestLocationIds) do
+                  pushAll
+                    [ chooseOne lead $ targetLabels closestLocationIds (only . EnemyMove enemyId)
+                    , MoveUntil lid target
+                    ]
+      pure a
+    Move movement | isTarget a (moveTarget movement) -> do
+      case moveDestination movement of
+        ToLocation destinationLocationId -> case moveMeans movement of
+          Direct -> push $ EnemyMove (toId a) destinationLocationId
+          Place -> push $ EnemyMove (toId a) destinationLocationId
+          OneAtATime -> push $ MoveUntil destinationLocationId (toTarget a)
+          Towards -> push $ MoveToward (toTarget a) (LocationWithId destinationLocationId)
+          TowardsN n ->
+            pushAll $ MoveToward (toTarget a) (LocationWithId destinationLocationId)
+              : [Move $ movement {moveMeans = TowardsN (n - 1)} | n > 1]
+        ToLocationMatching matcher -> do
+          lids <- select matcher
+          player <- getLeadPlayer
+          push
+            $ chooseOrRunOne player
+            $ [targetLabel lid [Move $ movement {moveDestination = ToLocation lid}] | lid <- lids]
+      pure $ a & movementL ?~ movement {moveFromInPlay = isInPlayPlacement enemyPlacement}
+    EnemyMove eid lid | eid == enemyId -> case enemyPlacement of
+      AsSwarm eid' _ -> do
+        push $ EnemyMove eid' lid
+        pure a
+      _ -> do
+        enemyLocation <- field EnemyLocation enemyId
+        -- Moving an enemy to the location it already occupies is not movement:
+        -- it must not fire leave/enter/moves windows. Dogs of War's The Beast in
+        -- a Cowl of Crimson cancels its own defeat and moves itself back to the
+        -- Catacombs of Kom el Shoqafa; when it is defeated *at* the Catacombs
+        -- that no-op move used to trigger "after an enemy enters your location"
+        -- effects such as Pursued. (Issue #5277)
+        willMove <- if enemyLocation == Just lid then pure False else canEnterLocation eid lid
+        if willMove
+          then do
+            batchId <- getRandom
+            -- The `Move` path records `enemyMovement` (with its `moveFromInPlay`
+            -- flag) before pushing EnemyMove, but MoveToward/MoveUntil/hunter
+            -- moves reach EnemyMove directly without it. Record it here when
+            -- absent so that if the enemy leaves play mid-move (e.g. a forced
+            -- ability fires in the enter window and removes it) the `Do EnemyMove`
+            -- / `EnemyEntered` guards abort the placement instead of dragging the
+            -- removed enemy back into play.
+            -- The destination is always rewritten to *this* move's target. A move
+            -- nested inside an outer move's enter-window (e.g. Elusive fleeing an
+            -- enemy that was just attacked in its own after-enters window) would
+            -- otherwise leave the outer destination recorded, and the outer move's
+            -- deferred `Do EnemyMove` below could not tell it had been superseded.
+            mMovement <- case enemyMovement of
+              Just m -> pure $ Just m {moveDestination = ToLocation lid}
+              Nothing -> do
+                m <- move (toSource eid) (toTarget eid) lid
+                pure $ Just m {moveFromInPlay = isInPlayPlacement enemyPlacement}
+            mRunWouldMove <- runMaybeT do
+              from <- MaybeT $ getLocationOf eid
+              let source = fromMaybe (toSource eid) a.movement.source
+              let (whens, _, _) = batchedTimings batchId (Window.EnemyWouldMove eid source from lid)
+              lift $ checkWindows [whens]
+            let leaveWindows = join $ map (\oldId -> windows [Window.EnemyLeaves eid oldId]) (maybeToList enemyLocation)
+            afterWindow <- checkAfter $ Window.EnemyMoves eid lid
+            pushBatched batchId
+              $ maybeToList mRunWouldMove
+              <> [EnemyEntered eid lid, Do msg]
+              <> leaveWindows
+              -- EnemyCheckEngagement is handled in After (EnemyEntered) so the
+              -- enemy engages before its after-enters reaction window fires.
+              <> [afterWindow]
+            -- A moving enemy is no longer mid-spawn. Without clearing spawn
+            -- details, a move nested inside the spawn's after-window (e.g.
+            -- The Unsealing cancelling Acolyte's doom into a hunter move)
+            -- causes After (EnemyEntered) to re-emit the after-EnemySpawns
+            -- window at the new location, re-firing enters-play abilities
+            -- in an infinite loop.
+            pure $ a & spawnDetailsL .~ Nothing & movementL .~ mMovement
+          else do
+            push (EnemyCheckEngagement eid)
+            pure a
+    Do (EnemyMove eid lid) | eid == enemyId -> do
+      -- Want to make sure if the enemy is already at the location we don't
+      -- adjust the placement as it will affect engagement (such as Knight of
+      -- the Inner Circle)
+      current <- getLocationOf enemyId
+      -- Don't drag an enemy back into play if it left play (e.g. was set aside)
+      -- after this in-play move was queued.
+      let leftPlayMidMove =
+            isNothing enemySpawnDetails
+              && maybe False moveFromInPlay enemyMovement
+              && isOutOfPlayPlacement enemyPlacement
+      -- The enemy moved again while this move's enter-windows were open (e.g.
+      -- Elusive fled it elsewhere during the after-enters reaction window).
+      -- `enemyMovement` describes that newer move, so this stale placement write
+      -- must not drag the enemy back to the superseded destination.
+      let supersededMidMove = maybe False ((/= ToLocation lid) . moveDestination) enemyMovement
+      -- The enemy was put back in the shadows while this move's enter-windows
+      -- were open, which clears `enemyMovement` (see `PlaceEnemy InTheShadows`).
+      -- `InTheShadows` is an *in-play* placement, so `leftPlayMidMove` above
+      -- cannot see it; without this the exposure's deferred placement write
+      -- drags the enemy straight back out (#5365). A live exposure always still
+      -- has its movement recorded, so it is unaffected.
+      let cancelledIntoShadows = enemyPlacement == InTheShadows && isNothing enemyMovement
+      if current == Just lid || leftPlayMidMove || supersededMidMove || cancelledIntoShadows
+        then pure a
+        else pure $ a & placementL .~ AtLocation lid
+    After (EndTurn _) | not enemyDefeated -> a <$ push (EnemyCheckEngagement $ toId a)
+    BeginRoundWindow | not enemyDefeated -> a <$ push (EnemyCheckEngagement $ toId a)
+    EnemyCheckEngagement eid | eid == enemyId && not (isSwarm a) && not enemyDelayEngagement -> do
+      let isAttached = isJust a.placement.attachedTo
+
+      unless isAttached do
+        keywords <- getModifiedKeywords a
+        mods <- getModifiers eid
+        let
+          modifiedFilter iid = do
+            if #massive `elem` keywords
+              then pure True
+              else do
+                investigatorMods <- getModifiers iid
+                canEngage <- flip allM investigatorMods $ \case
+                  CannotBeEngagedBy matcher -> notElem eid <$> select matcher
+                  CannotBeEngaged -> pure False
+                  _ -> pure True
+                pure $ canEngage && all (`notElem` mods) [CannotEngage iid, CannotBeEngaged]
+        investigatorIds' <- filterM modifiedFilter =<< getInvestigatorsAtSameLocation a
+        let valids = oneOf (map InvestigatorWithId investigatorIds')
+
+        prey <- getPreyMatcher a
+        investigatorIds <- case prey of
+          Prey m -> do
+            preyIds <- select $ Prey $ m <> valids
+            pure $ if null preyIds then investigatorIds' else preyIds
+          OnlyPrey m -> select $ OnlyPrey $ preyWith m valids
+          other@(BearerOf {}) -> do
+            mBearer <- selectOne other
+            pure $ maybe [] (\bearer -> [bearer | bearer `elem` investigatorIds']) mBearer
+          other@(RestrictedBearerOf {}) -> do
+            mBearer <- selectOne other
+            pure $ maybe [] (\bearer -> [bearer | bearer `elem` investigatorIds']) mBearer
+
+        lead <- getLeadPlayer
+        unengaged <- selectNone $ investigatorEngagedWith enemyId
+        when
+          ( none (`elem` keywords) [#aloof, #massive]
+              && unengaged
+              && CannotBeEngaged
+              `notElem` mods
+              && not enemyExhausted
+          )
+          $ if #massive `elem` keywords
+            then
+              pushAll
+                [ EnemyEngageInvestigator eid investigatorId
+                | investigatorId <- investigatorIds
+                ]
+            else case investigatorIds of
+              [] -> pure ()
+              [x] -> push $ EnemyEngageInvestigator eid x
+              xs ->
+                push
+                  $ chooseOne lead
+                  $ targetLabels xs (only . EnemyEngageInvestigator eid)
+        when (CannotBeEngaged `elem` mods) $ case enemyPlacement of
+          InThreatArea iid -> push $ DisengageEnemy iid enemyId
+          _ -> pure ()
+      pure a
+    HuntersMove | not enemyExhausted && not (isSwarm a) && isInPlayPlacement a.placement -> do
+      let isAttached = isJust a.placement.attachedTo
+      unless isAttached do
+        mods <- getModifiers enemyId
+        keywords <- getModifiedKeywords a
+        -- We should never have a case where an enemy has both patrol and
+        -- hunter and should only have one patrol keyword
+        unless (CannotMove `elem` mods) do
+          for_ keywords \case
+            Keyword.Patrol lMatcher -> do
+              wantsToPatrol <- matches enemyId (UnengagedEnemy <> not_ (EnemyAt $ replaceThatEnemy a.id lMatcher))
+              pushWhen wantsToPatrol
+                $ HandleGroupTarget HunterGroup (toTarget a) [PatrolMove (toId a) $ replaceThatEnemy a.id lMatcher]
+            Keyword.Hunter -> whenM (matches enemyId UnengagedEnemy) do
+              wantsToHunt <-
+                getPreyMatcher a >>= \case
+                  OnlyPrey _ -> do
+                    prey <- getActualAvailablePrey a
+                    selectNone (InvestigatorAt (locationWithEnemy enemyId) <> mapOneOf InvestigatorWithId prey)
+                  _ ->
+                    andM
+                      [ selectNone (InvestigatorAt (locationWithEnemy enemyId))
+                      , selectNone
+                          (EnemyAt (locationWithEnemy enemyId) <> EnemyWithModifier CountsAsInvestigatorForHunterEnemies)
+                      , selectNone
+                          $ EnemyAt (locationWithEnemy enemyId <> LocationWithModifier CountsAsInvestigatorForHunterEnemies)
+                      ]
+
+              when wantsToHunt do
+                (batchId, windowMessages) <- wouldWindows $ Window.WouldMoveFromHunter (toId a)
+                push
+                  $ HandleGroupTarget
+                    HunterGroup
+                    (toTarget a)
+                    [ Would batchId
+                        $ windowMessages
+                        <> (HunterMove (toId a) : [HunterMove (toId a) | ResolveHunterTwice `elem` mods])
+                    ]
+            _ -> pure ()
+      pure a
+    SwapPlaces (aTarget, _) (_, newLocation) | a `is` aTarget -> do
+      push $ EnemyCheckEngagement a.id
+      pure $ a & placementL .~ AtLocation newLocation
+    SwapPlaces (_, newLocation) (bTarget, _) | a `is` bTarget -> do
+      push $ EnemyCheckEngagement a.id
+      pure $ a & placementL .~ AtLocation newLocation
+    HunterMove eid | eid == toId a && not enemyExhausted && not (isSwarm a) -> do
+      field EnemyLocation enemyId >>= \case
+        Nothing -> pure a
+        Just loc -> do
+          mods <- getModifiers enemyId
+          let
+            locationMatcherModifier = if CanEnterEmptySpace `elem` mods then IncludeEmptySpace else id
+            matchForcedTargetLocation = \case
+              DuringEnemyPhaseMustMoveToward (LocationTarget lid) -> Just lid
+              _ -> Nothing
+            forcedTargetLocation = firstJust matchForcedTargetLocation mods
+            additionalConnections = [ConnectedToWhen (LocationWithId loc) (LocationWithId lid') | HunterConnectedTo lid' <- mods]
+
+          enemiesAsInvestigatorLocations <-
+            withModifiers loc (toModifiers a additionalConnections)
+              $ select
+              $ locationMatcherModifier
+              $ LocationWithEnemy
+              $ NearestEnemyToLocation loc
+              $ EnemyWithModifier CountsAsInvestigatorForHunterEnemies
+
+          locationsToHuntTo <-
+            withModifiers loc (toModifiers a additionalConnections)
+              $ select
+              $ locationMatcherModifier
+              $ LocationWithModifier CountsAsInvestigatorForHunterEnemies
+
+          prey <- getPreyMatcher a
+          matchingClosestLocationIds <- withModifiers loc (toModifiers a additionalConnections) do
+            select . locationMatcherModifier =<< case (forcedTargetLocation, prey) of
+              (Just forcedTargetLocationId, _) ->
+                -- Lure (1)
+                pure $ ClosestPathLocation loc forcedTargetLocationId
+              (Nothing, BearerOf _) ->
+                pure
+                  $ locationWithInvestigator
+                  $ fromJustNote "must have bearer" enemyBearer
+              (Nothing, RestrictedBearerOf _ _) -> do
+                -- this case should never happen, but just in case
+                pure
+                  $ locationWithInvestigator
+                  $ fromJustNote "must have bearer" enemyBearer
+              (Nothing, OnlyPrey onlyPrey) -> do
+                preyIds <- select onlyPrey
+                pure
+                  $ locationMatcherModifier
+                  $ NearestLocationToLocation loc
+                  $ LocationWithInvestigator
+                  $ mapOneOf InvestigatorWithId preyIds
+              (Nothing, _prey) -> do
+                investigatorLocations <-
+                  select
+                    $ locationMatcherModifier
+                    $ LocationWithInvestigator
+                    $ CanBeHuntedBy eid
+                    <> NearestToEnemy (be eid)
+                pure
+                  $ NearestLocationToLocation loc
+                  $ mapOneOf
+                    LocationWithId
+                    (locationsToHuntTo <> enemiesAsInvestigatorLocations <> investigatorLocations)
+
+          preyIds <- select prey
+          let includeEnemies = prey == Prey Anyone
+
+          filteredClosestLocationIds <- flip filterM matchingClosestLocationIds \lid -> do
+            hasInvestigators <-
+              notNull
+                . List.intersect preyIds
+                <$> select (InvestigatorAt (locationMatcherModifier $ LocationWithId lid))
+            hasEnemies <-
+              notNull
+                <$> select
+                  ( EnemyAt (locationMatcherModifier $ LocationWithId lid)
+                      <> EnemyWithModifier CountsAsInvestigatorForHunterEnemies
+                  )
+            hasCountsModifier <-
+              notNull
+                <$> select
+                  (LocationWithId lid <> LocationWithModifier CountsAsInvestigatorForHunterEnemies)
+            pure $ hasInvestigators || hasCountsModifier || (includeEnemies && hasEnemies)
+
+          -- If we have any locations with prey, that takes priority, otherwise
+          -- we return all locations which may have matched via AnyPrey
+          let
+            destinationLocationIds =
+              if null filteredClosestLocationIds
+                then matchingClosestLocationIds
+                else filteredClosestLocationIds
+
+          lead <- getLeadPlayer
+          pathIds <- getPaths a destinationLocationIds
+
+          case pathIds of
+            [] -> pure a
+            [lid] -> do
+              pushAll
+                [ CheckWindows [Window.mkWhen $ Window.MovedFromHunter enemyId]
+                , EnemyMove enemyId lid
+                , CheckWindows [mkAfter $ Window.MovedFromHunter enemyId]
+                , CheckWindows [mkAfter $ Window.EnemyMovesTo lid MovedViaHunter enemyId]
+                ]
+              pure $ a & movedFromHunterKeywordL .~ True
+            ls -> do
+              push
+                $ questionWithSourceWithTooltip (EnemySource enemyId) (Tooltip "$hunter.move") lead
+                $ ChooseOne
+                  [ targetLabel
+                      l
+                      [ CheckWindows [Window.mkWhen $ Window.MovedFromHunter enemyId]
+                      , EnemyMove enemyId l
+                      , CheckWindows [mkAfter $ Window.MovedFromHunter enemyId]
+                      , CheckWindows [mkAfter $ Window.EnemyMovesTo l MovedViaHunter enemyId]
+                      ]
+                  | l <- ls
+                  ]
+              pure $ a & movedFromHunterKeywordL .~ True
+    PatrolMove eid _lMatcher | eid == toId a && not enemyExhausted && not (isSwarm a) -> do
+      Lifted.checkWhen $ Window.WouldPatrol eid
+      do_ msg
+      pure a
+    Do (PatrolMove eid lMatcher) | eid == toId a && not enemyExhausted && not (isSwarm a) -> do
+      field EnemyLocation enemyId >>= traverse_ \loc ->
+        unlessM (loc <=~> replaceThatEnemy a.id lMatcher) do
+          mods <- getModifiers enemyId
+          let locationMatcherModifier = if CanEnterEmptySpace `elem` mods then IncludeEmptySpace else id
+          destinations <-
+            select $ locationMatcherModifier $ NearestLocationToLocation loc $ replaceThatEnemy a.id lMatcher
+          lead <- getLeadPlayer
+          pathIds <- concatForM destinations (select . locationMatcherModifier . ClosestPathLocation loc)
+          case pathIds of
+            [] -> pure ()
+            [lid] -> do
+              pushAll
+                [ EnemyMove enemyId lid
+                , CheckWindows [mkAfter $ Window.EnemyMovesTo lid MovedViaPatrol enemyId]
+                ]
+            ls -> do
+              push
+                $ questionWithSourceWithTooltip (EnemySource enemyId) (Tooltip "$patrol.move") lead
+                $ ChooseOne
+                  [ targetLabel
+                      l
+                      [ EnemyMove enemyId l
+                      , CheckWindows [mkAfter $ Window.EnemyMovesTo l MovedViaPatrol enemyId]
+                      ]
+                  | l <- ls
+                  ]
+      pure a
+    ForInvestigator iid EnemiesAttack | not enemyExhausted && not enemyDefeated -> do
+      mods <- getModifiers enemyId
+      cannotAttack <- getCannotAttackNow mods
+      unless cannotAttack do
+        let mOverride = getFirst $ mconcat [First (Just override) | EnemyAttacksOverride override <- mods]
+        iids <-
+          select (fromMaybe enemyAttacks mOverride) >>= filterM \iid' -> do
+            imods <- getModifiers iid'
+            flip allM imods \case
+              CannotBeAttackedBy matcher -> notElem enemyId <$> select matcher
+              CannotBeAttacked -> pure False
+              _ -> pure True
+        when (iid `elem` iids) do
+          keywords <- getModifiedKeywords a
+          phase <- getPhase
+          let attackCount :: Int
+              attackCount = if phase == #enemy && Keyword.Relentless `elem` keywords then 2 else 1
+          case iids of
+            [] -> do
+              whenAny (locationWithEnemy enemyId <> LocationWithModifier CountsAsInvestigatorForHunterEnemies) do
+                scenarioSpecific "enemyAttackedAtLocation" enemyId
+                scenarioSpecific "enemyAttacked" enemyId
+              pure ()
+            [x] ->
+              pushAll
+                [ EnemyWillAttack
+                    $ (enemyAttack enemyId a x)
+                      { attackDamageStrategy = enemyDamageStrategy
+                      , attackExhaustsEnemy = attackNumber == attackCount
+                      }
+                | attackNumber <- [1 .. attackCount]
+                ]
+            (x : xs) ->
+              pushAll
+                [ EnemyWillAttack
+                    $ (enemyAttack enemyId a x)
+                      { attackDamageStrategy = enemyDamageStrategy
+                      , attackExhaustsEnemy = attackNumber == attackCount
+                      , attackTarget = MassiveAttackTargets (map toTarget $ x : xs)
+                      , attackOriginalTarget = MassiveAttackTargets (map toTarget $ x : xs)
+                      }
+                | attackNumber <- [1 .. attackCount]
+                ]
+      pure a
+    Do EnemiesAttack | not enemyExhausted && not enemyDefeated -> do
+      mods <- getModifiers (EnemyTarget enemyId)
+      cannotAttack <- getCannotAttackNow mods
+      unless cannotAttack do
+        let mOverride = getFirst $ mconcat [First (Just override) | EnemyAttacksOverride override <- mods]
+        iids <-
+          select (fromMaybe enemyAttacks mOverride) >>= filterM \iid' -> do
+            imods <- getModifiers iid'
+            flip allM imods \case
+              CannotBeAttackedBy matcher -> notElem enemyId <$> select matcher
+              CannotBeAttacked -> pure False
+              _ -> pure True
+        keywords <- getModifiedKeywords a
+        phase <- getPhase
+        let attackCount :: Int
+            attackCount = if phase == #enemy && Keyword.Relentless `elem` keywords then 2 else 1
+        case iids of
+          [] -> do
+            whenAny (locationWithEnemy enemyId <> LocationWithModifier CountsAsInvestigatorForHunterEnemies) do
+              scenarioSpecific "enemyAttackedAtLocation" enemyId
+              scenarioSpecific "enemyAttacked" enemyId
+            pure ()
+          [x] ->
+            pushAll
+              [ EnemyWillAttack
+                  $ (enemyAttack enemyId a x)
+                    { attackDamageStrategy = enemyDamageStrategy
+                    , attackExhaustsEnemy = attackNumber == attackCount
+                    }
+              | attackNumber <- [1 .. attackCount]
+              ]
+          (x : xs) ->
+            pushAll
+              [ EnemyWillAttack
+                  $ (enemyAttack enemyId a x)
+                    { attackDamageStrategy = enemyDamageStrategy
+                    , attackExhaustsEnemy = attackNumber == attackCount
+                    , attackTarget = MassiveAttackTargets (map toTarget $ x : xs)
+                    , attackOriginalTarget = MassiveAttackTargets (map toTarget $ x : xs)
+                    }
+              | attackNumber <- [1 .. attackCount]
+              ]
+      pure a
+    AttackEnemy eid choose | eid == enemyId -> do
+      let iid = choose.investigator
+      let source = choose.source
+      let sid = choose.skillTest
+
+      whenWindow <- checkWindows [mkWhen (Window.EnemyAttacked iid source enemyId)]
+      afterWindow <- checkWindows [mkAfter (Window.EnemyAttacked iid source enemyId)]
+      attempt <- checkWindows [mkWhen (Window.AttemptToFightEnemy sid iid enemyId)]
+      keywords <- getModifiedKeywords a
+
+      pushAll
+        [ whenWindow
+        , attempt
+        , Fight.mkAttackMessage eid (EnemyMaybeFieldCalculation eid EnemyFight) choose
+        , afterWindow
+        ]
+
+      whenM (eid <=~> ReadyEnemy) do
+        pushWhen (Keyword.Elusive `elem` keywords) $ HandleElusive eid
+      pure a
+    HandleElusive eid | eid == enemyId -> do
+      -- just a reminder that the messages are handled in reverse, so exhaust happens last
+      when (isInPlayPlacement enemyPlacement) do
+        push $ DisengageEnemyFromAll eid
+        emptyConnectedLocations <-
+          select $ connectedFrom (locationWithEnemy eid) <> not_ (LocationWithInvestigator Anyone)
+        lead <- getLeadPlayer
+        let fleeChoice locs = case [targetLabel lid [EnemyMove eid lid] | lid <- locs] of
+              [x] -> uiToRun x
+              uis -> questionWithSourceWithTooltip (EnemySource eid) (Tooltip "$elusive.flee") lead (ChooseOne uis)
+        if notNull emptyConnectedLocations
+          then do
+            push $ fleeChoice emptyConnectedLocations
+          else do
+            otherConnectedLocations <-
+              select $ connectedFrom (locationWithEnemy eid) <> LocationWithInvestigator Anyone
+            when (notNull otherConnectedLocations) do
+              push $ fleeChoice otherConnectedLocations
+
+        whenM (eid <=~> ReadyEnemy) do
+          push $ Exhaust (mkExhaustion a a)
+      pure a
+    PassedSkillTest iid (Just Action.Fight) source (Initiator target) _ n | isActionTarget a target -> do
+      push
+        $ SkillTestResultOption
+        $ SkillTestOption
+          { option =
+              Label
+                ("Damage " <> display (toName a))
+                [ UpdateHistory iid (HistoryItem HistorySuccessfulAttacks 1)
+                , Successful (Action.Fight, toProxyTarget target) iid source (toActionTarget target) n
+                ]
+          , kind = OriginalOptionKind
+          , criteria = Nothing
+          }
+      pure a
+    Successful (Action.Fight, _) iid source target n | isTarget a target -> do
+      mods <- getModifiers a
+      let alternateSuccess = [t | AlternateSuccess t <- mods]
+      for_ alternateSuccess $ \target' ->
+        push $ Successful (Action.Fight, toTarget a) iid source target' n
+      pushWhen (null alternateSuccess) $ InvestigatorDamageEnemy iid enemyId source
+      pure a
+    After (FailedSkillTest iid (Just Action.Fight) source (Initiator target) _ n) | isActionTarget a target -> do
+      pushAll
+        [ CheckWindows [mkAfter $ Window.FailAttackEnemy iid enemyId n]
+        , CheckWindows [mkAfter $ Window.EnemyAttacked iid source enemyId]
+        ]
+      pure a
+    FailedSkillTest iid (Just Action.Fight) source (Initiator target) _ n | isActionTarget a target -> do
+      pushAll
+        [ FailedAttackEnemy iid enemyId
+        , Failed (Action.Fight, toProxyTarget target) iid source (toActionTarget target) n
+        ]
+      pure a
+    Failed (Action.Fight, target) iid _source _ _ | isTarget a target -> do
+      mods <- getCombinedModifiers [toTarget iid, toTarget a]
+      keywords <- getModifiedKeywords a
+
+      when
+        ( (Keyword.Retaliate `elem` keywords)
+            && (IgnoreRetaliate `notElem` mods)
+            && (not enemyExhausted || CanRetaliateWhileExhausted `elem` mods)
+        )
+        do
+          withI18n $ cardNameVar a $ sendI18n "log.retaliate"
+          push
+            $ EnemyAttack
+            $ (enemyAttack enemyId a iid)
+              { attackDamageStrategy = enemyDamageStrategy
+              , attackType = RetaliateAttack
+              }
+      pure a
+    EnemyAttackIfEngaged eid miid | eid == enemyId -> do
+      case miid of
+        Just iid -> do
+          shouldAttack <- elem iid <$> select (investigatorEngagedWith eid)
+          when shouldAttack do
+            push $ EnemyAttack $ (enemyAttack enemyId a iid) {attackDamageStrategy = enemyDamageStrategy}
+        Nothing -> do
+          iids <- select $ investigatorEngagedWith eid
+          pushAll
+            [ EnemyAttack $ (enemyAttack enemyId a iid) {attackDamageStrategy = enemyDamageStrategy} | iid <- iids
+            ]
+      pure a
+    EnemyEvaded iid eid | eid == enemyId -> do
+      -- The exhaust/disengage lives in `Do msg`, and the whole cascade rides in
+      -- a batch fronted by the EnemyWouldBeEvaded would-windows, so a reaction
+      -- that replaces the evasion (Reminiscence (Covenant)) can CancelBatch and
+      -- leave the enemy engaged and ready.
+      (batchId, wouldMsgs) <- wouldWindows $ Window.EnemyWouldBeEvaded iid enemyId
+      whenWindow <- checkWindows [mkWhen $ Window.EnemyEvaded iid enemyId]
+      afterWindow <- checkWindows [mkAfter $ Window.EnemyEvaded iid enemyId]
+      push $ Would batchId $ wouldMsgs <> [whenWindow, Do msg, afterWindow]
+      pure a
+    Do (EnemyEvaded iid eid) | eid == enemyId -> do
+      mods <- getModifiers iid
+      emods <- getModifiers eid
+      for_
+        ( evasionResult
+            (DoNotDisengageEvaded `notElem` mods)
+            (DoNotExhaustEvaded `notElem` (mods <> emods))
+        )
+        (`successfulEvasion` eid)
+      runDefaultMaybeT a do
+        pendingSpawnAt <- hoistMaybe $ (.spawnAt) <$> enemySpawnDetails
+        lid <- MaybeT $ case pendingSpawnAt of
+          SpawnEngagedWith (InvestigatorWithId iid') -> getLocationOf iid'
+          SpawnPlaced p -> placementLocation p
+          _ -> placementLocation a.placement
+        pure $ a & spawnDetailsL . _Just %~ \sd -> sd {spawnDetailsSpawnAt = SpawnAtLocation lid}
+    Exhaust ea | a `isTarget` ea.target -> do
+      mods <- getModifiers (toTarget a)
+      sourceBlocked <-
+        anyM
+          ( \case
+              CannotBeExhaustedBy sm -> sourceMatches ea.source sm
+              _ -> pure False
+          )
+          mods
+      if sourceBlocked
+        then pure a
+        else do
+          let
+            isEnemyAttack = \case
+              TargetLabel (EnemyTarget eid) [EnemyAttack details] -> eid == enemyId && details.enemy == enemyId
+              _ -> False
+            isNotInvalidEnemyAttack = \case
+              msg'@(TargetLabel _ [EnemyAttack details])
+                | isEnemyAttack msg' -> attackIsValid details (a & exhaustedL .~ True)
+              _ -> pure True
+          overMessagesM \case
+            Ask pid (ChooseOneAtATime xs) | any isEnemyAttack xs -> do
+              filterM isNotInvalidEnemyAttack xs >>= \case
+                [] -> pure []
+                xs' -> pure [Ask pid (ChooseOneAtATime xs')]
+            msg' -> pure [msg']
+
+          case enemyPlacement of
+            AsSwarm eid' _ -> push $ Exhaust ea {exhaustionTarget = toTarget eid'}
+            _ -> do
+              others <- select $ SwarmOf (toId a) <> ReadyEnemy
+              pushAll [Exhaust ea {exhaustionTarget = toTarget other} | other <- others]
+
+          afterWindow <- checkWindows [mkAfter $ Window.Exhausts (toTarget a)]
+          push afterWindow
+          pure $ a & exhaustedL .~ True
+    TryEvadeEnemy sid iid eid source mTarget skillType | eid == enemyId -> do
+      mEnemyEvade' <- field EnemyEvade eid
+      case mEnemyEvade' of
+        Just _ ->
+          push
+            $ Evade.mkEvadeMessage
+              eid
+              (EnemyMaybeFieldCalculation eid EnemyEvade)
+              sid
+              iid
+              source
+              mTarget
+              skillType
+        Nothing -> error "No evade value"
+      pure a
+    PassedSkillTest iid (Just Action.Evade) source (Initiator target) _ n | isActionTarget a target -> do
+      push
+        $ SkillTestResultOption
+        $ SkillTestOption
+          { option =
+              Label
+                ("Evade " <> display (toName a))
+                [ UpdateHistory iid (HistoryItem HistorySuccessfulEvasions 1)
+                , Successful (Action.Evade, toProxyTarget target) iid source (toActionTarget target) n
+                ]
+          , kind = OriginalOptionKind
+          , criteria = Nothing
+          }
+      pure a
+    Successful (Action.Evade, _) iid source target n | isTarget a target -> do
+      mods <- getModifiers a
+      let alternateSuccess = [t | AlternateSuccess t <- mods]
+      for_ alternateSuccess $ \target' ->
+        push $ Successful (Action.Evade, toTarget a) iid source target' n
+      -- Fire the SuccessfulEvadeEnemy windows around EnemyEvaded (When -> exhaust
+      -- -> After) so "after you evade" reactions see the enemy already exhausted
+      -- and disengaged (e.g. Right Under Their Noses vs Terror of the Stars).
+      when (null alternateSuccess) $ Evade.pushSuccessfulEvade iid source enemyId n
+      pure a
+    When (FailedSkillTest iid (Just Action.Evade) _source (Initiator target) _ n) | isActionTarget a target -> do
+      pushM $ checkWindows [mkWhen $ Window.FailEvadeEnemy iid enemyId n]
+      pure a
+    After (FailedSkillTest iid (Just Action.Evade) _source (Initiator target) _ n) | isActionTarget a target -> do
+      pushM $ checkWindows [mkAfter $ Window.FailEvadeEnemy iid enemyId n]
+      pure a
+    FailedSkillTest iid (Just Action.Evade) source (Initiator target) _ n | isActionTarget a target -> do
+      push $ Failed (Action.Evade, toProxyTarget target) iid source (toActionTarget target) n
+      pure a
+    Failed (Action.Evade, target) iid _ _ _ | isTarget a target -> do
+      mods <- getModifiers iid
+      keywords <- getModifiedKeywords a
+      pushAll
+        [ EnemyAttack $ viaAlert $ (enemyAttack enemyId a iid) {attackDamageStrategy = enemyDamageStrategy}
+        | Keyword.Alert `elem` keywords
+        , IgnoreRetaliate `notElem` mods
+        ]
+      pure a
+    InitiateEnemyAttack details | details.enemy == enemyId -> do
+      mods <- getModifiers a
+      if CannotAttack `elem` mods
+        then pure a
+        else do
+          let canBeCancelled = details.canBeCanceled && AttacksCannotBeCancelled `notElem` mods
+          let strategy = fromMaybe details.strategy $ listToMaybe [s | SetAttackDamageStrategy s <- mods]
+          push $ EnemyAttack $ details {attackCanBeCanceled = canBeCancelled, attackDamageStrategy = strategy}
+          pure $ a & wantsToAttackL .~ True
+    ChangeEnemyAttackTarget eid target | eid == enemyId -> do
+      let details = fromJustNote "missing attack details" enemyAttacking
+          details' = details {attackTarget = SingleAttackTarget target}
+      replaceWindow
+        \case
+          (Window.windowType -> Window.EnemyAttacks d) -> d == details
+          _ -> False
+        \w -> w {Window.windowType = Window.EnemyAttacks details'}
+      replaceWindow
+        \case
+          (Window.windowType -> Window.EnemyAttacksEvenIfCancelled d) -> d == details
+          _ -> False
+        \w -> w {Window.windowType = Window.EnemyAttacksEvenIfCancelled details'}
+      pure $ a & attackingL ?~ details'
+    ChangeEnemyAttackDetails eid details' | eid == enemyId -> do
+      pure $ a & attackingL ?~ details'
+    AfterEnemyAttack eid msgs | eid == enemyId -> do
+      let details = fromJustNote "missing attack details" enemyAttacking
+      pure $ a & attackingL ?~ details {attackAfter = msgs}
+    EnemyAttack details | details.enemy == enemyId -> do
+      whenM (attackIsValid details a) do
+        case details.investigator of
+          Just iid -> do
+            mods <- getModifiers iid
+            let ignoreMatchers = [m | MayIgnoreAttacksOfOpportunityOf m <- mods]
+            ignoreMatches <- if null ignoreMatchers then pure False else matches enemyId (concat ignoreMatchers)
+            let canIgnore = MayIgnoreAttacksOfOpportunity `elem` mods || ignoreMatches
+            let willIgnore = IgnoreAttacksOfOpportunity `elem` mods
+            if (canIgnore || willIgnore) && details.kind == AttackOfOpportunity
+              then do
+                player <- getPlayer iid
+                when canIgnore do
+                  push
+                    $ chooseOne player [Label "$label.ignoreAttackOfOpportunity" [], Label "$label.doNotIgnore" [Do msg]]
+              else push $ Do msg
+          _ -> push $ Do msg
+      pure $ a & wantsToAttackL .~ False
+    Do (EnemyAttack details) | attackEnemy details == enemyId -> do
+      mods <- getModifiers a
+      let canBeCancelled = AttacksCannotBeCancelled `notElem` mods
+      let strategy =
+            fromMaybe (attackDamageStrategy details)
+              $ listToMaybe [s | SetAttackDamageStrategy s <- mods]
+      whenAttacksWindow <- checkWindows [mkWhen $ Window.EnemyAttacks details]
+      afterAttacksEventIfCancelledWindow <-
+        checkWindows [mkAfter $ Window.EnemyAttacksEvenIfCancelled details]
+      whenWouldAttackWindow <- checkWindows [mkWhen $ Window.EnemyWouldAttack details]
+      pushAll
+        [ whenWouldAttackWindow
+        , whenAttacksWindow
+        , PerformEnemyAttack enemyId
+        , After (PerformEnemyAttack enemyId)
+        , afterAttacksEventIfCancelledWindow
+        ]
+
+      pure
+        $ a
+        & attackingL
+        ?~ details {attackCanBeCanceled = canBeCancelled, attackDamageStrategy = strategy}
+    PerformEnemyAttack eid | eid == enemyId && not enemyDefeated -> do
+      let details = fromJustNote "missing attack details" enemyAttacking
+      modifiers <- maybe (pure []) getModifiers details.singleTarget
+      mods <- getModifiers a
+      sourceModifiers <- maybe (pure []) getModifiers (sourceToMaybeTarget details.source)
+      keywords <- getModifiedKeywords a
+
+      -- Elusive fires "after that attack resolves" — before the after-attack
+      -- reaction windows — so the enemy disengages/moves/flips first and
+      -- reactions (e.g. Daniela Reyes) resolve against the fled enemy.
+      -- Readiness is captured here so a #when reaction that exhausts the enemy
+      -- before it attacks still suppresses elusive. Retaliate handles its own
+      -- elusive in the AttackEnemy handler.
+      readyForElusive <- eid <=~> ReadyEnemy
+      let elusiveMsgs =
+            [ HandleElusive enemyId
+            | attackType details /= RetaliateAttack
+            , readyForElusive
+            , Keyword.Elusive `elem` keywords
+            ]
+
+      let
+        applyModifiers cards (CancelAttacksByEnemies c n) = do
+          canceled <- elem enemyId <$> select n
+          pure $ if canceled then c : cards else cards
+        applyModifiers m _ = pure m
+
+      cardsThatCanceled <- foldM applyModifiers [] modifiers
+
+      ignoreWindows <- for cardsThatCanceled \card ->
+        checkWindows [mkAfter $ Window.CancelledOrIgnoredCardOrGameEffect (CardIdSource card.id) Nothing]
+
+      let
+        allowAttack =
+          or
+            [ null cardsThatCanceled
+            , EffectsCannotBeCanceled `notElem` sourceModifiers || not (attackCanBeCanceled details)
+            ]
+
+      healthDamage <-
+        if attackDealDamage details
+          then field EnemyHealthDamage (toId a)
+          else pure 0
+      sanityDamage <- field EnemySanityDamage (toId a)
+
+      let
+        swarmMatcher =
+          case enemyPlacement of
+            AsSwarm host _ -> oneOf [EnemyWithId host, SwarmOf host]
+            _ -> oneOf [EnemyWithId enemyId, SwarmOf enemyId]
+      swarmExhaust <- not . getAny <$> selectAgg Any EnemyWantsToAttack swarmMatcher
+
+      case attackTarget details of
+        SingleAttackTarget (InvestigatorTarget iid) -> do
+          player <- getPlayer iid
+          let
+            attackMessage =
+              if AttackDealsEitherDamageOrHorror `elem` (modifiers <> mods)
+                then
+                  chooseOne
+                    player
+                    [ Label
+                        ("Take " <> tshow healthDamage <> " damage")
+                        [ InvestigatorAssignDamage
+                            iid
+                            (EnemyAttackSource enemyId)
+                            (attackDamageStrategy details)
+                            healthDamage
+                            0
+                        ]
+                    , Label
+                        ("Take " <> tshow sanityDamage <> " horror")
+                        [ InvestigatorAssignDamage
+                            iid
+                            (EnemyAttackSource enemyId)
+                            (attackDamageStrategy details)
+                            0
+                            sanityDamage
+                        ]
+                    ]
+                else
+                  InvestigatorAssignDamage
+                    iid
+                    (EnemyAttackSource enemyId)
+                    (attackDamageStrategy details)
+                    healthDamage
+                    sanityDamage
+
+          pushAll
+            $ [attackMessage | allowAttack && not details.cancelled]
+            <> [ScenarioSpecific "enemyAttacked" (toJSON enemyId)]
+            <> [ Exhaust (mkExhaustion a a)
+               | allowAttack
+               , swarmExhaust
+               , attackExhaustsEnemy details
+               , DoNotExhaust `notElem` mods
+               ]
+            <> ignoreWindows
+            <> elusiveMsgs
+            <> [After (EnemyAttack details)]
+        MassiveAttackTargets ts -> do
+          lead <- getLeadPlayer
+          pushAll
+            $ [ chooseOneAtATime
+                  lead
+                  [ TargetLabel
+                      t
+                      [EnemyAttack $ details {attackTarget = SingleAttackTarget t, attackExhaustsEnemy = False}]
+                  | t <- ts
+                  ]
+              | allowAttack && not details.cancelled
+              ]
+            <> [ScenarioSpecific "enemyAttacked" (toJSON enemyId)]
+            <> [ Exhaust (mkExhaustion a a)
+               | allowAttack
+               , swarmExhaust
+               , attackExhaustsEnemy details
+               , DoNotExhaust `notElem` mods
+               ]
+        -- An enemy attacking an asset "as if it were an engaged investigator"
+        -- (e.g. Dogs of War's Key Locus). Horror is dealt as damage. Must not
+        -- re-emit ScenarioSpecific "enemyAttacked" here or the act handler that
+        -- initiates this attack would loop.
+        SingleAttackTarget (AssetTarget aid) -> do
+          let total = healthDamage + sanityDamage
+          pushAll
+            $ [ DealAssetDamageWithCheck aid (EnemyAttackSource enemyId) total 0 True
+              | allowAttack
+              , not details.cancelled
+              ]
+            <> [ Exhaust (mkExhaustion a a)
+               | allowAttack
+               , swarmExhaust
+               , attackExhaustsEnemy details
+               , DoNotExhaust `notElem` mods
+               ]
+            <> ignoreWindows
+            <> elusiveMsgs
+            <> [After (EnemyAttack details)]
+        _ -> error $ "Unhandled attack target: " <> show (attackTarget details)
+
+      pure a
+    After (EnemyAttack details) | details.enemy == a.id -> do
+      for_ enemyAttacking \updatedDetails -> do
+        afterAttacksWindow <- checkAfter $ Window.EnemyAttacks updatedDetails
+        when (details.kind == AttackOfOpportunity) do
+          for_ details.investigator \iid -> push $ UpdateHistory iid (HistoryItem HistoryAttacksOfOpportunity 1)
+        pushAll $ afterAttacksWindow : attackAfter updatedDetails
+      pure a
+    HealDamage (EnemyTarget eid) source n | eid == enemyId -> do
+      result <- liftRunMessage (RemoveTokens source (toTarget a) #damage n) a
+      Heal.pushHealedAfter DamageType (toTarget a) source n
+      pure result
+    HealAllDamage (EnemyTarget eid) source | eid == enemyId -> do
+      Heal.pushHealedAfter DamageType (toTarget a) source (enemyDamage a)
+      pure $ a & tokensL %~ removeAllTokens Token.Damage & defeatedL .~ False
+    Msg.DealDamage (EnemyTarget eid) damageAssignment | eid == enemyId -> do
+      let
+        source = damageAssignmentSource damageAssignment
+        damageEffect = damageAssignmentDamageEffect damageAssignment
+        damageAmount = damageAssignmentAmount damageAssignment
+      canDamage <- sourceCanDamageEnemy eid source
+      when canDamage do
+        Lifted.checkWhen $ Window.WouldTakeDamage source (toTarget a) damageAmount DamageDirect
+        Lifted.checkWhen $ Window.DealtDamage source damageEffect (toTarget a) damageAmount
+        Lifted.checkAfter $ Window.DealtDamage source damageEffect (toTarget a) damageAmount
+        Lifted.checkWhen $ Window.TakeDamage source damageEffect (toTarget a) damageAmount
+        push $ Damaged (EnemyTarget eid) damageAssignment
+        Lifted.checkAfter $ Window.TakeDamage source damageEffect (toTarget a) damageAmount
+      pure a
+    Damaged (EnemyTarget eid) damageAssignment'' | eid == enemyId -> do
+      let source = damageAssignment''.source
+      let
+        damageAssignment =
+          if damageAssignment''.delayed
+            then damageAssignment''
+            else fromMaybe damageAssignment'' (Map.lookup source enemyAssignedDamage)
+      canDamage <- sourceCanDamageEnemy eid source
+      if canDamage
+        then do
+          amount' <-
+            if damageAssignment.delayed
+              then pure damageAssignment.amount
+              else getModifiedDamageAmount a damageAssignment
+          let
+            damageAssignment' = damageAssignment {damageAssignmentAmount = amount'}
+            combine l r =
+              if l.effect == r.effect
+                then l {damageAssignmentAmount = l.amount + r.amount}
+                else
+                  error
+                    $ "mismatched damage assignments\n\nassignment: "
+                    <> show l
+                    <> "\nnew assignment: "
+                    <> show r
+          push $ AssignedDamage (toTarget a) amount' 0
+          unless damageAssignment'.delayed do
+            push $ checkDefeated source eid
+          pure $ a & assignedDamageL %~ insertWith combine source damageAssignment'
+        else pure a
+    CheckDefeated source (isTarget a -> True) | not enemyDefeated -> do
+      let mDamageAssignment = lookup source enemyAssignedDamage
+      case mDamageAssignment of
+        Nothing -> do
+          hasSwarm <- selectAny $ SwarmOf (toId a)
+          canBeDefeated <- withoutModifier a CannotBeDefeated
+          modifiers' <- getModifiers (toTarget a)
+          let
+            eid = toId a
+            canOnlyBeDefeatedByModifier = \case
+              CanOnlyBeDefeatedBy source' -> First (Just source')
+              _ -> First Nothing
+            mOnlyBeDefeatedByModifier =
+              getFirst $ foldMap canOnlyBeDefeatedByModifier modifiers'
+          let validDefeat = canBeDefeated && not hasSwarm && isNothing mOnlyBeDefeatedByModifier
+          when validDefeat $ do
+            field EnemyHealth (toId a) >>= traverse_ \modifiedHealth -> do
+              when (enemyDamage a >= modifiedHealth) $ do
+                whenMsg <- checkWindows [mkWhen $ Window.EnemyWouldBeDefeated eid]
+                afterMsg <- checkWindows [mkAfter $ Window.EnemyWouldBeDefeated eid]
+                let
+                  defeatMsgs =
+                    if ExhaustIfDefeated `elem` modifiers'
+                      then [Exhaust (mkExhaustion a a) | not enemyExhausted]
+                      else [Arkham.Message.Defeated (EnemyTarget eid) (toCardId a) source (setToList $ toTraits a)]
+
+                pushAll $ [whenMsg, afterMsg] <> defeatMsgs
+          pure a
+        Just da -> do
+          hasSwarm <- selectAny $ SwarmOf (toId a)
+          canBeDefeated <- withoutModifier a CannotBeDefeated
+          modifiers' <- getModifiers (toTarget a)
+          let
+            eid = toId a
+            amount' = damageAssignmentAmount da
+            damageEffect = damageAssignmentDamageEffect da
+            canOnlyBeDefeatedByModifier = \case
+              CanOnlyBeDefeatedBy source' -> First (Just source')
+              _ -> First Nothing
+            mOnlyBeDefeatedByModifier = getFirst $ foldMap canOnlyBeDefeatedByModifier modifiers'
+          when (amount' > 0) do
+            let (before, _, after) = frame $ Window.PlacedDamage source (toTarget a) amount'
+            pushAll [before, after]
+          validDefeat <-
+            ( ( canBeDefeated
+                  && not hasSwarm
+              )
+                &&
+            )
+              <$> maybe (pure True) (sourceMatches source) mOnlyBeDefeatedByModifier
+          when validDefeat $ do
+            field EnemyHealth (toId a) >>= traverse_ \modifiedHealth -> do
+              when (enemyDamage a + amount' >= modifiedHealth) $ do
+                let excess = (enemyDamage a + amount') - modifiedHealth
+                let
+                  mSwarmOf = case enemyPlacement of
+                    AsSwarm eid' _ -> Just eid'
+                    _ -> Nothing
+                controller <- maybe getLeadPlayer getPlayer =<< getSourceController source
+
+                excessDamageTargets <- case mSwarmOf of
+                  Nothing -> pure []
+                  Just eid' -> (eid' :) <$> select (not_ (EnemyWithId $ toId a) <> SwarmOf eid')
+
+                whenMsg <- checkWindows [mkWhen $ Window.EnemyWouldBeDefeated eid]
+                afterMsg <- checkWindows [mkAfter $ Window.EnemyWouldBeDefeated eid]
+                whenExcessMsg <-
+                  checkWindows
+                    [mkWhen $ Window.DealtExcessDamage source damageEffect (toTarget eid) excess | excess > 0]
+                afterExcessMsg <-
+                  checkWindows
+                    [mkAfter $ Window.DealtExcessDamage source damageEffect (toTarget eid) excess | excess > 0]
+
+                let
+                  defeatMsgs =
+                    if ExhaustIfDefeated `elem` modifiers'
+                      then [Exhaust (mkExhaustion a a) | not enemyExhausted]
+                      else
+                        [Arkham.Message.Defeated (EnemyTarget eid) (toCardId a) source (setToList $ toTraits a)]
+                          <> ( guard (notNull excessDamageTargets && excess > 0)
+                                 *> [ ExcessDamage
+                                        eid
+                                        [ chooseOne
+                                            controller
+                                            [ Label
+                                                "Deal Excess Damage to Host or Swarm?"
+                                                [ chooseOrRunOne
+                                                    controller
+                                                    [ targetLabel
+                                                        other
+                                                        [ Msg.DealDamage
+                                                            (EnemyTarget other)
+                                                            ( da
+                                                                { damageAssignmentAmount = excess
+                                                                , damageAssignmentDelayed = False
+                                                                }
+                                                            )
+                                                        ]
+                                                    | other <- excessDamageTargets
+                                                    ]
+                                                ]
+                                            , Label "$label.doNotDealExcessDamage" $ map (CheckDefeated GameSource . toTarget) (toList mSwarmOf)
+                                            ]
+                                        ]
+                                    ]
+                             )
+
+                pushAll $ [whenExcessMsg, afterExcessMsg, whenMsg, afterMsg] <> defeatMsgs
+          pure $ a & assignedDamageL .~ mempty & tokensL . at #damage . non 0 +~ amount'
+    DefeatEnemy eid _ source | eid == enemyId -> do
+      canBeDefeated <- withoutModifier a CannotBeDefeated
+      modifiedHealth <- fieldJust EnemyHealth (toId a)
+      canOnlyBeDefeatedByDamage <- hasModifier a CanOnlyBeDefeatedByDamage
+      modifiers' <- getModifiers (toTarget a)
+      let
+        defeatedByDamage = enemyDamage a >= modifiedHealth
+        canOnlyBeDefeatedByModifier = \case
+          CanOnlyBeDefeatedBy source' -> First (Just source')
+          _ -> First Nothing
+        mOnlyBeDefeatedByModifier =
+          getFirst $ foldMap canOnlyBeDefeatedByModifier modifiers'
+      blockedBySource <-
+        anyM
+          ( \case
+              CannotBeDefeatedBy sm -> sourceMatches source sm
+              _ -> pure False
+          )
+          modifiers'
+      validDefeat <-
+        ( ( canBeDefeated
+              && (not canOnlyBeDefeatedByDamage || defeatedByDamage)
+              && not blockedBySource
+          )
+            &&
+        )
+          <$> maybe (pure True) (sourceMatches source) mOnlyBeDefeatedByModifier
+      when validDefeat do
+        push $ Arkham.Message.Defeated (EnemyTarget eid) (toCardId a) source (setToList $ toTraits a)
+      pure a
+    Arkham.Message.Defeated (EnemyTarget eid) _ source _ | eid == toId a -> do
+      defeatedBy <- Defeat.classifyDefeat source (enemyDamage a) <$> fieldMayJoin EnemyHealth (toId a)
+      miid <- getSourceController source
+      mloc <- field EnemyLocation a.id
+
+      lift $ withQueue_ $ mapMaybe (filterOutEnemyMessages eid)
+
+      let
+        keyMsgs = case miid of
+          Just iid -> [PlaceKey (toTarget iid) ekey | ekey <- toList enemyKeys]
+          Nothing -> case mloc of
+            Just lid -> [PlaceKey (toTarget lid) ekey | ekey <- toList enemyKeys]
+            _ -> []
+      pushAll =<< Defeat.openDefeat eid defeatedBy miid msg keyMsgs
+      pure
+        $ a
+        & (keysL .~ mempty)
+        & (lastKnownLocationL %~ (mloc <|>))
+    Do (Arkham.Message.Defeated (EnemyTarget eid) _ source _) | eid == toId a -> do
+      defeatedBy <- Defeat.classifyDefeat source (enemyDamage a) <$> fieldMayJoin EnemyHealth (toId a)
+      miid <- getSourceController source
+      victory <- getVictoryPoints eid
+      mods <- getModifiers a
+      vengeance <- getVengeancePoints eid
+      let
+        placeInVictory = isJust (victory <|> vengeance) && not a.placement.isSwarm && LoseVictory `notElem` mods
+        victoryMsgs =
+          guard (not a.placement.isInVictory) *> [AddToVictory miid $ toTarget a | placeInVictory]
+        defeatMsgs =
+          guard (not a.placement.isInVictory) *> [Discard miid GameSource $ toTarget a | not placeInVictory]
+        -- Doomed keyword: when defeated, place 1 doom on the agenda (can advance)
+        doomedMsgs =
+          guard (Set.member Keyword.Doomed (cdKeywords (toCardDef a))) *> [PlaceDoomOnAgenda 1 CanAdvance]
+        disposal =
+          victoryMsgs
+            <> (guard (not a.placement.isInVictory) *> windows [Window.EntityDiscarded source (toTarget a)])
+            <> defeatMsgs
+            <> doomedMsgs
+
+      pushAll =<< Defeat.closeDefeat eid defeatedBy miid disposal
+
+      case a.placement of
+        AsSwarm eid' _ -> do
+          n <- selectCount $ SwarmOf eid'
+          when (n <= 1) $ push $ CheckDefeated source (toTarget eid')
+        _ -> pure ()
+      -- Mark defeated here rather than on `After`: disposal above is what takes the enemy
+      -- out of play, and anything that reacts to it can push another `CheckDefeated` at us
+      -- (Smite the Wicked (Advanced) and friends re-check their host when their health
+      -- modifier goes away). Those land before `After`, so leaving the flag until then let
+      -- the whole defeat pipeline — and every "after an enemy is defeated" trigger — run a
+      -- second time. See issue #5242.
+      pure $ a & defeatedL .~ True
+    After (Arkham.Message.Defeated (EnemyTarget eid) _ _source _) | eid == toId a -> do
+      pure $ a & defeatedL .~ True
+    EnemySpawnFromOutOfPlay _ miid lid eid | eid == a.id -> do
+      pushAll
+        $ resolve
+        $ EnemySpawn
+        $ (mkSpawnDetails eid $ Arkham.Spawn.SpawnAtLocation lid)
+          { spawnDetailsInvestigator = miid
+          }
+      pure $ a & (defeatedL .~ False) & (exhaustedL .~ False)
+    AddToVictory _miid (isTarget a -> True) -> do
+      push $ RemoveFromPlay (toSource a)
+      push $ Do msg
+      pure a
+    Do (AddToVictory miid (isTarget a -> True)) -> do
+      selectEach (SwarmOf a.id) (push . RemoveEnemy)
+      mloc <- getLocationOf a
+      mods <- getModifiers a
+      let card = toCard a
+      pushAll $ windows [Window.LeavePlay (toTarget a), Window.AddedToVictory miid card]
+      unless (StayInVictory `elem` mods) $ removeEnemy a
+      withLocationOf a $ for_ a.keys . placeKey
+      pure
+        $ a
+        & (placementL .~ OutOfPlay VictoryDisplayZone)
+        & (keysL .~ mempty)
+        & (lastKnownLocationL %~ (mloc <|>))
+        & (tokensL .~ mempty)
+    Discard miid source target | a `isTarget` target -> do
+      whenLeavePlay <- checkWindows [mkWhen $ Window.LeavePlay (toTarget a)]
+      afterLeavePlay <- checkWindows [mkAfter $ Window.LeavePlay (toTarget a)]
+      let
+        card = case enemyPlacement of
+          AsSwarm _ c -> c
+          _ -> toCard a
+      pushAll
+        $ windows [Window.WouldBeDiscarded (toTarget a)]
+        <> windows [Window.EntityDiscarded source (toTarget a)]
+        <> [ whenLeavePlay
+           , RemovedFromPlay $ toSource a
+           ]
+        <> ( guard (not a.placement.isSwarm)
+               *> [ Discarded (toTarget a) source card
+                  , Do (Discarded (toTarget a) source card)
+                  ]
+           )
+        <> [afterLeavePlay]
+      pure $ a & keysL .~ mempty & discardedByL .~ miid
+    PutOnTopOfDeck iid deck target | a `isTarget` target -> do
+      pushAll
+        $ resolve (RemoveEnemy $ toId a)
+        <> [PutCardOnTopOfDeck iid deck (toCard a)]
+      pure a
+    PutOnBottomOfDeck iid deck target | a `isTarget` target -> do
+      pushAll
+        $ resolve (RemoveEnemy $ toId a)
+        <> [PutCardOnBottomOfDeck iid deck (toCard a)]
+      pure a
+    RemovedFromPlay source | isSource a source -> do
+      enemyAssets <- select $ EnemyAsset enemyId
+      pushAll
+        $ map (toDiscard GameSource) enemyAssets
+        <> [UnsealChaosToken token | token <- enemySealedChaosTokens]
+        <> [RemoveEnemy a.id]
+      pure a
+    RemovedFromPlay source -> do
+      -- An enemy attached to something (e.g. Cavern Moss on an Item asset) is
+      -- discarded when that thing leaves play, mirroring attached treacheries.
+      case placementToAttached a.placement of
+        Just target | isTarget target (sourceToTarget source) -> push $ toDiscard GameSource a
+        _ -> pure ()
+      pure a
+    ShuffleBackIntoEncounterDeck source (isTarget a -> True) -> do
+      mods <- getModifiers (toTarget a)
+      blocked <-
+        anyM
+          ( \case
+              CannotBeRemovedBy sm -> sourceMatches source sm
+              _ -> pure False
+          )
+          mods
+      if blocked
+        then pure a
+        else pure $ a & placementL .~ OutOfPlay RemovedZone
+    PlaceEnemyOutOfPlay _oZone eid | a.id == eid -> do
+      let
+        isDiscardEnemy = \case
+          Discard _ _ (EnemyTarget eid') -> eid == eid'
+          RemovedFromPlay (EnemySource eid') -> eid == eid'
+          _ -> False
+      withQueue_ $ filter (not . isDiscardEnemy)
+      pure a
+    Will msg'@(EnemyEngageInvestigator eid _) | eid == enemyId -> do
+      mods <- getCombinedModifiers [toTarget eid, toTarget (toCardId a)]
+      let
+        isForcedEngagement = \case
+          ForceSpawn _ -> True
+          ForceSpawnLocation _ -> True
+          _ -> False
+
+      let
+        forcedEngagement =
+          any isForcedEngagement mods || case enemySpawnDetails of
+            Nothing -> False
+            Just sd -> case sd.spawnAt of
+              SpawnEngagedWith {} -> spawnDetailsOverridden sd
+              _ -> False
+      kws <- getModifiedKeywords a
+      if forcedEngagement
+        then push msg'
+        else unless (enemyExhausted || Keyword.Aloof `elem` kws) $ push msg'
+      pure a
+    EnemyEngageInvestigator eid iid | eid == enemyId -> do
+      eliminated <- not <$> matches iid UneliminatedInvestigator
+      if eliminated
+        then do
+          push $ EnemyCheckEngagement eid
+          pure a
+        else do
+          alreadyEngaged <- eid <=~> enemyEngagedWith iid
+          if alreadyEngaged
+            then pure a
+            else liftRunMessage (EngageEnemy iid eid Nothing False) a
+    EngageEnemy iid eid mTarget False | eid == enemyId -> do
+      eliminated <- selectNone $ InvestigatorWithId iid
+      if eliminated
+        then push $ EnemyCheckEngagement eid
+        else do
+          let (before, _, after) = frame (Window.EnemyEngaged iid eid)
+          case enemyPlacement of
+            AsSwarm eid' _ -> do
+              pushAll [before, EngageEnemy iid eid' mTarget False, after]
+            _ -> do
+              mlid <- getMaybeLocation iid
+              enemyLocation <- field EnemyLocation eid
+              canEnter <-
+                maybe (pure False) (\loc -> (enemyLocation == Just loc ||) <$> canEnterLocation enemyId loc) mlid
+
+              when canEnter do
+                Lifted.batched \_ -> do
+                  Lifted.checkWhen $ Window.EnemyWouldEngage iid eid
+                  Lifted.do_ msg
+      pure a
+    Do (EngageEnemy iid eid _mTarget False) | eid == enemyId -> do
+      let (before, _, after) = frame (Window.EnemyEngaged iid eid)
+      mlid <- getMaybeLocation iid
+      enemyLocation <- field EnemyLocation eid
+      -- A massive enemy can never be placed in a threat area; it is engaged with
+      -- everyone at its location, so a card effect that engages it (Stalked in
+      -- the Dark on a Shadow-spawned Hunting Horror) resolves by moving it to
+      -- that investigator's location instead of being dropped entirely.
+      massive <- eid <=~> MassiveEnemy
+      let
+        placement =
+          if massive
+            then [PlaceEnemy eid (AtLocation lid) | lid <- maybeToList mlid, Just lid /= enemyLocation]
+            else [PlaceEnemy eid (InThreatArea iid)]
+      pushAll
+        $ [before]
+        <> placement
+        <> [EnemyEntered eid lid | lid <- maybeToList mlid, Just lid /= enemyLocation]
+        <> [after]
+
+      selectEach (SwarmOf eid) \s -> do
+        let (sbefore, _, safter) = frame (Window.EnemyEngaged iid s)
+        pushAll [sbefore, safter]
+      pure a
+    WhenWillEnterLocation _iid _lid -> do
+      -- The engaged-follow flow (pushing `EnemyEnteredFollowing` for engaged
+      -- enemies that follow the investigator, or `DisengageEnemy` for those
+      -- that can't) is now driven from `handleDoResolveMovement` in
+      -- `Arkham/Investigator/Runner/Movement.hs` so the entries can be
+      -- grouped with the investigator's own entry inside a `Simultaneously`
+      -- block. Nothing for the Enemy runner to do here.
+      pure a
+    Msg.InvestigatorDamage iid (EnemyAttackSource eid) x y | eid == enemyId -> do
+      pure $ a & attackingL . _Just . damagedL . at (toTarget iid) . non (0, 0) %~ bimap (+ x) (+ y)
+    AssignAssetDamageWithCheck aid (EnemyAttackSource eid) x y _ | eid == enemyId -> do
+      pure $ a & attackingL . _Just . damagedL . at (toTarget aid) . non (0, 0) %~ bimap (+ x) (+ y)
+    CancelAssetDamage aid (EnemyAttackSource eid) x | eid == enemyId -> do
+      pure
+        $ a
+        & (attackingL . _Just . damagedL . at (toTarget aid) . non (0, 0) %~ first (max 0 . subtract x))
+    Will (CheckAttackOfOpportunity iid isFast mtchr) | not isFast && not enemyExhausted -> do
+      let isNotIgnored = case mtchr of
+            Nothing -> pure True
+            Just AnyEnemy -> pure False
+            Just m -> enemyId <!=~> m
+      notIgnored <- isNotIgnored
+      modifiers' <- getModifiers enemyId
+      engaged <- matches iid (investigatorEngagedWith enemyId)
+      let canAttack = not $ any (`elem` modifiers') [CannotMakeAttacksOfOpportunity, CannotAttack]
+      pure $ a & attackOfOpportunityFlaggedL .~ (notIgnored && engaged && canAttack)
+    Will (CheckAttackOfOpportunity {}) -> do
+      pure $ a & attackOfOpportunityFlaggedL .~ False
+    CheckAttackOfOpportunity iid isFast mtchr | not isFast && not enemyExhausted && enemyAttackOfOpportunityFlagged -> do
+      let
+        handleAttack = whenM (matches iid $ investigatorEngagedWith enemyId) do
+          modifiers' <- getModifiers enemyId
+          unless (any (`elem` modifiers') [CannotMakeAttacksOfOpportunity, CannotAttack])
+            $ push
+            $ EnemyWillAttack
+            $ EnemyAttackDetails
+              { attackEnemy = enemyId
+              , attackTarget = SingleAttackTarget (InvestigatorTarget iid)
+              , attackOriginalTarget = SingleAttackTarget (InvestigatorTarget iid)
+              , attackDamageStrategy = enemyDamageStrategy
+              , attackType = AttackOfOpportunity
+              , attackExhaustsEnemy = False
+              , attackSource = toSource a
+              , attackCanBeCanceled = True
+              , attackAfter = []
+              , attackDamaged = mempty
+              , attackDealDamage = True
+              , attackDespiteExhausted = False
+              , attackCancelled = False
+              }
+      case mtchr of
+        Nothing -> handleAttack
+        Just AnyEnemy -> pure ()
+        Just m -> whenM (enemyId <!=~> m) handleAttack
+      pure $ a & attackOfOpportunityFlaggedL .~ False
+    CheckAttackOfOpportunity {} -> do
+      pure $ a & attackOfOpportunityFlaggedL .~ False
+    ForTarget (isTarget a -> True) (CancelEachNext mCardId source [AttackMessage]) -> do
+      let details = fromJustNote "missing attack details" enemyAttacking
+          details' = details {attackCancelled = True}
+      Lifted.checkWhen $ Window.CancelledOrIgnoredCardOrGameEffect source mCardId
+      Lifted.checkAfter $ Window.CancelledOrIgnoredCardOrGameEffect source mCardId
+      pure $ a & attackingL ?~ details'
+    InvestigatorDrawEnemy iid eid | eid == enemyId -> do
+      push $ UpdateHistory iid (HistoryItem HistoryEnemiesDrawn [toCardCode a])
+      mods <- (<>) <$> getModifiers enemyId <*> getModifiers (CardIdTarget $ toCardId a)
+      let
+        getForcedSpawnAt [] = Nothing
+        getForcedSpawnAt (ForceSpawnLocation m : _) = Just $ SpawnAt m
+        getForcedSpawnAt (ForceSpawn m : _) = Just m
+        getForcedSpawnAt (_ : xs) = getForcedSpawnAt xs
+        getOverwrittenSpawnAt [] = Nothing
+        getOverwrittenSpawnAt (OverwrittenSpawn m : _) = Just m
+        getOverwrittenSpawnAt (_ : xs) = getOverwrittenSpawnAt xs
+      -- ForceSpawn (On the Hunt, Kicking the Hornet's Nest) always wins; an
+      -- OverwrittenSpawn (a scenario rule replacing an enemy's normal spawn,
+      -- e.g. Dead Heat forcing Ghoul/Risen enemies to a random location) only
+      -- applies when no ForceSpawn is present.
+      case getForcedSpawnAt mods <|> getOverwrittenSpawnAt mods of
+        Just matcher -> spawnAt enemyId (Just iid) (replaceYouMatcher iid matcher)
+        Nothing -> do
+          gatherConcealedCards a.id >>= \case
+            Just (kind, cards) -> do
+              (batchId, windowMessages) <-
+                wouldWindows
+                  $ Window.ScenarioEvent "wouldConceal" (Just iid) (toJSON (eid, kind, Static $ length cards - 1))
+              placeConcealedMsgs <- capture $ placeConcealed iid kind cards
+              push
+                $ Would batchId
+                $ windowMessages
+                <> resolve
+                  ( EnemySpawn
+                      $ (mkSpawnDetails eid $ SpawnPlaced InTheShadows)
+                        { spawnDetailsInvestigator = Just iid
+                        }
+                  )
+                <> placeConcealedMsgs
+            Nothing -> do
+              let
+                getModifiedSpawnAt [] = enemySpawnAt
+                getModifiedSpawnAt (ForceSpawnLocation m : _) = Just $ SpawnAt m
+                getModifiedSpawnAt (ForceSpawn m : _) = Just m
+                getModifiedSpawnAt (ChangeSpawnWith iid' m : _) | iid' == iid = Just m
+                getModifiedSpawnAt (_ : xs) = getModifiedSpawnAt xs
+                spawnAtMatcher = getModifiedSpawnAt mods
+                LocationFilter cannotSpawnMatchers = fold [LocationFilter m | CannotSpawnIn m <- mods]
+                (LocationFilter changeSpawnMatchers, changedSpawnMatchers) = fold [(LocationFilter x, y) | ChangeSpawnLocation x y <- mods]
+                applyMatcherExclusions ms (SpawnAtFirst sas) =
+                  SpawnAtFirst (map (applyMatcherExclusions ms) sas)
+                applyMatcherExclusions [] m = m
+                applyMatcherExclusions (CannotSpawnIn n : xs) (SpawnAt m) =
+                  applyMatcherExclusions xs (SpawnAt $ m <> NotLocation n)
+                applyMatcherExclusions (_ : xs) m = applyMatcherExclusions xs m
+
+              case spawnAtMatcher of
+                Nothing -> do
+                  getMaybeLocation iid >>= \case
+                    Just lid -> do
+                      canSpawn <- lid <!=~> cannotSpawnMatchers
+                      unchanged <- lid <!=~> changeSpawnMatchers
+                      if canSpawn && unchanged
+                        then do
+                          canBeEngaged <- matches iid (InvestigatorCanBeEngagedBy eid)
+                          isAloof <- matches eid AloofEnemy
+                          -- An enemy with an exclusive prey ("Prey - X only") never
+                          -- automatically engages a non-prey investigator on spawn. When
+                          -- a non-prey investigator draws it, it spawns unengaged via the
+                          -- prey-aware SpawnAtLocation path (which only engages its prey).
+                          prey <- getPreyMatcher a
+                          onlyPreyAllows <- case prey of
+                            OnlyPrey _ -> (iid `elem`) <$> select prey
+                            _ -> pure True
+                          pushAll
+                            $ resolve
+                            $ EnemySpawn
+                            $ ( mkSpawnDetails eid
+                                  $ if canBeEngaged && not isAloof && onlyPreyAllows
+                                    then SpawnEngagedWith (InvestigatorWithId iid)
+                                    else SpawnAtLocation lid
+                              )
+                              { spawnDetailsInvestigator = Just iid
+                              }
+                        else
+                          if not unchanged
+                            then do
+                              spawnAt enemyId (Just iid)
+                                $ applyMatcherExclusions mods
+                                $ replaceYouMatcher iid (SpawnAt $ not_ changeSpawnMatchers <> changedSpawnMatchers)
+                            else noSpawn a (Just iid)
+                    Nothing -> noSpawn a (Just iid)
+                Just matcher -> spawnAt enemyId (Just iid) (applyMatcherExclusions mods $ replaceYouMatcher iid matcher)
+      pure a
+    EnemySpawnAtLocationMatching miid locationMatcher eid | eid == enemyId -> do
+      activeInvestigatorId <- getActiveInvestigatorId
+      lids <- select $ replaceYouMatcher activeInvestigatorId locationMatcher
+      case lids of
+        [] -> noSpawn a miid
+        [lid] -> do
+          windows' <- checkWindows [mkWhen $ Window.EnemyWouldSpawnAt eid lid]
+          pushAll $ windows' : resolve (EnemySpawn $ mkSpawnDetails eid (SpawnAtLocation lid))
+        xs -> spawnAtOneOf Nothing eid xs
+      pure a
+    InvestigatorEliminated iid ->
+      case enemyPlacement of
+        InThreatArea iid' | iid == iid' -> do
+          getMaybeLocation iid >>= \case
+            Just lid -> do
+              push $ EnemyCheckEngagement a.id
+              pure $ a & placementL .~ AtLocation lid
+            Nothing -> do
+              push $ Discard Nothing GameSource (toTarget a)
+              pure a
+        _ -> pure a
+    DisengageEnemy iid eid | eid == enemyId -> case enemyPlacement of
+      InThreatArea iid' | iid == iid' -> do
+        canDisengage <- iid <=~> InvestigatorCanDisengage
+        if canDisengage
+          then do
+            pushM $ checkAfter $ Window.EnemyDisengaged iid enemyId
+            lid <- disengageLocation iid
+            pure $ a & placementL .~ AtLocation lid
+          else pure a
+      AsSwarm eid' _ -> do
+        push $ DisengageEnemy iid eid'
+        pure a
+      _ -> pure a
+    DisengageEnemyFromAll eid | eid == enemyId -> case enemyPlacement of
+      InThreatArea iid -> do
+        canDisengage <- iid <=~> InvestigatorCanDisengage
+        if canDisengage
+          then do
+            lid <- disengageLocation iid
+            pushM $ checkAfter $ Window.EnemyDisengaged iid enemyId
+            pure $ a & placementL .~ AtLocation lid
+          else pure a
+      AsSwarm eid' _ -> do
+        push $ DisengageEnemyFromAll eid'
+        pure a
+      _ -> pure a
+    RemoveAllClues _ target | isTarget a target -> pure $ a & tokensL %~ removeAllTokens Clue
+    RemoveAllDoom _ target | isTarget a target -> pure $ a & tokensL %~ removeAllTokens Doom
+    RemoveTokens _ target token amount | isTarget a target -> do
+      pure $ a & tokensL %~ subtractTokens token amount
+    MoveTokens s source _ tType n | isSource a source -> liftRunMessage (RemoveTokens s (toTarget a) tType n) a
+    MoveTokens _s (InvestigatorSource _) target Clue _ | isTarget a target -> pure a
+    MoveTokens s _ target tType n | isTarget a target -> liftRunMessage (PlaceTokens s (toTarget a) tType n) a
+    MoveTokensNoDefeated s source _ tType n | isSource a source -> liftRunMessage (RemoveTokens s (toTarget a) tType n) a
+    MoveTokensNoDefeated _s _ target tType n | isTarget a target -> do
+      pure $ a & tokensL %~ addTokens tType n
+    PlaceTokens source target token n | isTarget a target -> do
+      if token == #doom
+        then do
+          cannotPlaceDoom <- hasModifier a CannotPlaceDoomOnThis
+          if cannotPlaceDoom
+            then pure ()
+            else do
+              batchId <- getRandom
+              whenWindow <-
+                checkWindows
+                  [(mkWhen $ Window.WouldPlaceDoom source target n) {Window.windowBatchId = Just batchId}]
+
+              push $ Would batchId [whenWindow, Do msg]
+        else push $ Do msg
+      pure a
+    Do (PlaceTokens source target token n) | isTarget a target -> do
+      if token == #doom
+        then do
+          cannotPlaceDoom <- hasModifier a CannotPlaceDoomOnThis
+          if cannotPlaceDoom
+            then pure a
+            else do
+              pushAll $ windows [Window.PlacedDoom source (toTarget a) n]
+              when (token == Doom && a.doom == 0) do
+                pushM $ checkAfter $ Window.PlacedDoomCounterOnTargetWithNoDoom source target n
+              pure $ a & tokensL %~ addTokens Doom n
+        else do
+          case token of
+            Clue -> pushAll $ windows [Window.PlacedClues source (toTarget a) n]
+            Damage -> do
+              let (before, _, after) = frame $ Window.PlacedToken source (toTarget a) token n
+              pushAll [before, after, CheckDefeated source (toTarget a)]
+            _ -> pushAll $ windows [Window.PlacedToken source (toTarget a) token n]
+          pure $ a & tokensL %~ addTokens token n
+    PlaceKey (isTarget a -> True) k -> do
+      pure $ a & keysL %~ insertSet k
+    PlaceKey (isTarget a -> False) k -> do
+      pure $ a & keysL %~ deleteSet k
+    FlipClues target n | isTarget a target -> do
+      pure $ a & tokensL %~ flipClues n
+    FlipDoom target n | isTarget a target -> do
+      pure $ a & tokensL %~ flipDoom n
+    ClearTokens target | isTarget a target -> do
+      pure $ a & tokensL .~ mempty
+    PlaceReferenceCard (isTarget a -> True) cardCode -> do
+      pure $ a & referenceCardsL %~ (cardCode :)
+    PlaceEnemy eid placement | eid == enemyId -> do
+      mods <- getModifiers a
+      let cannotEngage = [x | CannotEngage x <- mods]
+      let handlePlacement placement' = do
+            checkEntersThreatArea a placement'
+            pushM $ checkAfter $ Window.EnemyPlaced enemyId placement'
+            when (not (isInPlayPlacement a.placement) && isInPlayPlacement placement') do
+              pushM $ checkWhen $ Window.EnterPlay (toTarget a)
+              pushM $ checkAfter $ Window.EnterPlay (toTarget a)
+            when (isInPlayPlacement a.placement && not (isInPlayPlacement placement')) do
+              pushM $ checkWhen $ Window.LeavePlay (toTarget a)
+              pushM $ checkAfter $ Window.LeavePlay (toTarget a)
+            pure $ a & placementL .~ placement'
+      case placement of
+        AtLocation lid -> do
+          let details = mkSpawnDetails enemyId (X.SpawnAtLocation lid)
+          if isInPlayPlacement a.placement
+            then do
+              -- A ready, unengaged enemy engages any time it is at the same
+              -- location as an investigator (RR "Enemy Cards") -- including when
+              -- a card effect *places* an already-in-play enemy there rather
+              -- than spawning or moving it. Spawns engage through the
+              -- EnemySpawn flow and moves through After (EnemyEntered), but a
+              -- bare PlaceEnemy had no equivalent, so the enemy arrived
+              -- unengaged (Breaking and Entering putting the Hunting Horror in
+              -- the Restricted Hall, #5332). Pushed before handlePlacement so
+              -- engagement resolves ahead of the after-EnemyPlaced window, as
+              -- with enemy movement.
+              push $ EnemyCheckEngagement enemyId
+              handlePlacement placement
+            else do
+              pushAll
+                [ Will (EnemySpawn details)
+                , When (EnemySpawn details)
+                , EnemySpawn details
+                , After (EnemySpawn details)
+                ]
+              pushM $ checkAfter $ Window.EnemyPlaced enemyId placement
+              pure a
+        InThreatArea iid | iid `elem` cannotEngage -> do
+          getLocationOf iid >>= \case
+            Just lid -> handlePlacement (AtLocation lid)
+            Nothing -> do
+              Lifted.toDiscard GameSource a
+              pure a
+        HiddenInHand _ -> do
+          obtainCard (toCardId a)
+          handlePlacement placement
+        -- Returning an enemy to the shadows cancels an engagement that is still
+        -- queued behind an open `#when EnemyEngaged` window. `Do (EngageEnemy)`
+        -- pushes that window and the threat-area placement together, so a forced
+        -- reaction in the window resolves first: act 1 of Shades of Suffering
+        -- advances off that very window, and its advance puts Tzu San Niang back
+        -- in the shadows and redistributes her concealed mini-cards. The stale
+        -- placement then dragged her into the investigator's threat area, leaving
+        -- her in play twice -- mini-card *and* enemy (#5365). The act's failure
+        -- branch already calls `cancelEnemyEngagement` by hand; this covers every
+        -- other route back into the shadows.
+        InTheShadows -> do
+          mQueuedEngagement <- lift $ findFromQueue \case
+            PlaceEnemy eid' (InThreatArea _) -> eid' == enemyId
+            _ -> False
+          case mQueuedEngagement of
+            Just (PlaceEnemy _ (InThreatArea iid)) -> cancelEnemyEngagement iid enemyId
+            _ -> pure ()
+          -- ...and it cancels any in-flight move. Exposing a concealed enemy
+          -- moves it out of the shadows, but `Do (EnemyMove)` commits the
+          -- placement *after* the enter-windows, so the enemy is still
+          -- `InTheShadows` while they run -- which makes this very placement a
+          -- no-op and leaves the move free to land it at the mini-card's
+          -- location anyway. Dropping `enemyMovement` is what `Do (EnemyMove)`
+          -- reads to tell a live exposure from a cancelled one (#5365).
+          a' <- handlePlacement placement
+          pure $ a' & movementL .~ Nothing
+        _ -> handlePlacement placement
+    Blanked msg' -> liftRunMessage msg' a
+    UseCardAbility iid (isSource a -> True) AbilityAttack _ _ -> do
+      sid <- getRandom
+      push $ FightEnemy (toId a) $ mkChooseFightPure sid iid (a.ability AbilityAttack)
+      pure a
+    UseCardAbility iid (isSource a -> True) AbilityEvade _ _ -> do
+      sid <- getRandom
+      push $ EvadeEnemy sid iid (toId a) (a.ability AbilityEvade) Nothing #agility False
+      pure a
+    UseCardAbility iid (isSource a -> True) AbilityEngage _ _ -> do
+      push $ EngageEnemy iid (toId a) Nothing False
+      pure a
+    AssignDamage target | isTarget a target -> do
+      pushAll $ map (`checkDefeated` a) (keys enemyAssignedDamage)
+      pure a
+    -- Removing from the game is still leaving play, so an in-play enemy has to go
+    -- through RemoveFromPlay (like RemoveFromGame does) rather than a bare
+    -- RemoveEnemy. A bare RemoveEnemy skips the leave-play windows entirely, which
+    -- stranded attached cards such as Rod of Carnamagos' Rots, #5309.
+    RemoveAllCopiesOfCardFromGame _ cCode | cCode == toCardCode a -> do
+      push $ removeFromGameMessage a
+      pure a
+    RemoveAllCopiesOfEncounterCardFromGame cardMatcher | toCard a `cardMatch` cardMatcher -> do
+      push $ removeFromGameMessage a
+      pure a
+    SendMessage (isTarget a -> True) msg' -> liftRunMessage msg' a
+    RemoveAllAttachments source target -> do
+      case placementToAttached a.placement of
+        Just attached | target == attached -> push $ toDiscard source a
+        _ -> pure ()
+      pure a
+    PlaceUnderneath (isTarget a -> True) cards -> do
+      pure $ a & cardsUnderneathL %~ (nubBy ((==) `on` toCardId) . (<> cards))
+    PlaceUnderneath _ cards -> do
+      when (toCard a `elem` cards) $ push $ RemoveEnemy (toId a)
+      pure a
+    ObtainCard c -> do
+      pure $ a & cardsUnderneathL %~ filter ((/= c) . toCardId)
+    When (PlaceInBonded _iid card) -> do
+      when (toCard a == card) do
+        removeAllMessagesMatching \case
+          Discarded (EnemyTarget aid) _ _ -> aid == a.id
+          CheckWindows ws -> flip any ws \case
+            (Window.windowType -> Window.Discarded _ _ c) -> toCard a == c
+            _ -> False
+          Do (CheckWindows ws) -> flip any ws \case
+            (Window.windowType -> Window.Discarded _ _ c) -> toCard a == c
+            _ -> False
+          _ -> False
+        push $ RemoveFromGame (toTarget a)
+      pure a
+    Discarded (isTarget a -> True) source _ -> do
+      case a.placement of
+        AsSwarm {} -> pure () -- will be handled when leaves play
+        _ -> case toCard a of
+          PlayerCard pc -> case enemyBearer of
+            Nothing -> push (RemoveFromGame $ EnemyTarget a.id)
+            -- The Man in the Pallid Mask has not bearer in Curtain Call
+            Just iid' -> push (AddToDiscard iid' pc)
+          EncounterCard _ -> pure ()
+          VengeanceCard _ -> error "Vengeance card"
+
+      miid <- getSourceController source
+      mLocation <- getLocationOf a
+
+      let
+        handleKey k =
+          case miid of
+            Nothing -> case mLocation of
+              Just location -> PlaceKey (toTarget location) k
+              Nothing -> error "Could not place key"
+            Just iid -> PlaceKey (toTarget iid) k
+
+      ks <- fieldMap EnemyKeys toList a.id
+      pushAll $ map handleKey ks
+
+      pure a
+    RemoveFromGame target | a `isTarget` target -> do
+      a <$ push (RemoveFromPlay $ toSource a)
+    RemoveFromPlay source | isSource a source -> do
+      windowMsg <-
+        checkWindows $ (`Window.mkWindow` Window.LeavePlay (toTarget a)) <$> [#when, #at, #after]
+      pushAll [windowMsg, RemovedFromPlay source]
+      pure a
+    DoBatch _ msg' -> do
+      -- generic DoBatch handler
+      liftRunMessage (Do msg') a
+    ForTarget (isTarget a -> True) msg' -> liftRunMessage msg' a
+    UseAbility _ ab _ | isSource a ab.source || isProxySource a ab.source || isIndexed a ab.source -> do
+      push $ Do msg
+      pure a
+    InSearch msg'@(UseAbility _ ab _) | isSource a ab.source || isProxySource a ab.source -> do
+      push $ Do msg'
+      pure a
+    InDiscard iid msg'@(UseAbility iid' ab _) | iid == iid' && (isSource a ab.source || isProxySource a ab.source) -> do
+      push $ Do msg'
+      pure a
+    InHand iid msg'@(UseAbility iid' ab _) | iid == iid' && (isSource a ab.source || isProxySource a ab.source) -> do
+      push $ Do msg'
+      pure a
+    SetLocationOutOfGame lid -> do
+      case enemyPlacement of
+        AtLocation lid' | lid' == lid -> pure $ a & placementL .~ OutOfGame enemyPlacement
+        AttachedToLocation lid' | lid' == lid -> pure $ a & placementL .~ OutOfGame enemyPlacement
+        _ -> pure a
+    ReturnLocationToGame lid -> do
+      case enemyPlacement of
+        OutOfGame p@(AtLocation lid') | lid' == lid -> pure $ a & placementL .~ p
+        OutOfGame p@(AttachedToLocation lid') | lid' == lid -> pure $ a & placementL .~ p
+        _ -> pure a
+    _ -> pure a

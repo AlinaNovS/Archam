@@ -1,0 +1,11 @@
+{
+    "discards": "Сбросы",
+    "endTurn": "Закончить ход",
+    "endTurnShort": "Конец",
+    "skipTriggers": "Пропустить триггеры",
+    "skipAllTriggers": "Пропустить триггеры для всех сыщиков",
+    "devouredCards": "Поглощено ({count})",
+    "underneathCards": "Внизу ({count})",
+    "freeAbilitiesUnavailable": "<strong>Бесплатные способности недоступны</strong><br>Быстрые и бесплатные способности нельзя использовать во время немедленного действия."
+
+}

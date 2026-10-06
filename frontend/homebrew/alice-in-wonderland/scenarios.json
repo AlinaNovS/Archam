@@ -1,0 +1,58 @@
+[
+  {
+    "id": ":alice-in-wonderland:001",
+    "name": "Scenario 1",
+    "campaign": ":alice-in-wonderland",
+    "standalone": false,
+    "i18n": "scenario1"
+  },
+  {
+    "id": ":alice-in-wonderland:002",
+    "name": "Scenario 2",
+    "campaign": ":alice-in-wonderland",
+    "standalone": false,
+    "i18n": "scenario2"
+  },
+  {
+    "id": ":alice-in-wonderland:003",
+    "name": "Scenario 3",
+    "campaign": ":alice-in-wonderland",
+    "standalone": false,
+    "i18n": "scenario3"
+  },
+  {
+    "id": ":alice-in-wonderland:004",
+    "name": "Scenario 4",
+    "campaign": ":alice-in-wonderland",
+    "standalone": false,
+    "i18n": "scenario4"
+  },
+  {
+    "id": ":alice-in-wonderland:005",
+    "name": "Scenario 5",
+    "campaign": ":alice-in-wonderland",
+    "standalone": false,
+    "i18n": "scenario5"
+  },
+  {
+    "id": ":alice-in-wonderland:006",
+    "name": "Scenario 6",
+    "campaign": ":alice-in-wonderland",
+    "standalone": false,
+    "i18n": "scenario6"
+  },
+  {
+    "id": ":alice-in-wonderland:007",
+    "name": "Scenario 7",
+    "campaign": ":alice-in-wonderland",
+    "standalone": false,
+    "i18n": "scenario7"
+  },
+  {
+    "id": ":alice-in-wonderland:008",
+    "name": "Scenario 8",
+    "campaign": ":alice-in-wonderland",
+    "standalone": false,
+    "i18n": "scenario8"
+  }
+]

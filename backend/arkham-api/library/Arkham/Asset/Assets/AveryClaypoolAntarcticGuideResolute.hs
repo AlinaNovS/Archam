@@ -1,0 +1,46 @@
+module Arkham.Asset.Assets.AveryClaypoolAntarcticGuideResolute (
+  averyClaypoolAntarcticGuideResolute,
+)
+where
+
+import Arkham.Ability
+import Arkham.Asset.Cards qualified as Cards
+import Arkham.Asset.Import.Lifted hiding (RevealChaosToken)
+import Arkham.Asset.Uses
+import Arkham.Helpers.SkillTest (getSkillTestInvestigator)
+import Arkham.Helpers.Window (getChaosToken)
+import Arkham.Matcher
+import Arkham.Message.Lifted.Choose
+import Arkham.Scenarios.FatalMirage.Helpers (scenarioI18n)
+
+newtype AveryClaypoolAntarcticGuideResolute = AveryClaypoolAntarcticGuideResolute AssetAttrs
+  deriving anyclass (IsAsset, HasModifiersFor)
+  deriving newtype (Show, Eq, ToJSON, FromJSON, Entity)
+
+averyClaypoolAntarcticGuideResolute :: AssetCard AveryClaypoolAntarcticGuideResolute
+averyClaypoolAntarcticGuideResolute =
+  allyWith
+    AveryClaypoolAntarcticGuideResolute
+    Cards.averyClaypoolAntarcticGuideResolute
+    (4, 3)
+    noSlots
+
+instance HasAbilities AveryClaypoolAntarcticGuideResolute where
+  getAbilities (AveryClaypoolAntarcticGuideResolute a) =
+    [ restricted a 1 ControlsThis
+        $ triggered
+          (RevealChaosToken #cancel (affectsOthers $ colocatedWithMatch You) #frost)
+          (exhaust a)
+    ]
+
+instance RunMessage AveryClaypoolAntarcticGuideResolute where
+  runMessage msg a@(AveryClaypoolAntarcticGuideResolute attrs) = runQueueT $ case msg of
+    UseCardAbility iid (isSource attrs -> True) 1 (getChaosToken -> token) _ -> do
+      cancelChaosToken (attrs.ability 1) iid token
+      cancelledOrIgnoredCardOrGameEffect (attrs.ability 1)
+      chooseOneM iid $ scenarioI18n do
+        labeled' "averyClaypoolAntarcticGuideResolute.revealANewChaosToken" do
+          getSkillTestInvestigator >>= traverse_ drawAnotherChaosToken
+        labeled' "averyClaypoolAntarcticGuideResolute.spend1Supply" $ spendUses (attrs.ability 1) attrs Supply 1
+      pure a
+    _ -> AveryClaypoolAntarcticGuideResolute <$> liftRunMessage msg attrs

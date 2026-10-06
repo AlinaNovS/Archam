@@ -1,0 +1,345 @@
+[
+  {
+    "id": ":unofficial-return-to-the-scarlet-keys:Curse of the Rougarou",
+    "name": "Curse of the Rougarou",
+    "campaign": ":unofficial-return-to-the-scarlet-keys",
+    "standalone": false,
+    "i18n": "curse-of-the-rougarou"
+  },
+  {
+    "id": ":unofficial-return-to-the-scarlet-keys:Carnevale of Horrors",
+    "name": "Carnevale of Horrors",
+    "campaign": ":unofficial-return-to-the-scarlet-keys",
+    "standalone": false,
+    "i18n": "carnevale-of-horrors"
+  },
+  {
+    "id": ":unofficial-return-to-the-scarlet-keys:The Labyrinths of Lunacy",
+    "name": "The Labyrinths of Lunacy",
+    "campaign": ":unofficial-return-to-the-scarlet-keys",
+    "standalone": false,
+    "i18n": "the-labyrinths-of-lunacy"
+  },
+  {
+    "id": ":unofficial-return-to-the-scarlet-keys:Guardians of the Abyss",
+    "name": "Guardians of the Abyss",
+    "campaign": ":unofficial-return-to-the-scarlet-keys",
+    "standalone": false,
+    "i18n": "guardians-of-the-abyss"
+  },
+  {
+    "id": ":unofficial-return-to-the-scarlet-keys:Murder at the Excelsior Hotel",
+    "name": "Murder at the Excelsior Hotel",
+    "campaign": ":unofficial-return-to-the-scarlet-keys",
+    "standalone": false,
+    "i18n": "murder-at-the-excelsior-hotel"
+  },
+  {
+    "id": ":unofficial-return-to-the-scarlet-keys:The Blob that Ate Everything",
+    "name": "The Blob that Ate Everything",
+    "campaign": ":unofficial-return-to-the-scarlet-keys",
+    "standalone": false,
+    "i18n": "the-blob-that-ate-everything"
+  },
+  {
+    "id": ":unofficial-return-to-the-scarlet-keys:War of the Outer Gods",
+    "name": "War of the Outer Gods",
+    "campaign": ":unofficial-return-to-the-scarlet-keys",
+    "standalone": false,
+    "i18n": "war-of-the-outer-gods"
+  },
+  {
+    "id": ":unofficial-return-to-the-scarlet-keys:Machinations Through Time",
+    "name": "Machinations Through Time",
+    "campaign": ":unofficial-return-to-the-scarlet-keys",
+    "standalone": false,
+    "i18n": "machinations-through-time"
+  },
+  {
+    "id": ":unofficial-return-to-the-scarlet-keys:Fortune and Folly",
+    "name": "Fortune and Folly",
+    "campaign": ":unofficial-return-to-the-scarlet-keys",
+    "standalone": false,
+    "i18n": "fortune-and-folly"
+  },
+  {
+    "id": ":unofficial-return-to-the-scarlet-keys:The Midwinter Gala",
+    "name": "The Midwinter Gala",
+    "campaign": ":unofficial-return-to-the-scarlet-keys",
+    "standalone": false,
+    "i18n": "the-midwinter-gala"
+  },
+  {
+    "id": ":unofficial-return-to-the-scarlet-keys:Film Fatale",
+    "name": "Film Fatale",
+    "campaign": ":unofficial-return-to-the-scarlet-keys",
+    "standalone": false,
+    "i18n": "film-fatale"
+  },
+  {
+    "id": ":unofficial-return-to-the-scarlet-keys:Challenge Scenario - All or Nothing",
+    "name": "Challenge Scenario - All or Nothing",
+    "campaign": ":unofficial-return-to-the-scarlet-keys",
+    "standalone": false,
+    "i18n": "challenge-scenario-all-or-nothing"
+  },
+  {
+    "id": ":unofficial-return-to-the-scarlet-keys:Challenge Scenario - Bad Blood",
+    "name": "Challenge Scenario - Bad Blood",
+    "campaign": ":unofficial-return-to-the-scarlet-keys",
+    "standalone": false,
+    "i18n": "challenge-scenario-bad-blood"
+  },
+  {
+    "id": ":unofficial-return-to-the-scarlet-keys:Challenge Scenario - By the Book",
+    "name": "Challenge Scenario - By the Book",
+    "campaign": ":unofficial-return-to-the-scarlet-keys",
+    "standalone": false,
+    "i18n": "challenge-scenario-by-the-book"
+  },
+  {
+    "id": ":unofficial-return-to-the-scarlet-keys:Challenge Scenario - Laid to Rest",
+    "name": "Challenge Scenario - Laid to Rest",
+    "campaign": ":unofficial-return-to-the-scarlet-keys",
+    "standalone": false,
+    "i18n": "challenge-scenario-laid-to-rest"
+  },
+  {
+    "id": ":unofficial-return-to-the-scarlet-keys:Challenge Scenario - Read or Die",
+    "name": "Challenge Scenario - Read or Die",
+    "campaign": ":unofficial-return-to-the-scarlet-keys",
+    "standalone": false,
+    "i18n": "challenge-scenario-read-or-die"
+  },
+  {
+    "id": ":unofficial-return-to-the-scarlet-keys:Challenge Scenario - Red Tide Rising",
+    "name": "Challenge Scenario - Red Tide Rising",
+    "campaign": ":unofficial-return-to-the-scarlet-keys",
+    "standalone": false,
+    "i18n": "challenge-scenario-red-tide-rising"
+  },
+  {
+    "id": ":unofficial-return-to-the-scarlet-keys:Challenge Scenario - Relics of the Past",
+    "name": "Challenge Scenario - Relics of the Past",
+    "campaign": ":unofficial-return-to-the-scarlet-keys",
+    "standalone": false,
+    "i18n": "challenge-scenario-relics-of-the-past"
+  },
+  {
+    "id": ":unofficial-return-to-the-scarlet-keys:Challenge Scenario - Enthralling Encore",
+    "name": "Challenge Scenario - Enthralling Encore",
+    "campaign": ":unofficial-return-to-the-scarlet-keys",
+    "standalone": false,
+    "i18n": "challenge-scenario-enthralling-encore"
+  },
+  {
+    "id": ":unofficial-return-to-the-scarlet-keys:Barkham Horror - The Meddling of Meowlathotep",
+    "name": "Barkham Horror - The Meddling of Meowlathotep",
+    "campaign": ":unofficial-return-to-the-scarlet-keys",
+    "standalone": false,
+    "i18n": "barkham-horror-the-meddling-of-meowlathotep"
+  },
+  {
+    "id": ":unofficial-return-to-the-scarlet-keys:Against the Wendigo",
+    "name": "Against the Wendigo",
+    "campaign": ":unofficial-return-to-the-scarlet-keys",
+    "standalone": false,
+    "i18n": "against-the-wendigo"
+  },
+  {
+    "id": ":unofficial-return-to-the-scarlet-keys:And Then There Were None",
+    "name": "And Then There Were None",
+    "campaign": ":unofficial-return-to-the-scarlet-keys",
+    "standalone": false,
+    "i18n": "and-then-there-were-none"
+  },
+  {
+    "id": ":unofficial-return-to-the-scarlet-keys:Carnevale of Spiders",
+    "name": "Carnevale of Spiders",
+    "campaign": ":unofficial-return-to-the-scarlet-keys",
+    "standalone": false,
+    "i18n": "carnevale-of-spiders"
+  },
+  {
+    "id": ":unofficial-return-to-the-scarlet-keys:Clueless Cultist Coup",
+    "name": "Clueless Cultist Coup",
+    "campaign": ":unofficial-return-to-the-scarlet-keys",
+    "standalone": false,
+    "i18n": "clueless-cultist-coup"
+  },
+  {
+    "id": ":unofficial-return-to-the-scarlet-keys:Code Red at Bleeding Heart",
+    "name": "Code Red at Bleeding Heart",
+    "campaign": ":unofficial-return-to-the-scarlet-keys",
+    "standalone": false,
+    "i18n": "code-red-at-bleeding-heart"
+  },
+  {
+    "id": ":unofficial-return-to-the-scarlet-keys:Consternation on the Constellation",
+    "name": "Consternation on the Constellation",
+    "campaign": ":unofficial-return-to-the-scarlet-keys",
+    "standalone": false,
+    "i18n": "consternation-on-the-constellation"
+  },
+  {
+    "id": ":unofficial-return-to-the-scarlet-keys:Cosmic Pantheon",
+    "name": "Cosmic Pantheon",
+    "campaign": ":unofficial-return-to-the-scarlet-keys",
+    "standalone": false,
+    "i18n": "cosmic-pantheon"
+  },
+  {
+    "id": ":unofficial-return-to-the-scarlet-keys:Defense of the Arkham",
+    "name": "Defense of the Arkham",
+    "campaign": ":unofficial-return-to-the-scarlet-keys",
+    "standalone": false,
+    "i18n": "defense-of-the-arkham"
+  },
+  {
+    "id": ":unofficial-return-to-the-scarlet-keys:Devils In The Canyon",
+    "name": "Devils In The Canyon",
+    "campaign": ":unofficial-return-to-the-scarlet-keys",
+    "standalone": false,
+    "i18n": "devils-in-the-canyon"
+  },
+  {
+    "id": ":unofficial-return-to-the-scarlet-keys:Don't Starve - Scenario",
+    "name": "Don't Starve - Scenario",
+    "campaign": ":unofficial-return-to-the-scarlet-keys",
+    "standalone": false,
+    "i18n": "don-t-starve-scenario"
+  },
+  {
+    "id": ":unofficial-return-to-the-scarlet-keys:Election Night",
+    "name": "Election Night",
+    "campaign": ":unofficial-return-to-the-scarlet-keys",
+    "standalone": false,
+    "i18n": "election-night"
+  },
+  {
+    "id": ":unofficial-return-to-the-scarlet-keys:The Facts in the Case of M. Valdemar",
+    "name": "The Facts in the Case of M. Valdemar",
+    "campaign": ":unofficial-return-to-the-scarlet-keys",
+    "standalone": false,
+    "i18n": "the-facts-in-the-case-of-m-valdemar"
+  },
+  {
+    "id": ":unofficial-return-to-the-scarlet-keys:The Fall of the House of Usher",
+    "name": "The Fall of the House of Usher",
+    "campaign": ":unofficial-return-to-the-scarlet-keys",
+    "standalone": false,
+    "i18n": "the-fall-of-the-house-of-usher"
+  },
+  {
+    "id": ":unofficial-return-to-the-scarlet-keys:Fortune or Folly - Parallel Rex Murphy",
+    "name": "Fortune or Folly - Parallel Rex Murphy",
+    "campaign": ":unofficial-return-to-the-scarlet-keys",
+    "standalone": false,
+    "i18n": "fortune-or-folly-parallel-rex-murphy"
+  },
+  {
+    "id": ":unofficial-return-to-the-scarlet-keys:The Grand Oak Hotel",
+    "name": "The Grand Oak Hotel",
+    "campaign": ":unofficial-return-to-the-scarlet-keys",
+    "standalone": false,
+    "i18n": "the-grand-oak-hotel"
+  },
+  {
+    "id": ":unofficial-return-to-the-scarlet-keys:The Invisible Man",
+    "name": "The Invisible Man",
+    "campaign": ":unofficial-return-to-the-scarlet-keys",
+    "standalone": false,
+    "i18n": "the-invisible-man"
+  },
+  {
+    "id": ":unofficial-return-to-the-scarlet-keys:The Legend of Sleepy Hollow",
+    "name": "The Legend of Sleepy Hollow",
+    "campaign": ":unofficial-return-to-the-scarlet-keys",
+    "standalone": false,
+    "i18n": "the-legend-of-sleepy-hollow"
+  },
+  {
+    "id": ":unofficial-return-to-the-scarlet-keys:The Living Labyrinth",
+    "name": "The Living Labyrinth",
+    "campaign": ":unofficial-return-to-the-scarlet-keys",
+    "standalone": false,
+    "i18n": "the-living-labyrinth"
+  },
+  {
+    "id": ":unofficial-return-to-the-scarlet-keys:The Midwinter Gala - Fashionably Late",
+    "name": "The Midwinter Gala - Fashionably Late",
+    "campaign": ":unofficial-return-to-the-scarlet-keys",
+    "standalone": false,
+    "i18n": "the-midwinter-gala-fashionably-late"
+  },
+  {
+    "id": ":unofficial-return-to-the-scarlet-keys:Miskatonic Mouse",
+    "name": "Miskatonic Mouse",
+    "campaign": ":unofficial-return-to-the-scarlet-keys",
+    "standalone": false,
+    "i18n": "miskatonic-mouse"
+  },
+  {
+    "id": ":unofficial-return-to-the-scarlet-keys:Mythos Deviations",
+    "name": "Mythos Deviations",
+    "campaign": ":unofficial-return-to-the-scarlet-keys",
+    "standalone": false,
+    "i18n": "mythos-deviations"
+  },
+  {
+    "id": ":unofficial-return-to-the-scarlet-keys:Return to the Consternation on the Constellation",
+    "name": "Return to the Consternation on the Constellation",
+    "campaign": ":unofficial-return-to-the-scarlet-keys",
+    "standalone": false,
+    "i18n": "return-to-the-consternation-on-the-constellation"
+  },
+  {
+    "id": ":unofficial-return-to-the-scarlet-keys:Return to the Wendigo",
+    "name": "Return to the Wendigo",
+    "campaign": ":unofficial-return-to-the-scarlet-keys",
+    "standalone": false,
+    "i18n": "return-to-the-wendigo"
+  },
+  {
+    "id": ":unofficial-return-to-the-scarlet-keys:Snakes and Ladders",
+    "name": "Snakes and Ladders",
+    "campaign": ":unofficial-return-to-the-scarlet-keys",
+    "standalone": false,
+    "i18n": "snakes-and-ladders"
+  },
+  {
+    "id": ":unofficial-return-to-the-scarlet-keys:The Strange Case of Dr. Jekyll and Mr. Hyde",
+    "name": "The Strange Case of Dr. Jekyll and Mr. Hyde",
+    "campaign": ":unofficial-return-to-the-scarlet-keys",
+    "standalone": false,
+    "i18n": "the-strange-case-of-dr-jekyll-and-mr-hyde"
+  },
+  {
+    "id": ":unofficial-return-to-the-scarlet-keys:'Tis The Season",
+    "name": "'Tis The Season",
+    "campaign": ":unofficial-return-to-the-scarlet-keys",
+    "standalone": false,
+    "i18n": "tis-the-season"
+  },
+  {
+    "id": ":unofficial-return-to-the-scarlet-keys:When the World Screamed",
+    "name": "When the World Screamed",
+    "campaign": ":unofficial-return-to-the-scarlet-keys",
+    "standalone": false,
+    "i18n": "when-the-world-screamed"
+  },
+  {
+    "id": ":unofficial-return-to-the-scarlet-keys:The Witcher Horror",
+    "name": "The Witcher Horror",
+    "campaign": ":unofficial-return-to-the-scarlet-keys",
+    "standalone": false,
+    "i18n": "the-witcher-horror"
+  },
+  {
+    "id": ":unofficial-return-to-the-scarlet-keys:The Woods of the Black Goat",
+    "name": "The Woods of the Black Goat",
+    "campaign": ":unofficial-return-to-the-scarlet-keys",
+    "standalone": false,
+    "i18n": "the-woods-of-the-black-goat"
+  }
+]

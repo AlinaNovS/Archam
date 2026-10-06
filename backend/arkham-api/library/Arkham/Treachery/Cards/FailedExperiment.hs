@@ -1,0 +1,47 @@
+module Arkham.Treachery.Cards.FailedExperiment (failedExperiment, FailedExperiment (..)) where
+
+import Arkham.Calculation
+import Arkham.Helpers.Investigator (canPlaceCluesOnYourLocation)
+import Arkham.I18n
+import Arkham.Investigator.Types (Field (..))
+import Arkham.Matcher
+import Arkham.Message.Lifted.Choose
+import Arkham.Modifier
+import Arkham.Projection
+import Arkham.Treachery.Cards qualified as Cards
+import Arkham.Treachery.Import.Lifted
+
+newtype FailedExperiment = FailedExperiment TreacheryAttrs
+  deriving anyclass (IsTreachery, HasModifiersFor, HasAbilities)
+  deriving newtype (Show, Eq, ToJSON, FromJSON, Entity)
+
+failedExperiment :: TreacheryCard FailedExperiment
+failedExperiment = treachery FailedExperiment Cards.failedExperiment
+
+instance RunMessage FailedExperiment where
+  runMessage msg t@(FailedExperiment attrs) = runQueueT $ case msg of
+    Revelation iid (isSource attrs -> True) -> do
+      sid <- getRandom
+      skillTestModifier sid attrs (SkillTestTarget sid)
+        $ CalculatedDifficulty
+        $ CountAssets
+        $ assetControlledBy iid
+        <> AssetWithAnyClues
+      revelationSkillTest sid iid attrs #willpower (Fixed 3)
+      pure t
+    FailedThisSkillTestBy _iid (isSource attrs -> True) n -> do
+      doStep n msg
+      pure t
+    DoStep n msg'@(FailedThisSkillTestBy iid (isSource attrs -> True) _) | n > 0 -> do
+      canPlaceClues <- canPlaceCluesOnYourLocation iid
+      mLocation <- field InvestigatorLocation iid
+      if canPlaceClues && isJust mLocation
+        then chooseOneM iid $ withI18n do
+          countVar 1 $ labeled' "takeHorror" $ assignHorror iid attrs 1
+          countVar 1 $ labeled' "placeCluesOnYourLocation"
+            $ push
+            $ InvestigatorPlaceCluesOnLocation iid (toSource attrs) 1
+        else assignHorror iid attrs 1
+      doStep (n - 1) msg'
+      pure t
+    _ -> FailedExperiment <$> liftRunMessage msg attrs

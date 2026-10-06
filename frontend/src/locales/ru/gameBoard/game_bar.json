@@ -1,0 +1,75 @@
+{
+    "closeLog": "Закрыть журнал",
+    "viewLog": "Просмотр журнала",
+
+    "view": "Просмотр",
+    "shortcuts": "Горячие клавиши",
+    "shortcutsTitle": "Горячие клавиши",
+    "shortcutSkipTriggers": "(пробел) Пропустить триггеры",
+    "shortcutUndo": "Отменить",
+    "shortcutToggleDebug": "Переключить отладку",
+    "shortcutShowOrHideShortcuts": "Показать/скрыть горячие клавиши",
+    "shortcutDraw": "Взять карту из колоды / из колоды столкновений",
+    "shortcutTakeResources": "Взять ресурсы",
+    "shortcutEndTurn": "Закончить ход",
+    "shortcutRestartScenario": "Перезапустить сценарий",
+
+    "viewSettings": "Настройки просмотра",
+    "viewHistory": "Просмотр истории",
+    "viewSettingTitle": "Настройки для {investigator}",
+    "playerSettings": "Настройки игрока",
+    "viewSettingSkipTriggers": "Пропускать триггеры во время проверок навыков, не влияющие на исход",
+    "viewSettingSkipTriggersTitle": "Пропускать триггеры",
+    "viewSettingShowOtherPlayersHands": "Всегда видеть карты в руках других игроков.",
+    "viewSettingShowOtherPlayersHandsTitle": "Показывать руки других игроков",
+    "investigatorSettingsSection": "Настройки сыщика",
+    "yourViewSettingsSection": "Настройки вашего вида",
+    "sharedGameSettingsSection": "Общие настройки игры",
+    "viewSettingSoundsTitle": "Звук",
+    "viewSettingSounds": "Воспроизводить звуковые эффекты в этом браузере.",
+    "viewSettingExtraAnimationsTitle": "Дополнительная анимация",
+    "viewSettingExtraAnimations": "Декоративные эффекты вроде горящих локаций и лучей «Космического посланника». Никогда не влияет на то, что нужно видеть для игры.",
+    "viewSettingExtraAnimationsReducedMotion": "Сейчас всё равно выключено, так как это устройство запрашивает уменьшенную анимацию.",
+    "viewSettingExtraAnimationsScenarioTitle": "Дополнительная анимация (этот сценарий)",
+    "viewSettingExtraAnimationsScenario": "Переопределить настройку выше только для этой игры.",
+    "viewSettingCosmicEmissaryTitle": "Включить анимацию «Космического посланника»",
+    "viewSettingCosmicEmissary": "Показывает анимированные эффекты связи «Космического посланника» для сценария «Участь Хемлок-Вейл».",
+    "viewSettingAsIfRulingTitle": "Правило «Как будто»",
+    "viewSettingAsIfRuling": "Переключение между обработкой эффектов «как будто» по правилам Главы 1 и Главы 2 при вложенных проверках окон. Влияет на всех игроков.",
+
+    "viewChaosBag": "Просмотр мешка хаоса",
+    "chaosBag": "Мешок хаоса",
+    "add": "Добавить",
+
+    "splitView": "Разделить экран",
+
+    "viewBonded": "Просмотр связанных карт",
+    "bonded": "Связанные",
+
+    "showOutOfPlay": "Показать вне игры",
+    "outOfPlay": "Вне игры",
+
+
+    "debug": "Отладка",
+    "toggleDebug": "Переключить отладку",
+    "debugExport": "Экспорт отладки",
+    "debugExportScenario": "Экспорт отладки (сценарий)",
+    "debugExportFull": "Экспорт отладки (полный)",
+
+    "undo": "Отменить",
+    "restartScenario": "Перезапустить сценарий",
+
+    "fileABug": "Сообщить об ошибке",
+    "fileBugPart1": "Это сохранит текущее состояние игры и создаст issue на GitHub. Для продолжения вам понадобится аккаунт GitHub.",
+    "fileBugPart2": "Создание issue займёт всего мгновение, после чего вы сможете продолжить игру.",
+    "fileBugPart3": "В загружаемый файл отладки войдут только последние 30 шагов, поэтому убедитесь, что ваша проблема укладывается в этот промежуток, либо предоставьте дополнительную информацию для её воспроизведения.",
+    "bugTitleholder": "Краткое название ошибки",
+    "bugDescriptionholder": "Описание произошедшего",
+    "bugSubmittingTitle": "Отправка отчёта об ошибке, это может занять несколько минут, подождите...",
+    "bugSubmittingContent": "По завершении этого процесса откроется новое окно с GitHub, и вы сможете продолжить игру.",
+    "bugSubmittingFail": "Не удалось отправить отчёт об ошибке",
+
+    "toggleSidebar": "Переключить боковую панель",
+
+    "rotateLayout": "Повернуть раскладку локации"
+}

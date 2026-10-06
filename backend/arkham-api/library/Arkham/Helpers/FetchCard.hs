@@ -1,0 +1,125 @@
+module Arkham.Helpers.FetchCard where
+
+import Arkham.Asset.Types qualified as Field
+import Arkham.Card
+import Arkham.Classes.HasGame
+import Arkham.Classes.Query
+import Arkham.Enemy.Types qualified as Field
+import Arkham.Event.Types qualified as Field
+import {-# SOURCE #-} Arkham.GameEnv
+import Arkham.Helpers.Query
+import Arkham.Id
+import Arkham.Location.Types qualified as Field
+import Arkham.Matcher.Card
+import Arkham.Prelude
+import Arkham.Projection
+import Arkham.Story.Types qualified as Field
+import Arkham.Treachery.Types qualified as Field
+import Data.Monoid (First (..))
+
+class Show a => FetchCard a where
+  fetchCardMaybe :: (HasCallStack, HasGame m, CardGen m) => a -> m (Maybe Card)
+  fetchCardMaybe = fetchCardMaybe_
+  fetchCardMaybe_ :: (HasCallStack, HasGame m) => a -> m (Maybe Card)
+
+fetchCard :: (HasCallStack, HasGame m, CardGen m, FetchCard a) => a -> m Card
+fetchCard a = fromJustNote ("Card not found: " <> show a) <$> fetchCardMaybe a
+
+fetchCards :: (HasCallStack, HasGame m, CardGen m, FetchCard a, Traversable t) => t a -> m (t Card)
+fetchCards = traverse fetchCard
+
+instance FetchCard UniqueFetchCard where
+  fetchCardMaybe (UniqueFetchCard def) = do
+    findCardFace def >>= \case
+      Nothing -> Just <$> genCard def
+      Just card -> pure $ Just card
+  fetchCardMaybe_ (UniqueFetchCard def) = findCardFace def
+
+{- | Find the unique card for a def, preferring the face we actually asked for.
+
+Both faces of a double-sided card share a base card code, so a purely loose
+search can return the card registered under the *other* face — whichever sorts
+first by card id — and then hand back a flipped copy of it. The copy shows the
+right card code but carries the other card's identity, so the real card is never
+consumed (it sits set aside forever) and anything that resolves the returned
+card back through the registry, such as the victory display, sees the other face
+instead. Look for an exact match first and only fall back to the flip side.
+-}
+findCardFace :: HasGame m => CardDef -> m (Maybe Card)
+findCardFace def =
+  findCard (cardCodeExactEq def.cardCode . toCardCode) >>= \case
+    Just card -> pure $ Just card
+    Nothing -> fmap flipCard <$> findCard ((== def.cardCode) . toCardCode)
+
+instance FetchCard CardDef where
+  fetchCardMaybe def =
+    if def.unique
+      then fetchCardMaybe (UniqueFetchCard def)
+      else maybe (Just <$> genCard def) (pure . Just) =<< maybeGetSetAsideCard def
+  fetchCardMaybe_ def =
+    if def.unique
+      then fetchCardMaybe_ (UniqueFetchCard def)
+      else maybeGetSetAsideCard def
+
+newtype SetAsideCard = SetAsideCard CardDef
+  deriving newtype Show
+
+instance FetchCard SetAsideCard where
+  fetchCardMaybe_ (SetAsideCard def) = maybeGetSetAsideCard def
+
+instance FetchCard a => FetchCard [a] where
+  fetchCardMaybe defs = getFirst . foldMap First <$> traverse fetchCardMaybe defs
+  fetchCardMaybe_ defs = getFirst . foldMap First <$> traverse fetchCardMaybe_ defs
+
+instance FetchCard ExtendedCardMatcher where
+  fetchCardMaybe_ = selectOne
+
+instance FetchCard Card where
+  fetchCardMaybe_ = pure . Just
+
+instance FetchCard EncounterCard where
+  fetchCardMaybe_ = pure . Just . toCard
+
+instance FetchCard PlayerCard where
+  fetchCardMaybe_ = pure . Just . toCard
+
+instance FetchCard AssetId where
+  fetchCardMaybe_ = fieldMap Field.AssetCard Just
+
+instance FetchCard EventId where
+  fetchCardMaybe_ = fieldMap Field.EventCard Just
+
+instance FetchCard TreacheryId where
+  fetchCardMaybe_ = fieldMap Field.TreacheryCard Just
+
+instance FetchCard EnemyId where
+  fetchCardMaybe_ = fieldMap Field.EnemyCard Just
+
+instance FetchCard LocationId where
+  fetchCardMaybe_ = fieldMap Field.LocationCard Just
+
+instance FetchCard StoryId where
+  fetchCardMaybe_ = fieldMap Field.StoryCard Just
+
+instance FetchCard CardId where
+  fetchCardMaybe_ = fmap Just . getCard
+
+instance FetchCard Field.TreacheryAttrs where
+  fetchCardMaybe_ = fieldMap Field.TreacheryCard Just . asId
+
+instance FetchCard Field.StoryAttrs where
+  fetchCardMaybe_ = fieldMap Field.StoryCard Just . asId
+
+newtype UniqueFetchCard = UniqueFetchCard CardDef
+  deriving newtype (Show, Eq, ToJSON, FromJSON)
+
+flippedOver :: (FetchCard c, HasGame m, CardGen m) => c -> m ()
+flippedOver c = do
+  card <- fetchCard c
+  replaceCard card.id (flipCard card)
+
+flippedOverCapture :: (FetchCard c, HasGame m, CardGen m) => c -> m Card
+flippedOverCapture c = do
+  card <- flipCard <$> fetchCard c
+  replaceCard card.id card
+  pure card

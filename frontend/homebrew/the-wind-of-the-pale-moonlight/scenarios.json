@@ -1,0 +1,345 @@
+[
+  {
+    "id": ":the-wind-of-the-pale-moonlight:Curse of the Rougarou",
+    "name": "Curse of the Rougarou",
+    "campaign": ":the-wind-of-the-pale-moonlight",
+    "standalone": false,
+    "i18n": "curse-of-the-rougarou"
+  },
+  {
+    "id": ":the-wind-of-the-pale-moonlight:Carnevale of Horrors",
+    "name": "Carnevale of Horrors",
+    "campaign": ":the-wind-of-the-pale-moonlight",
+    "standalone": false,
+    "i18n": "carnevale-of-horrors"
+  },
+  {
+    "id": ":the-wind-of-the-pale-moonlight:The Labyrinths of Lunacy",
+    "name": "The Labyrinths of Lunacy",
+    "campaign": ":the-wind-of-the-pale-moonlight",
+    "standalone": false,
+    "i18n": "the-labyrinths-of-lunacy"
+  },
+  {
+    "id": ":the-wind-of-the-pale-moonlight:Guardians of the Abyss",
+    "name": "Guardians of the Abyss",
+    "campaign": ":the-wind-of-the-pale-moonlight",
+    "standalone": false,
+    "i18n": "guardians-of-the-abyss"
+  },
+  {
+    "id": ":the-wind-of-the-pale-moonlight:Murder at the Excelsior Hotel",
+    "name": "Murder at the Excelsior Hotel",
+    "campaign": ":the-wind-of-the-pale-moonlight",
+    "standalone": false,
+    "i18n": "murder-at-the-excelsior-hotel"
+  },
+  {
+    "id": ":the-wind-of-the-pale-moonlight:The Blob that Ate Everything",
+    "name": "The Blob that Ate Everything",
+    "campaign": ":the-wind-of-the-pale-moonlight",
+    "standalone": false,
+    "i18n": "the-blob-that-ate-everything"
+  },
+  {
+    "id": ":the-wind-of-the-pale-moonlight:War of the Outer Gods",
+    "name": "War of the Outer Gods",
+    "campaign": ":the-wind-of-the-pale-moonlight",
+    "standalone": false,
+    "i18n": "war-of-the-outer-gods"
+  },
+  {
+    "id": ":the-wind-of-the-pale-moonlight:Machinations Through Time",
+    "name": "Machinations Through Time",
+    "campaign": ":the-wind-of-the-pale-moonlight",
+    "standalone": false,
+    "i18n": "machinations-through-time"
+  },
+  {
+    "id": ":the-wind-of-the-pale-moonlight:Fortune and Folly",
+    "name": "Fortune and Folly",
+    "campaign": ":the-wind-of-the-pale-moonlight",
+    "standalone": false,
+    "i18n": "fortune-and-folly"
+  },
+  {
+    "id": ":the-wind-of-the-pale-moonlight:The Midwinter Gala",
+    "name": "The Midwinter Gala",
+    "campaign": ":the-wind-of-the-pale-moonlight",
+    "standalone": false,
+    "i18n": "the-midwinter-gala"
+  },
+  {
+    "id": ":the-wind-of-the-pale-moonlight:Film Fatale",
+    "name": "Film Fatale",
+    "campaign": ":the-wind-of-the-pale-moonlight",
+    "standalone": false,
+    "i18n": "film-fatale"
+  },
+  {
+    "id": ":the-wind-of-the-pale-moonlight:Challenge Scenario - All or Nothing",
+    "name": "Challenge Scenario - All or Nothing",
+    "campaign": ":the-wind-of-the-pale-moonlight",
+    "standalone": false,
+    "i18n": "challenge-scenario-all-or-nothing"
+  },
+  {
+    "id": ":the-wind-of-the-pale-moonlight:Challenge Scenario - Bad Blood",
+    "name": "Challenge Scenario - Bad Blood",
+    "campaign": ":the-wind-of-the-pale-moonlight",
+    "standalone": false,
+    "i18n": "challenge-scenario-bad-blood"
+  },
+  {
+    "id": ":the-wind-of-the-pale-moonlight:Challenge Scenario - By the Book",
+    "name": "Challenge Scenario - By the Book",
+    "campaign": ":the-wind-of-the-pale-moonlight",
+    "standalone": false,
+    "i18n": "challenge-scenario-by-the-book"
+  },
+  {
+    "id": ":the-wind-of-the-pale-moonlight:Challenge Scenario - Laid to Rest",
+    "name": "Challenge Scenario - Laid to Rest",
+    "campaign": ":the-wind-of-the-pale-moonlight",
+    "standalone": false,
+    "i18n": "challenge-scenario-laid-to-rest"
+  },
+  {
+    "id": ":the-wind-of-the-pale-moonlight:Challenge Scenario - Read or Die",
+    "name": "Challenge Scenario - Read or Die",
+    "campaign": ":the-wind-of-the-pale-moonlight",
+    "standalone": false,
+    "i18n": "challenge-scenario-read-or-die"
+  },
+  {
+    "id": ":the-wind-of-the-pale-moonlight:Challenge Scenario - Red Tide Rising",
+    "name": "Challenge Scenario - Red Tide Rising",
+    "campaign": ":the-wind-of-the-pale-moonlight",
+    "standalone": false,
+    "i18n": "challenge-scenario-red-tide-rising"
+  },
+  {
+    "id": ":the-wind-of-the-pale-moonlight:Challenge Scenario - Relics of the Past",
+    "name": "Challenge Scenario - Relics of the Past",
+    "campaign": ":the-wind-of-the-pale-moonlight",
+    "standalone": false,
+    "i18n": "challenge-scenario-relics-of-the-past"
+  },
+  {
+    "id": ":the-wind-of-the-pale-moonlight:Challenge Scenario - Enthralling Encore",
+    "name": "Challenge Scenario - Enthralling Encore",
+    "campaign": ":the-wind-of-the-pale-moonlight",
+    "standalone": false,
+    "i18n": "challenge-scenario-enthralling-encore"
+  },
+  {
+    "id": ":the-wind-of-the-pale-moonlight:Barkham Horror - The Meddling of Meowlathotep",
+    "name": "Barkham Horror - The Meddling of Meowlathotep",
+    "campaign": ":the-wind-of-the-pale-moonlight",
+    "standalone": false,
+    "i18n": "barkham-horror-the-meddling-of-meowlathotep"
+  },
+  {
+    "id": ":the-wind-of-the-pale-moonlight:Against the Wendigo",
+    "name": "Against the Wendigo",
+    "campaign": ":the-wind-of-the-pale-moonlight",
+    "standalone": false,
+    "i18n": "against-the-wendigo"
+  },
+  {
+    "id": ":the-wind-of-the-pale-moonlight:And Then There Were None",
+    "name": "And Then There Were None",
+    "campaign": ":the-wind-of-the-pale-moonlight",
+    "standalone": false,
+    "i18n": "and-then-there-were-none"
+  },
+  {
+    "id": ":the-wind-of-the-pale-moonlight:Carnevale of Spiders",
+    "name": "Carnevale of Spiders",
+    "campaign": ":the-wind-of-the-pale-moonlight",
+    "standalone": false,
+    "i18n": "carnevale-of-spiders"
+  },
+  {
+    "id": ":the-wind-of-the-pale-moonlight:Clueless Cultist Coup",
+    "name": "Clueless Cultist Coup",
+    "campaign": ":the-wind-of-the-pale-moonlight",
+    "standalone": false,
+    "i18n": "clueless-cultist-coup"
+  },
+  {
+    "id": ":the-wind-of-the-pale-moonlight:Code Red at Bleeding Heart",
+    "name": "Code Red at Bleeding Heart",
+    "campaign": ":the-wind-of-the-pale-moonlight",
+    "standalone": false,
+    "i18n": "code-red-at-bleeding-heart"
+  },
+  {
+    "id": ":the-wind-of-the-pale-moonlight:Consternation on the Constellation",
+    "name": "Consternation on the Constellation",
+    "campaign": ":the-wind-of-the-pale-moonlight",
+    "standalone": false,
+    "i18n": "consternation-on-the-constellation"
+  },
+  {
+    "id": ":the-wind-of-the-pale-moonlight:Cosmic Pantheon",
+    "name": "Cosmic Pantheon",
+    "campaign": ":the-wind-of-the-pale-moonlight",
+    "standalone": false,
+    "i18n": "cosmic-pantheon"
+  },
+  {
+    "id": ":the-wind-of-the-pale-moonlight:Defense of the Arkham",
+    "name": "Defense of the Arkham",
+    "campaign": ":the-wind-of-the-pale-moonlight",
+    "standalone": false,
+    "i18n": "defense-of-the-arkham"
+  },
+  {
+    "id": ":the-wind-of-the-pale-moonlight:Devils In The Canyon",
+    "name": "Devils In The Canyon",
+    "campaign": ":the-wind-of-the-pale-moonlight",
+    "standalone": false,
+    "i18n": "devils-in-the-canyon"
+  },
+  {
+    "id": ":the-wind-of-the-pale-moonlight:Don't Starve - Scenario",
+    "name": "Don't Starve - Scenario",
+    "campaign": ":the-wind-of-the-pale-moonlight",
+    "standalone": false,
+    "i18n": "don-t-starve-scenario"
+  },
+  {
+    "id": ":the-wind-of-the-pale-moonlight:Election Night",
+    "name": "Election Night",
+    "campaign": ":the-wind-of-the-pale-moonlight",
+    "standalone": false,
+    "i18n": "election-night"
+  },
+  {
+    "id": ":the-wind-of-the-pale-moonlight:The Facts in the Case of M. Valdemar",
+    "name": "The Facts in the Case of M. Valdemar",
+    "campaign": ":the-wind-of-the-pale-moonlight",
+    "standalone": false,
+    "i18n": "the-facts-in-the-case-of-m-valdemar"
+  },
+  {
+    "id": ":the-wind-of-the-pale-moonlight:The Fall of the House of Usher",
+    "name": "The Fall of the House of Usher",
+    "campaign": ":the-wind-of-the-pale-moonlight",
+    "standalone": false,
+    "i18n": "the-fall-of-the-house-of-usher"
+  },
+  {
+    "id": ":the-wind-of-the-pale-moonlight:Fortune or Folly - Parallel Rex Murphy",
+    "name": "Fortune or Folly - Parallel Rex Murphy",
+    "campaign": ":the-wind-of-the-pale-moonlight",
+    "standalone": false,
+    "i18n": "fortune-or-folly-parallel-rex-murphy"
+  },
+  {
+    "id": ":the-wind-of-the-pale-moonlight:The Grand Oak Hotel",
+    "name": "The Grand Oak Hotel",
+    "campaign": ":the-wind-of-the-pale-moonlight",
+    "standalone": false,
+    "i18n": "the-grand-oak-hotel"
+  },
+  {
+    "id": ":the-wind-of-the-pale-moonlight:The Invisible Man",
+    "name": "The Invisible Man",
+    "campaign": ":the-wind-of-the-pale-moonlight",
+    "standalone": false,
+    "i18n": "the-invisible-man"
+  },
+  {
+    "id": ":the-wind-of-the-pale-moonlight:The Legend of Sleepy Hollow",
+    "name": "The Legend of Sleepy Hollow",
+    "campaign": ":the-wind-of-the-pale-moonlight",
+    "standalone": false,
+    "i18n": "the-legend-of-sleepy-hollow"
+  },
+  {
+    "id": ":the-wind-of-the-pale-moonlight:The Living Labyrinth",
+    "name": "The Living Labyrinth",
+    "campaign": ":the-wind-of-the-pale-moonlight",
+    "standalone": false,
+    "i18n": "the-living-labyrinth"
+  },
+  {
+    "id": ":the-wind-of-the-pale-moonlight:The Midwinter Gala - Fashionably Late",
+    "name": "The Midwinter Gala - Fashionably Late",
+    "campaign": ":the-wind-of-the-pale-moonlight",
+    "standalone": false,
+    "i18n": "the-midwinter-gala-fashionably-late"
+  },
+  {
+    "id": ":the-wind-of-the-pale-moonlight:Miskatonic Mouse",
+    "name": "Miskatonic Mouse",
+    "campaign": ":the-wind-of-the-pale-moonlight",
+    "standalone": false,
+    "i18n": "miskatonic-mouse"
+  },
+  {
+    "id": ":the-wind-of-the-pale-moonlight:Mythos Deviations",
+    "name": "Mythos Deviations",
+    "campaign": ":the-wind-of-the-pale-moonlight",
+    "standalone": false,
+    "i18n": "mythos-deviations"
+  },
+  {
+    "id": ":the-wind-of-the-pale-moonlight:Return to the Consternation on the Constellation",
+    "name": "Return to the Consternation on the Constellation",
+    "campaign": ":the-wind-of-the-pale-moonlight",
+    "standalone": false,
+    "i18n": "return-to-the-consternation-on-the-constellation"
+  },
+  {
+    "id": ":the-wind-of-the-pale-moonlight:Return to the Wendigo",
+    "name": "Return to the Wendigo",
+    "campaign": ":the-wind-of-the-pale-moonlight",
+    "standalone": false,
+    "i18n": "return-to-the-wendigo"
+  },
+  {
+    "id": ":the-wind-of-the-pale-moonlight:Snakes and Ladders",
+    "name": "Snakes and Ladders",
+    "campaign": ":the-wind-of-the-pale-moonlight",
+    "standalone": false,
+    "i18n": "snakes-and-ladders"
+  },
+  {
+    "id": ":the-wind-of-the-pale-moonlight:The Strange Case of Dr. Jekyll and Mr. Hyde",
+    "name": "The Strange Case of Dr. Jekyll and Mr. Hyde",
+    "campaign": ":the-wind-of-the-pale-moonlight",
+    "standalone": false,
+    "i18n": "the-strange-case-of-dr-jekyll-and-mr-hyde"
+  },
+  {
+    "id": ":the-wind-of-the-pale-moonlight:'Tis The Season",
+    "name": "'Tis The Season",
+    "campaign": ":the-wind-of-the-pale-moonlight",
+    "standalone": false,
+    "i18n": "tis-the-season"
+  },
+  {
+    "id": ":the-wind-of-the-pale-moonlight:When the World Screamed",
+    "name": "When the World Screamed",
+    "campaign": ":the-wind-of-the-pale-moonlight",
+    "standalone": false,
+    "i18n": "when-the-world-screamed"
+  },
+  {
+    "id": ":the-wind-of-the-pale-moonlight:The Witcher Horror",
+    "name": "The Witcher Horror",
+    "campaign": ":the-wind-of-the-pale-moonlight",
+    "standalone": false,
+    "i18n": "the-witcher-horror"
+  },
+  {
+    "id": ":the-wind-of-the-pale-moonlight:The Woods of the Black Goat",
+    "name": "The Woods of the Black Goat",
+    "campaign": ":the-wind-of-the-pale-moonlight",
+    "standalone": false,
+    "i18n": "the-woods-of-the-black-goat"
+  }
+]

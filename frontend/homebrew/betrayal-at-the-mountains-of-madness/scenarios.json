@@ -1,0 +1,345 @@
+[
+  {
+    "id": ":betrayal-at-the-mountains-of-madness:Curse of the Rougarou",
+    "name": "Curse of the Rougarou",
+    "campaign": ":betrayal-at-the-mountains-of-madness",
+    "standalone": false,
+    "i18n": "curse-of-the-rougarou"
+  },
+  {
+    "id": ":betrayal-at-the-mountains-of-madness:Carnevale of Horrors",
+    "name": "Carnevale of Horrors",
+    "campaign": ":betrayal-at-the-mountains-of-madness",
+    "standalone": false,
+    "i18n": "carnevale-of-horrors"
+  },
+  {
+    "id": ":betrayal-at-the-mountains-of-madness:The Labyrinths of Lunacy",
+    "name": "The Labyrinths of Lunacy",
+    "campaign": ":betrayal-at-the-mountains-of-madness",
+    "standalone": false,
+    "i18n": "the-labyrinths-of-lunacy"
+  },
+  {
+    "id": ":betrayal-at-the-mountains-of-madness:Guardians of the Abyss",
+    "name": "Guardians of the Abyss",
+    "campaign": ":betrayal-at-the-mountains-of-madness",
+    "standalone": false,
+    "i18n": "guardians-of-the-abyss"
+  },
+  {
+    "id": ":betrayal-at-the-mountains-of-madness:Murder at the Excelsior Hotel",
+    "name": "Murder at the Excelsior Hotel",
+    "campaign": ":betrayal-at-the-mountains-of-madness",
+    "standalone": false,
+    "i18n": "murder-at-the-excelsior-hotel"
+  },
+  {
+    "id": ":betrayal-at-the-mountains-of-madness:The Blob that Ate Everything",
+    "name": "The Blob that Ate Everything",
+    "campaign": ":betrayal-at-the-mountains-of-madness",
+    "standalone": false,
+    "i18n": "the-blob-that-ate-everything"
+  },
+  {
+    "id": ":betrayal-at-the-mountains-of-madness:War of the Outer Gods",
+    "name": "War of the Outer Gods",
+    "campaign": ":betrayal-at-the-mountains-of-madness",
+    "standalone": false,
+    "i18n": "war-of-the-outer-gods"
+  },
+  {
+    "id": ":betrayal-at-the-mountains-of-madness:Machinations Through Time",
+    "name": "Machinations Through Time",
+    "campaign": ":betrayal-at-the-mountains-of-madness",
+    "standalone": false,
+    "i18n": "machinations-through-time"
+  },
+  {
+    "id": ":betrayal-at-the-mountains-of-madness:Fortune and Folly",
+    "name": "Fortune and Folly",
+    "campaign": ":betrayal-at-the-mountains-of-madness",
+    "standalone": false,
+    "i18n": "fortune-and-folly"
+  },
+  {
+    "id": ":betrayal-at-the-mountains-of-madness:The Midwinter Gala",
+    "name": "The Midwinter Gala",
+    "campaign": ":betrayal-at-the-mountains-of-madness",
+    "standalone": false,
+    "i18n": "the-midwinter-gala"
+  },
+  {
+    "id": ":betrayal-at-the-mountains-of-madness:Film Fatale",
+    "name": "Film Fatale",
+    "campaign": ":betrayal-at-the-mountains-of-madness",
+    "standalone": false,
+    "i18n": "film-fatale"
+  },
+  {
+    "id": ":betrayal-at-the-mountains-of-madness:Challenge Scenario - All or Nothing",
+    "name": "Challenge Scenario - All or Nothing",
+    "campaign": ":betrayal-at-the-mountains-of-madness",
+    "standalone": false,
+    "i18n": "challenge-scenario-all-or-nothing"
+  },
+  {
+    "id": ":betrayal-at-the-mountains-of-madness:Challenge Scenario - Bad Blood",
+    "name": "Challenge Scenario - Bad Blood",
+    "campaign": ":betrayal-at-the-mountains-of-madness",
+    "standalone": false,
+    "i18n": "challenge-scenario-bad-blood"
+  },
+  {
+    "id": ":betrayal-at-the-mountains-of-madness:Challenge Scenario - By the Book",
+    "name": "Challenge Scenario - By the Book",
+    "campaign": ":betrayal-at-the-mountains-of-madness",
+    "standalone": false,
+    "i18n": "challenge-scenario-by-the-book"
+  },
+  {
+    "id": ":betrayal-at-the-mountains-of-madness:Challenge Scenario - Laid to Rest",
+    "name": "Challenge Scenario - Laid to Rest",
+    "campaign": ":betrayal-at-the-mountains-of-madness",
+    "standalone": false,
+    "i18n": "challenge-scenario-laid-to-rest"
+  },
+  {
+    "id": ":betrayal-at-the-mountains-of-madness:Challenge Scenario - Read or Die",
+    "name": "Challenge Scenario - Read or Die",
+    "campaign": ":betrayal-at-the-mountains-of-madness",
+    "standalone": false,
+    "i18n": "challenge-scenario-read-or-die"
+  },
+  {
+    "id": ":betrayal-at-the-mountains-of-madness:Challenge Scenario - Red Tide Rising",
+    "name": "Challenge Scenario - Red Tide Rising",
+    "campaign": ":betrayal-at-the-mountains-of-madness",
+    "standalone": false,
+    "i18n": "challenge-scenario-red-tide-rising"
+  },
+  {
+    "id": ":betrayal-at-the-mountains-of-madness:Challenge Scenario - Relics of the Past",
+    "name": "Challenge Scenario - Relics of the Past",
+    "campaign": ":betrayal-at-the-mountains-of-madness",
+    "standalone": false,
+    "i18n": "challenge-scenario-relics-of-the-past"
+  },
+  {
+    "id": ":betrayal-at-the-mountains-of-madness:Challenge Scenario - Enthralling Encore",
+    "name": "Challenge Scenario - Enthralling Encore",
+    "campaign": ":betrayal-at-the-mountains-of-madness",
+    "standalone": false,
+    "i18n": "challenge-scenario-enthralling-encore"
+  },
+  {
+    "id": ":betrayal-at-the-mountains-of-madness:Barkham Horror - The Meddling of Meowlathotep",
+    "name": "Barkham Horror - The Meddling of Meowlathotep",
+    "campaign": ":betrayal-at-the-mountains-of-madness",
+    "standalone": false,
+    "i18n": "barkham-horror-the-meddling-of-meowlathotep"
+  },
+  {
+    "id": ":betrayal-at-the-mountains-of-madness:Against the Wendigo",
+    "name": "Against the Wendigo",
+    "campaign": ":betrayal-at-the-mountains-of-madness",
+    "standalone": false,
+    "i18n": "against-the-wendigo"
+  },
+  {
+    "id": ":betrayal-at-the-mountains-of-madness:And Then There Were None",
+    "name": "And Then There Were None",
+    "campaign": ":betrayal-at-the-mountains-of-madness",
+    "standalone": false,
+    "i18n": "and-then-there-were-none"
+  },
+  {
+    "id": ":betrayal-at-the-mountains-of-madness:Carnevale of Spiders",
+    "name": "Carnevale of Spiders",
+    "campaign": ":betrayal-at-the-mountains-of-madness",
+    "standalone": false,
+    "i18n": "carnevale-of-spiders"
+  },
+  {
+    "id": ":betrayal-at-the-mountains-of-madness:Clueless Cultist Coup",
+    "name": "Clueless Cultist Coup",
+    "campaign": ":betrayal-at-the-mountains-of-madness",
+    "standalone": false,
+    "i18n": "clueless-cultist-coup"
+  },
+  {
+    "id": ":betrayal-at-the-mountains-of-madness:Code Red at Bleeding Heart",
+    "name": "Code Red at Bleeding Heart",
+    "campaign": ":betrayal-at-the-mountains-of-madness",
+    "standalone": false,
+    "i18n": "code-red-at-bleeding-heart"
+  },
+  {
+    "id": ":betrayal-at-the-mountains-of-madness:Consternation on the Constellation",
+    "name": "Consternation on the Constellation",
+    "campaign": ":betrayal-at-the-mountains-of-madness",
+    "standalone": false,
+    "i18n": "consternation-on-the-constellation"
+  },
+  {
+    "id": ":betrayal-at-the-mountains-of-madness:Cosmic Pantheon",
+    "name": "Cosmic Pantheon",
+    "campaign": ":betrayal-at-the-mountains-of-madness",
+    "standalone": false,
+    "i18n": "cosmic-pantheon"
+  },
+  {
+    "id": ":betrayal-at-the-mountains-of-madness:Defense of the Arkham",
+    "name": "Defense of the Arkham",
+    "campaign": ":betrayal-at-the-mountains-of-madness",
+    "standalone": false,
+    "i18n": "defense-of-the-arkham"
+  },
+  {
+    "id": ":betrayal-at-the-mountains-of-madness:Devils In The Canyon",
+    "name": "Devils In The Canyon",
+    "campaign": ":betrayal-at-the-mountains-of-madness",
+    "standalone": false,
+    "i18n": "devils-in-the-canyon"
+  },
+  {
+    "id": ":betrayal-at-the-mountains-of-madness:Don't Starve - Scenario",
+    "name": "Don't Starve - Scenario",
+    "campaign": ":betrayal-at-the-mountains-of-madness",
+    "standalone": false,
+    "i18n": "don-t-starve-scenario"
+  },
+  {
+    "id": ":betrayal-at-the-mountains-of-madness:Election Night",
+    "name": "Election Night",
+    "campaign": ":betrayal-at-the-mountains-of-madness",
+    "standalone": false,
+    "i18n": "election-night"
+  },
+  {
+    "id": ":betrayal-at-the-mountains-of-madness:The Facts in the Case of M. Valdemar",
+    "name": "The Facts in the Case of M. Valdemar",
+    "campaign": ":betrayal-at-the-mountains-of-madness",
+    "standalone": false,
+    "i18n": "the-facts-in-the-case-of-m-valdemar"
+  },
+  {
+    "id": ":betrayal-at-the-mountains-of-madness:The Fall of the House of Usher",
+    "name": "The Fall of the House of Usher",
+    "campaign": ":betrayal-at-the-mountains-of-madness",
+    "standalone": false,
+    "i18n": "the-fall-of-the-house-of-usher"
+  },
+  {
+    "id": ":betrayal-at-the-mountains-of-madness:Fortune or Folly - Parallel Rex Murphy",
+    "name": "Fortune or Folly - Parallel Rex Murphy",
+    "campaign": ":betrayal-at-the-mountains-of-madness",
+    "standalone": false,
+    "i18n": "fortune-or-folly-parallel-rex-murphy"
+  },
+  {
+    "id": ":betrayal-at-the-mountains-of-madness:The Grand Oak Hotel",
+    "name": "The Grand Oak Hotel",
+    "campaign": ":betrayal-at-the-mountains-of-madness",
+    "standalone": false,
+    "i18n": "the-grand-oak-hotel"
+  },
+  {
+    "id": ":betrayal-at-the-mountains-of-madness:The Invisible Man",
+    "name": "The Invisible Man",
+    "campaign": ":betrayal-at-the-mountains-of-madness",
+    "standalone": false,
+    "i18n": "the-invisible-man"
+  },
+  {
+    "id": ":betrayal-at-the-mountains-of-madness:The Legend of Sleepy Hollow",
+    "name": "The Legend of Sleepy Hollow",
+    "campaign": ":betrayal-at-the-mountains-of-madness",
+    "standalone": false,
+    "i18n": "the-legend-of-sleepy-hollow"
+  },
+  {
+    "id": ":betrayal-at-the-mountains-of-madness:The Living Labyrinth",
+    "name": "The Living Labyrinth",
+    "campaign": ":betrayal-at-the-mountains-of-madness",
+    "standalone": false,
+    "i18n": "the-living-labyrinth"
+  },
+  {
+    "id": ":betrayal-at-the-mountains-of-madness:The Midwinter Gala - Fashionably Late",
+    "name": "The Midwinter Gala - Fashionably Late",
+    "campaign": ":betrayal-at-the-mountains-of-madness",
+    "standalone": false,
+    "i18n": "the-midwinter-gala-fashionably-late"
+  },
+  {
+    "id": ":betrayal-at-the-mountains-of-madness:Miskatonic Mouse",
+    "name": "Miskatonic Mouse",
+    "campaign": ":betrayal-at-the-mountains-of-madness",
+    "standalone": false,
+    "i18n": "miskatonic-mouse"
+  },
+  {
+    "id": ":betrayal-at-the-mountains-of-madness:Mythos Deviations",
+    "name": "Mythos Deviations",
+    "campaign": ":betrayal-at-the-mountains-of-madness",
+    "standalone": false,
+    "i18n": "mythos-deviations"
+  },
+  {
+    "id": ":betrayal-at-the-mountains-of-madness:Return to the Consternation on the Constellation",
+    "name": "Return to the Consternation on the Constellation",
+    "campaign": ":betrayal-at-the-mountains-of-madness",
+    "standalone": false,
+    "i18n": "return-to-the-consternation-on-the-constellation"
+  },
+  {
+    "id": ":betrayal-at-the-mountains-of-madness:Return to the Wendigo",
+    "name": "Return to the Wendigo",
+    "campaign": ":betrayal-at-the-mountains-of-madness",
+    "standalone": false,
+    "i18n": "return-to-the-wendigo"
+  },
+  {
+    "id": ":betrayal-at-the-mountains-of-madness:Snakes and Ladders",
+    "name": "Snakes and Ladders",
+    "campaign": ":betrayal-at-the-mountains-of-madness",
+    "standalone": false,
+    "i18n": "snakes-and-ladders"
+  },
+  {
+    "id": ":betrayal-at-the-mountains-of-madness:The Strange Case of Dr. Jekyll and Mr. Hyde",
+    "name": "The Strange Case of Dr. Jekyll and Mr. Hyde",
+    "campaign": ":betrayal-at-the-mountains-of-madness",
+    "standalone": false,
+    "i18n": "the-strange-case-of-dr-jekyll-and-mr-hyde"
+  },
+  {
+    "id": ":betrayal-at-the-mountains-of-madness:'Tis The Season",
+    "name": "'Tis The Season",
+    "campaign": ":betrayal-at-the-mountains-of-madness",
+    "standalone": false,
+    "i18n": "tis-the-season"
+  },
+  {
+    "id": ":betrayal-at-the-mountains-of-madness:When the World Screamed",
+    "name": "When the World Screamed",
+    "campaign": ":betrayal-at-the-mountains-of-madness",
+    "standalone": false,
+    "i18n": "when-the-world-screamed"
+  },
+  {
+    "id": ":betrayal-at-the-mountains-of-madness:The Witcher Horror",
+    "name": "The Witcher Horror",
+    "campaign": ":betrayal-at-the-mountains-of-madness",
+    "standalone": false,
+    "i18n": "the-witcher-horror"
+  },
+  {
+    "id": ":betrayal-at-the-mountains-of-madness:The Woods of the Black Goat",
+    "name": "The Woods of the Black Goat",
+    "campaign": ":betrayal-at-the-mountains-of-madness",
+    "standalone": false,
+    "i18n": "the-woods-of-the-black-goat"
+  }
+]

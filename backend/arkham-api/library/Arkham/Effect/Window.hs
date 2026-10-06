@@ -1,0 +1,139 @@
+{-# LANGUAGE TemplateHaskell #-}
+
+module Arkham.Effect.Window (module Arkham.Effect.Window) where
+
+import Arkham.Ability.Types
+import Arkham.Card.Id
+import Arkham.Id
+import Arkham.Matcher.SkillTest
+import Arkham.Phase
+import Arkham.Prelude
+import Arkham.ScenarioLogKey
+import Data.Aeson.TH
+import Data.UUID qualified as UUID
+import GHC.OverloadedLabels
+
+data EffectWindow
+  = EffectPhaseWindow
+  | EffectPhaseWindowFor Phase
+  | EffectUntilEndOfPhaseWindowFor Phase
+  | EffectUntilEndOfNextPhaseWindowFor Phase
+  | EffectCostWindow
+  | EffectSkillTestWindow SkillTestId
+  | EffectSkillTestMatchingWindow SkillTestMatcher
+  | EffectNextSkillTestWindow InvestigatorId
+  | EffectRoundWindow
+  | EffectNextActionWindow
+  | EffectActWindow
+  | EffectSetupWindow
+  | EffectScenarioSetupWindow ScenarioId
+  | {- | Carries a setup modifier to the *next* scenario. Tagged with the scenario
+    it was created in; inert while that scenario is current, active (as a setup
+    modifier) once a different scenario is current, and dismissed at the end of
+    that scenario's first round (so first-turn action penalties still apply).
+    -}
+    EffectNextSetupWindow ScenarioId
+  | -- | Lasts until the agenda deck first advances.
+    EffectFirstAgendaWindow
+  | {- | Wraps another window and carries it to the *next* scenario. Tagged with the
+    scenario it was created in: it emits nothing while still wrapped, and the first
+    Setup in a /different/ scenario unwraps it to the inner window, which then
+    behaves exactly as it would have in the scenario it was created in. Unwrapping
+    is also what stops it carrying forward a second time, since the inner window is
+    not itself carried across a scenario boundary.
+    -}
+    EffectForNextScenario ScenarioId EffectWindow
+  | EffectTurnWindow InvestigatorId
+  | EffectEndOfNextTurnWindow InvestigatorId
+  | EffectNextTurnWindow InvestigatorId
+  | EffectCardResolutionWindow CardId
+  | EffectGameWindow
+  | EffectResolutionWindow
+  | EffectAttackWindow
+  | EffectDamageWindow
+  | FirstEffectWindow [EffectWindow]
+  | EffectEventWindow
+  | EffectAbilityWindow AbilityRef
+  | EffectGainResourcesWindow InvestigatorId
+  | EffectSearchWindow
+  | EffectCardCostWindow CardId
+  | EffectCardDrawWindow CardDrawId
+  | EffectUI
+  | EffectMoveWindow
+  | EffectThisMoveWindow MovementId
+  | EffectRevelationWindow TreacheryId
+  | EffectDefeatWindow EnemyId
+  | EffectHollowWindow CardId
+  | EffectRememberedWindow ScenarioLogKey
+  deriving stock (Ord, Eq, Show, Data)
+
+instance IsLabel "endOfCurrentPhase" EffectWindow where
+  fromLabel = EffectPhaseWindow
+
+instance IsLabel "endOfNextSkillTest" (InvestigatorId -> EffectWindow) where
+  fromLabel = EffectNextSkillTestWindow
+
+instance IsLabel "nextSkillTest" (InvestigatorId -> EffectWindow) where
+  fromLabel = EffectNextSkillTestWindow
+
+instance IsLabel "remembered" (ScenarioLogKey -> EffectWindow) where
+  fromLabel = EffectRememberedWindow
+
+instance IsLabel "round" EffectWindow where
+  fromLabel = EffectRoundWindow
+
+instance IsLabel "nextAction" EffectWindow where
+  fromLabel = EffectNextActionWindow
+
+instance IsLabel "resolution" EffectWindow where
+  fromLabel = EffectResolutionWindow
+
+instance IsLabel "move" EffectWindow where
+  fromLabel = EffectMoveWindow
+
+instance IsLabel "turn" (InvestigatorId -> EffectWindow) where
+  fromLabel = EffectTurnWindow
+
+instance IsLabel "skillTest" (SkillTestId -> EffectWindow) where
+  fromLabel = EffectSkillTestWindow
+
+instance IsLabel "skillTestMatching" (SkillTestMatcher -> EffectWindow) where
+  fromLabel = EffectSkillTestMatchingWindow
+
+firstWindow :: [EffectWindow] -> EffectWindow
+firstWindow = FirstEffectWindow
+
+{- | Decision for whether and how a 'FirstEffectWindow' should emit modifiers.
+The most specific gating window in the list determines the gate; an inner
+'EffectNextSkillTestWindow' suppresses emission entirely until 'replaceNextSkillTest'
+rewrites it into 'EffectSkillTestWindow'.
+-}
+data FirstEffectWindowGate
+  = FirstWindowSuppress
+  | FirstWindowSkillTest SkillTestId
+  | FirstWindowTurn InvestigatorId
+  | FirstWindowPhase Phase
+  | FirstWindowEmit
+  deriving stock (Eq, Show)
+
+firstEffectWindowGate :: [EffectWindow] -> FirstEffectWindowGate
+firstEffectWindowGate ws
+  | any isNextSkillTest ws = FirstWindowSuppress
+  | Just sid <- listToMaybe [s | EffectSkillTestWindow s <- ws] = FirstWindowSkillTest sid
+  | Just iid <- listToMaybe [i | EffectTurnWindow i <- ws] = FirstWindowTurn iid
+  | Just p <- listToMaybe [ph | EffectPhaseWindowFor ph <- ws] = FirstWindowPhase p
+  | otherwise = FirstWindowEmit
+ where
+  isNextSkillTest (EffectNextSkillTestWindow _) = True
+  isNextSkillTest _ = False
+
+$(deriveToJSON defaultOptions ''EffectWindow)
+
+instance FromJSON EffectWindow where
+  parseJSON = withObject "EffectWindow" \o -> do
+    t <- o .: "tag"
+    case t :: Text of
+      "EffectCardDrawWindow" -> do
+        contents <- o .:? "contents" .!= CardDrawId UUID.nil
+        pure $ EffectCardDrawWindow contents
+      _ -> $(mkParseJSON defaultOptions ''EffectWindow) (Object o)

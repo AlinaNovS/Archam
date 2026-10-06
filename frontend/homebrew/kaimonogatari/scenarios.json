@@ -1,0 +1,345 @@
+[
+  {
+    "id": ":kaimonogatari:Curse of the Rougarou",
+    "name": "Curse of the Rougarou",
+    "campaign": ":kaimonogatari",
+    "standalone": false,
+    "i18n": "curse-of-the-rougarou"
+  },
+  {
+    "id": ":kaimonogatari:Carnevale of Horrors",
+    "name": "Carnevale of Horrors",
+    "campaign": ":kaimonogatari",
+    "standalone": false,
+    "i18n": "carnevale-of-horrors"
+  },
+  {
+    "id": ":kaimonogatari:The Labyrinths of Lunacy",
+    "name": "The Labyrinths of Lunacy",
+    "campaign": ":kaimonogatari",
+    "standalone": false,
+    "i18n": "the-labyrinths-of-lunacy"
+  },
+  {
+    "id": ":kaimonogatari:Guardians of the Abyss",
+    "name": "Guardians of the Abyss",
+    "campaign": ":kaimonogatari",
+    "standalone": false,
+    "i18n": "guardians-of-the-abyss"
+  },
+  {
+    "id": ":kaimonogatari:Murder at the Excelsior Hotel",
+    "name": "Murder at the Excelsior Hotel",
+    "campaign": ":kaimonogatari",
+    "standalone": false,
+    "i18n": "murder-at-the-excelsior-hotel"
+  },
+  {
+    "id": ":kaimonogatari:The Blob that Ate Everything",
+    "name": "The Blob that Ate Everything",
+    "campaign": ":kaimonogatari",
+    "standalone": false,
+    "i18n": "the-blob-that-ate-everything"
+  },
+  {
+    "id": ":kaimonogatari:War of the Outer Gods",
+    "name": "War of the Outer Gods",
+    "campaign": ":kaimonogatari",
+    "standalone": false,
+    "i18n": "war-of-the-outer-gods"
+  },
+  {
+    "id": ":kaimonogatari:Machinations Through Time",
+    "name": "Machinations Through Time",
+    "campaign": ":kaimonogatari",
+    "standalone": false,
+    "i18n": "machinations-through-time"
+  },
+  {
+    "id": ":kaimonogatari:Fortune and Folly",
+    "name": "Fortune and Folly",
+    "campaign": ":kaimonogatari",
+    "standalone": false,
+    "i18n": "fortune-and-folly"
+  },
+  {
+    "id": ":kaimonogatari:The Midwinter Gala",
+    "name": "The Midwinter Gala",
+    "campaign": ":kaimonogatari",
+    "standalone": false,
+    "i18n": "the-midwinter-gala"
+  },
+  {
+    "id": ":kaimonogatari:Film Fatale",
+    "name": "Film Fatale",
+    "campaign": ":kaimonogatari",
+    "standalone": false,
+    "i18n": "film-fatale"
+  },
+  {
+    "id": ":kaimonogatari:Challenge Scenario - All or Nothing",
+    "name": "Challenge Scenario - All or Nothing",
+    "campaign": ":kaimonogatari",
+    "standalone": false,
+    "i18n": "challenge-scenario-all-or-nothing"
+  },
+  {
+    "id": ":kaimonogatari:Challenge Scenario - Bad Blood",
+    "name": "Challenge Scenario - Bad Blood",
+    "campaign": ":kaimonogatari",
+    "standalone": false,
+    "i18n": "challenge-scenario-bad-blood"
+  },
+  {
+    "id": ":kaimonogatari:Challenge Scenario - By the Book",
+    "name": "Challenge Scenario - By the Book",
+    "campaign": ":kaimonogatari",
+    "standalone": false,
+    "i18n": "challenge-scenario-by-the-book"
+  },
+  {
+    "id": ":kaimonogatari:Challenge Scenario - Laid to Rest",
+    "name": "Challenge Scenario - Laid to Rest",
+    "campaign": ":kaimonogatari",
+    "standalone": false,
+    "i18n": "challenge-scenario-laid-to-rest"
+  },
+  {
+    "id": ":kaimonogatari:Challenge Scenario - Read or Die",
+    "name": "Challenge Scenario - Read or Die",
+    "campaign": ":kaimonogatari",
+    "standalone": false,
+    "i18n": "challenge-scenario-read-or-die"
+  },
+  {
+    "id": ":kaimonogatari:Challenge Scenario - Red Tide Rising",
+    "name": "Challenge Scenario - Red Tide Rising",
+    "campaign": ":kaimonogatari",
+    "standalone": false,
+    "i18n": "challenge-scenario-red-tide-rising"
+  },
+  {
+    "id": ":kaimonogatari:Challenge Scenario - Relics of the Past",
+    "name": "Challenge Scenario - Relics of the Past",
+    "campaign": ":kaimonogatari",
+    "standalone": false,
+    "i18n": "challenge-scenario-relics-of-the-past"
+  },
+  {
+    "id": ":kaimonogatari:Challenge Scenario - Enthralling Encore",
+    "name": "Challenge Scenario - Enthralling Encore",
+    "campaign": ":kaimonogatari",
+    "standalone": false,
+    "i18n": "challenge-scenario-enthralling-encore"
+  },
+  {
+    "id": ":kaimonogatari:Barkham Horror - The Meddling of Meowlathotep",
+    "name": "Barkham Horror - The Meddling of Meowlathotep",
+    "campaign": ":kaimonogatari",
+    "standalone": false,
+    "i18n": "barkham-horror-the-meddling-of-meowlathotep"
+  },
+  {
+    "id": ":kaimonogatari:Against the Wendigo",
+    "name": "Against the Wendigo",
+    "campaign": ":kaimonogatari",
+    "standalone": false,
+    "i18n": "against-the-wendigo"
+  },
+  {
+    "id": ":kaimonogatari:And Then There Were None",
+    "name": "And Then There Were None",
+    "campaign": ":kaimonogatari",
+    "standalone": false,
+    "i18n": "and-then-there-were-none"
+  },
+  {
+    "id": ":kaimonogatari:Carnevale of Spiders",
+    "name": "Carnevale of Spiders",
+    "campaign": ":kaimonogatari",
+    "standalone": false,
+    "i18n": "carnevale-of-spiders"
+  },
+  {
+    "id": ":kaimonogatari:Clueless Cultist Coup",
+    "name": "Clueless Cultist Coup",
+    "campaign": ":kaimonogatari",
+    "standalone": false,
+    "i18n": "clueless-cultist-coup"
+  },
+  {
+    "id": ":kaimonogatari:Code Red at Bleeding Heart",
+    "name": "Code Red at Bleeding Heart",
+    "campaign": ":kaimonogatari",
+    "standalone": false,
+    "i18n": "code-red-at-bleeding-heart"
+  },
+  {
+    "id": ":kaimonogatari:Consternation on the Constellation",
+    "name": "Consternation on the Constellation",
+    "campaign": ":kaimonogatari",
+    "standalone": false,
+    "i18n": "consternation-on-the-constellation"
+  },
+  {
+    "id": ":kaimonogatari:Cosmic Pantheon",
+    "name": "Cosmic Pantheon",
+    "campaign": ":kaimonogatari",
+    "standalone": false,
+    "i18n": "cosmic-pantheon"
+  },
+  {
+    "id": ":kaimonogatari:Defense of the Arkham",
+    "name": "Defense of the Arkham",
+    "campaign": ":kaimonogatari",
+    "standalone": false,
+    "i18n": "defense-of-the-arkham"
+  },
+  {
+    "id": ":kaimonogatari:Devils In The Canyon",
+    "name": "Devils In The Canyon",
+    "campaign": ":kaimonogatari",
+    "standalone": false,
+    "i18n": "devils-in-the-canyon"
+  },
+  {
+    "id": ":kaimonogatari:Don't Starve - Scenario",
+    "name": "Don't Starve - Scenario",
+    "campaign": ":kaimonogatari",
+    "standalone": false,
+    "i18n": "don-t-starve-scenario"
+  },
+  {
+    "id": ":kaimonogatari:Election Night",
+    "name": "Election Night",
+    "campaign": ":kaimonogatari",
+    "standalone": false,
+    "i18n": "election-night"
+  },
+  {
+    "id": ":kaimonogatari:The Facts in the Case of M. Valdemar",
+    "name": "The Facts in the Case of M. Valdemar",
+    "campaign": ":kaimonogatari",
+    "standalone": false,
+    "i18n": "the-facts-in-the-case-of-m-valdemar"
+  },
+  {
+    "id": ":kaimonogatari:The Fall of the House of Usher",
+    "name": "The Fall of the House of Usher",
+    "campaign": ":kaimonogatari",
+    "standalone": false,
+    "i18n": "the-fall-of-the-house-of-usher"
+  },
+  {
+    "id": ":kaimonogatari:Fortune or Folly - Parallel Rex Murphy",
+    "name": "Fortune or Folly - Parallel Rex Murphy",
+    "campaign": ":kaimonogatari",
+    "standalone": false,
+    "i18n": "fortune-or-folly-parallel-rex-murphy"
+  },
+  {
+    "id": ":kaimonogatari:The Grand Oak Hotel",
+    "name": "The Grand Oak Hotel",
+    "campaign": ":kaimonogatari",
+    "standalone": false,
+    "i18n": "the-grand-oak-hotel"
+  },
+  {
+    "id": ":kaimonogatari:The Invisible Man",
+    "name": "The Invisible Man",
+    "campaign": ":kaimonogatari",
+    "standalone": false,
+    "i18n": "the-invisible-man"
+  },
+  {
+    "id": ":kaimonogatari:The Legend of Sleepy Hollow",
+    "name": "The Legend of Sleepy Hollow",
+    "campaign": ":kaimonogatari",
+    "standalone": false,
+    "i18n": "the-legend-of-sleepy-hollow"
+  },
+  {
+    "id": ":kaimonogatari:The Living Labyrinth",
+    "name": "The Living Labyrinth",
+    "campaign": ":kaimonogatari",
+    "standalone": false,
+    "i18n": "the-living-labyrinth"
+  },
+  {
+    "id": ":kaimonogatari:The Midwinter Gala - Fashionably Late",
+    "name": "The Midwinter Gala - Fashionably Late",
+    "campaign": ":kaimonogatari",
+    "standalone": false,
+    "i18n": "the-midwinter-gala-fashionably-late"
+  },
+  {
+    "id": ":kaimonogatari:Miskatonic Mouse",
+    "name": "Miskatonic Mouse",
+    "campaign": ":kaimonogatari",
+    "standalone": false,
+    "i18n": "miskatonic-mouse"
+  },
+  {
+    "id": ":kaimonogatari:Mythos Deviations",
+    "name": "Mythos Deviations",
+    "campaign": ":kaimonogatari",
+    "standalone": false,
+    "i18n": "mythos-deviations"
+  },
+  {
+    "id": ":kaimonogatari:Return to the Consternation on the Constellation",
+    "name": "Return to the Consternation on the Constellation",
+    "campaign": ":kaimonogatari",
+    "standalone": false,
+    "i18n": "return-to-the-consternation-on-the-constellation"
+  },
+  {
+    "id": ":kaimonogatari:Return to the Wendigo",
+    "name": "Return to the Wendigo",
+    "campaign": ":kaimonogatari",
+    "standalone": false,
+    "i18n": "return-to-the-wendigo"
+  },
+  {
+    "id": ":kaimonogatari:Snakes and Ladders",
+    "name": "Snakes and Ladders",
+    "campaign": ":kaimonogatari",
+    "standalone": false,
+    "i18n": "snakes-and-ladders"
+  },
+  {
+    "id": ":kaimonogatari:The Strange Case of Dr. Jekyll and Mr. Hyde",
+    "name": "The Strange Case of Dr. Jekyll and Mr. Hyde",
+    "campaign": ":kaimonogatari",
+    "standalone": false,
+    "i18n": "the-strange-case-of-dr-jekyll-and-mr-hyde"
+  },
+  {
+    "id": ":kaimonogatari:'Tis The Season",
+    "name": "'Tis The Season",
+    "campaign": ":kaimonogatari",
+    "standalone": false,
+    "i18n": "tis-the-season"
+  },
+  {
+    "id": ":kaimonogatari:When the World Screamed",
+    "name": "When the World Screamed",
+    "campaign": ":kaimonogatari",
+    "standalone": false,
+    "i18n": "when-the-world-screamed"
+  },
+  {
+    "id": ":kaimonogatari:The Witcher Horror",
+    "name": "The Witcher Horror",
+    "campaign": ":kaimonogatari",
+    "standalone": false,
+    "i18n": "the-witcher-horror"
+  },
+  {
+    "id": ":kaimonogatari:The Woods of the Black Goat",
+    "name": "The Woods of the Black Goat",
+    "campaign": ":kaimonogatari",
+    "standalone": false,
+    "i18n": "the-woods-of-the-black-goat"
+  }
+]

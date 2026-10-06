@@ -1,0 +1,51 @@
+[
+  {
+    "id": ":ages-unwound:001",
+    "name": "Scenario 1",
+    "campaign": ":ages-unwound",
+    "standalone": false,
+    "i18n": "scenario1"
+  },
+  {
+    "id": ":ages-unwound:002",
+    "name": "Scenario 2",
+    "campaign": ":ages-unwound",
+    "standalone": false,
+    "i18n": "scenario2"
+  },
+  {
+    "id": ":ages-unwound:003",
+    "name": "Scenario 3",
+    "campaign": ":ages-unwound",
+    "standalone": false,
+    "i18n": "scenario3"
+  },
+  {
+    "id": ":ages-unwound:004",
+    "name": "Scenario 4",
+    "campaign": ":ages-unwound",
+    "standalone": false,
+    "i18n": "scenario4"
+  },
+  {
+    "id": ":ages-unwound:005",
+    "name": "Scenario 5",
+    "campaign": ":ages-unwound",
+    "standalone": false,
+    "i18n": "scenario5"
+  },
+  {
+    "id": ":ages-unwound:006",
+    "name": "Scenario 6",
+    "campaign": ":ages-unwound",
+    "standalone": false,
+    "i18n": "scenario6"
+  },
+  {
+    "id": ":ages-unwound:007",
+    "name": "Scenario 7",
+    "campaign": ":ages-unwound",
+    "standalone": false,
+    "i18n": "scenario7"
+  }
+]

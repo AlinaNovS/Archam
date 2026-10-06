@@ -1,0 +1,345 @@
+[
+  {
+    "id": ":into-the-shadowlands:Curse of the Rougarou",
+    "name": "Curse of the Rougarou",
+    "campaign": ":into-the-shadowlands",
+    "standalone": false,
+    "i18n": "curse-of-the-rougarou"
+  },
+  {
+    "id": ":into-the-shadowlands:Carnevale of Horrors",
+    "name": "Carnevale of Horrors",
+    "campaign": ":into-the-shadowlands",
+    "standalone": false,
+    "i18n": "carnevale-of-horrors"
+  },
+  {
+    "id": ":into-the-shadowlands:The Labyrinths of Lunacy",
+    "name": "The Labyrinths of Lunacy",
+    "campaign": ":into-the-shadowlands",
+    "standalone": false,
+    "i18n": "the-labyrinths-of-lunacy"
+  },
+  {
+    "id": ":into-the-shadowlands:Guardians of the Abyss",
+    "name": "Guardians of the Abyss",
+    "campaign": ":into-the-shadowlands",
+    "standalone": false,
+    "i18n": "guardians-of-the-abyss"
+  },
+  {
+    "id": ":into-the-shadowlands:Murder at the Excelsior Hotel",
+    "name": "Murder at the Excelsior Hotel",
+    "campaign": ":into-the-shadowlands",
+    "standalone": false,
+    "i18n": "murder-at-the-excelsior-hotel"
+  },
+  {
+    "id": ":into-the-shadowlands:The Blob that Ate Everything",
+    "name": "The Blob that Ate Everything",
+    "campaign": ":into-the-shadowlands",
+    "standalone": false,
+    "i18n": "the-blob-that-ate-everything"
+  },
+  {
+    "id": ":into-the-shadowlands:War of the Outer Gods",
+    "name": "War of the Outer Gods",
+    "campaign": ":into-the-shadowlands",
+    "standalone": false,
+    "i18n": "war-of-the-outer-gods"
+  },
+  {
+    "id": ":into-the-shadowlands:Machinations Through Time",
+    "name": "Machinations Through Time",
+    "campaign": ":into-the-shadowlands",
+    "standalone": false,
+    "i18n": "machinations-through-time"
+  },
+  {
+    "id": ":into-the-shadowlands:Fortune and Folly",
+    "name": "Fortune and Folly",
+    "campaign": ":into-the-shadowlands",
+    "standalone": false,
+    "i18n": "fortune-and-folly"
+  },
+  {
+    "id": ":into-the-shadowlands:The Midwinter Gala",
+    "name": "The Midwinter Gala",
+    "campaign": ":into-the-shadowlands",
+    "standalone": false,
+    "i18n": "the-midwinter-gala"
+  },
+  {
+    "id": ":into-the-shadowlands:Film Fatale",
+    "name": "Film Fatale",
+    "campaign": ":into-the-shadowlands",
+    "standalone": false,
+    "i18n": "film-fatale"
+  },
+  {
+    "id": ":into-the-shadowlands:Challenge Scenario - All or Nothing",
+    "name": "Challenge Scenario - All or Nothing",
+    "campaign": ":into-the-shadowlands",
+    "standalone": false,
+    "i18n": "challenge-scenario-all-or-nothing"
+  },
+  {
+    "id": ":into-the-shadowlands:Challenge Scenario - Bad Blood",
+    "name": "Challenge Scenario - Bad Blood",
+    "campaign": ":into-the-shadowlands",
+    "standalone": false,
+    "i18n": "challenge-scenario-bad-blood"
+  },
+  {
+    "id": ":into-the-shadowlands:Challenge Scenario - By the Book",
+    "name": "Challenge Scenario - By the Book",
+    "campaign": ":into-the-shadowlands",
+    "standalone": false,
+    "i18n": "challenge-scenario-by-the-book"
+  },
+  {
+    "id": ":into-the-shadowlands:Challenge Scenario - Laid to Rest",
+    "name": "Challenge Scenario - Laid to Rest",
+    "campaign": ":into-the-shadowlands",
+    "standalone": false,
+    "i18n": "challenge-scenario-laid-to-rest"
+  },
+  {
+    "id": ":into-the-shadowlands:Challenge Scenario - Read or Die",
+    "name": "Challenge Scenario - Read or Die",
+    "campaign": ":into-the-shadowlands",
+    "standalone": false,
+    "i18n": "challenge-scenario-read-or-die"
+  },
+  {
+    "id": ":into-the-shadowlands:Challenge Scenario - Red Tide Rising",
+    "name": "Challenge Scenario - Red Tide Rising",
+    "campaign": ":into-the-shadowlands",
+    "standalone": false,
+    "i18n": "challenge-scenario-red-tide-rising"
+  },
+  {
+    "id": ":into-the-shadowlands:Challenge Scenario - Relics of the Past",
+    "name": "Challenge Scenario - Relics of the Past",
+    "campaign": ":into-the-shadowlands",
+    "standalone": false,
+    "i18n": "challenge-scenario-relics-of-the-past"
+  },
+  {
+    "id": ":into-the-shadowlands:Challenge Scenario - Enthralling Encore",
+    "name": "Challenge Scenario - Enthralling Encore",
+    "campaign": ":into-the-shadowlands",
+    "standalone": false,
+    "i18n": "challenge-scenario-enthralling-encore"
+  },
+  {
+    "id": ":into-the-shadowlands:Barkham Horror - The Meddling of Meowlathotep",
+    "name": "Barkham Horror - The Meddling of Meowlathotep",
+    "campaign": ":into-the-shadowlands",
+    "standalone": false,
+    "i18n": "barkham-horror-the-meddling-of-meowlathotep"
+  },
+  {
+    "id": ":into-the-shadowlands:Against the Wendigo",
+    "name": "Against the Wendigo",
+    "campaign": ":into-the-shadowlands",
+    "standalone": false,
+    "i18n": "against-the-wendigo"
+  },
+  {
+    "id": ":into-the-shadowlands:And Then There Were None",
+    "name": "And Then There Were None",
+    "campaign": ":into-the-shadowlands",
+    "standalone": false,
+    "i18n": "and-then-there-were-none"
+  },
+  {
+    "id": ":into-the-shadowlands:Carnevale of Spiders",
+    "name": "Carnevale of Spiders",
+    "campaign": ":into-the-shadowlands",
+    "standalone": false,
+    "i18n": "carnevale-of-spiders"
+  },
+  {
+    "id": ":into-the-shadowlands:Clueless Cultist Coup",
+    "name": "Clueless Cultist Coup",
+    "campaign": ":into-the-shadowlands",
+    "standalone": false,
+    "i18n": "clueless-cultist-coup"
+  },
+  {
+    "id": ":into-the-shadowlands:Code Red at Bleeding Heart",
+    "name": "Code Red at Bleeding Heart",
+    "campaign": ":into-the-shadowlands",
+    "standalone": false,
+    "i18n": "code-red-at-bleeding-heart"
+  },
+  {
+    "id": ":into-the-shadowlands:Consternation on the Constellation",
+    "name": "Consternation on the Constellation",
+    "campaign": ":into-the-shadowlands",
+    "standalone": false,
+    "i18n": "consternation-on-the-constellation"
+  },
+  {
+    "id": ":into-the-shadowlands:Cosmic Pantheon",
+    "name": "Cosmic Pantheon",
+    "campaign": ":into-the-shadowlands",
+    "standalone": false,
+    "i18n": "cosmic-pantheon"
+  },
+  {
+    "id": ":into-the-shadowlands:Defense of the Arkham",
+    "name": "Defense of the Arkham",
+    "campaign": ":into-the-shadowlands",
+    "standalone": false,
+    "i18n": "defense-of-the-arkham"
+  },
+  {
+    "id": ":into-the-shadowlands:Devils In The Canyon",
+    "name": "Devils In The Canyon",
+    "campaign": ":into-the-shadowlands",
+    "standalone": false,
+    "i18n": "devils-in-the-canyon"
+  },
+  {
+    "id": ":into-the-shadowlands:Don't Starve - Scenario",
+    "name": "Don't Starve - Scenario",
+    "campaign": ":into-the-shadowlands",
+    "standalone": false,
+    "i18n": "don-t-starve-scenario"
+  },
+  {
+    "id": ":into-the-shadowlands:Election Night",
+    "name": "Election Night",
+    "campaign": ":into-the-shadowlands",
+    "standalone": false,
+    "i18n": "election-night"
+  },
+  {
+    "id": ":into-the-shadowlands:The Facts in the Case of M. Valdemar",
+    "name": "The Facts in the Case of M. Valdemar",
+    "campaign": ":into-the-shadowlands",
+    "standalone": false,
+    "i18n": "the-facts-in-the-case-of-m-valdemar"
+  },
+  {
+    "id": ":into-the-shadowlands:The Fall of the House of Usher",
+    "name": "The Fall of the House of Usher",
+    "campaign": ":into-the-shadowlands",
+    "standalone": false,
+    "i18n": "the-fall-of-the-house-of-usher"
+  },
+  {
+    "id": ":into-the-shadowlands:Fortune or Folly - Parallel Rex Murphy",
+    "name": "Fortune or Folly - Parallel Rex Murphy",
+    "campaign": ":into-the-shadowlands",
+    "standalone": false,
+    "i18n": "fortune-or-folly-parallel-rex-murphy"
+  },
+  {
+    "id": ":into-the-shadowlands:The Grand Oak Hotel",
+    "name": "The Grand Oak Hotel",
+    "campaign": ":into-the-shadowlands",
+    "standalone": false,
+    "i18n": "the-grand-oak-hotel"
+  },
+  {
+    "id": ":into-the-shadowlands:The Invisible Man",
+    "name": "The Invisible Man",
+    "campaign": ":into-the-shadowlands",
+    "standalone": false,
+    "i18n": "the-invisible-man"
+  },
+  {
+    "id": ":into-the-shadowlands:The Legend of Sleepy Hollow",
+    "name": "The Legend of Sleepy Hollow",
+    "campaign": ":into-the-shadowlands",
+    "standalone": false,
+    "i18n": "the-legend-of-sleepy-hollow"
+  },
+  {
+    "id": ":into-the-shadowlands:The Living Labyrinth",
+    "name": "The Living Labyrinth",
+    "campaign": ":into-the-shadowlands",
+    "standalone": false,
+    "i18n": "the-living-labyrinth"
+  },
+  {
+    "id": ":into-the-shadowlands:The Midwinter Gala - Fashionably Late",
+    "name": "The Midwinter Gala - Fashionably Late",
+    "campaign": ":into-the-shadowlands",
+    "standalone": false,
+    "i18n": "the-midwinter-gala-fashionably-late"
+  },
+  {
+    "id": ":into-the-shadowlands:Miskatonic Mouse",
+    "name": "Miskatonic Mouse",
+    "campaign": ":into-the-shadowlands",
+    "standalone": false,
+    "i18n": "miskatonic-mouse"
+  },
+  {
+    "id": ":into-the-shadowlands:Mythos Deviations",
+    "name": "Mythos Deviations",
+    "campaign": ":into-the-shadowlands",
+    "standalone": false,
+    "i18n": "mythos-deviations"
+  },
+  {
+    "id": ":into-the-shadowlands:Return to the Consternation on the Constellation",
+    "name": "Return to the Consternation on the Constellation",
+    "campaign": ":into-the-shadowlands",
+    "standalone": false,
+    "i18n": "return-to-the-consternation-on-the-constellation"
+  },
+  {
+    "id": ":into-the-shadowlands:Return to the Wendigo",
+    "name": "Return to the Wendigo",
+    "campaign": ":into-the-shadowlands",
+    "standalone": false,
+    "i18n": "return-to-the-wendigo"
+  },
+  {
+    "id": ":into-the-shadowlands:Snakes and Ladders",
+    "name": "Snakes and Ladders",
+    "campaign": ":into-the-shadowlands",
+    "standalone": false,
+    "i18n": "snakes-and-ladders"
+  },
+  {
+    "id": ":into-the-shadowlands:The Strange Case of Dr. Jekyll and Mr. Hyde",
+    "name": "The Strange Case of Dr. Jekyll and Mr. Hyde",
+    "campaign": ":into-the-shadowlands",
+    "standalone": false,
+    "i18n": "the-strange-case-of-dr-jekyll-and-mr-hyde"
+  },
+  {
+    "id": ":into-the-shadowlands:'Tis The Season",
+    "name": "'Tis The Season",
+    "campaign": ":into-the-shadowlands",
+    "standalone": false,
+    "i18n": "tis-the-season"
+  },
+  {
+    "id": ":into-the-shadowlands:When the World Screamed",
+    "name": "When the World Screamed",
+    "campaign": ":into-the-shadowlands",
+    "standalone": false,
+    "i18n": "when-the-world-screamed"
+  },
+  {
+    "id": ":into-the-shadowlands:The Witcher Horror",
+    "name": "The Witcher Horror",
+    "campaign": ":into-the-shadowlands",
+    "standalone": false,
+    "i18n": "the-witcher-horror"
+  },
+  {
+    "id": ":into-the-shadowlands:The Woods of the Black Goat",
+    "name": "The Woods of the Black Goat",
+    "campaign": ":into-the-shadowlands",
+    "standalone": false,
+    "i18n": "the-woods-of-the-black-goat"
+  }
+]

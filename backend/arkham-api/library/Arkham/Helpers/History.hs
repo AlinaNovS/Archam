@@ -1,0 +1,42 @@
+module Arkham.Helpers.History (module Arkham.Helpers.History, module X) where
+
+import Arkham.Classes.HasGame
+import {-# SOURCE #-} Arkham.GameEnv
+import {-# SOURCE #-} Arkham.GameEnv as X (getHistoryField)
+import Arkham.Helpers.GameValue (gameValueMatches)
+import Arkham.Card (toCardDef)
+import Arkham.Card.CardDef (cdCardTraits)
+import Arkham.Helpers.Query
+import Arkham.History as X
+import Arkham.Enemy.Types (enemyLastKnownLocation, enemyPlacement)
+import Arkham.Id
+import Arkham.Matcher qualified as Matcher
+import Arkham.Placement
+import Arkham.Prelude
+
+historyMatches :: HasGame m => Matcher.HistoryMatcher -> History -> m Bool
+historyMatches = \case
+  Matcher.DefeatedEnemiesWithTotalHealth vMatcher ->
+    (`gameValueMatches` vMatcher) . sum . map defeatedEnemyHealth . historyEnemiesDefeated
+  Matcher.DefeatedEnemyWithTraitAt trait lid ->
+    pure
+      . any
+        ( \defeated ->
+            let attrs = defeatedEnemyAttrs defeated
+                mloc = case enemyPlacement attrs of
+                  AtLocation lid' -> Just lid'
+                  _ -> enemyLastKnownLocation attrs
+             in trait `member` cdCardTraits (toCardDef attrs) && mloc == Just lid
+        )
+      . historyEnemiesDefeated
+  Matcher.AttackedByAnyEnemies -> pure . notNull . historyEnemiesAttackedBy
+  Matcher.CluesDiscoveredAt vMatcher lid ->
+    (`gameValueMatches` vMatcher) . findWithDefault 0 lid . historyCluesDiscovered
+
+getAllHistoryField :: (HasGame m, Monoid k) => HistoryType -> HistoryField k -> m k
+getAllHistoryField htype fld = concatMap (viewHistoryField fld) <$> (traverse (getHistory htype) =<< getInvestigators)
+
+hasHistory
+  :: (HasGame m, ToId investigator InvestigatorId)
+  => HistoryType -> Matcher.HistoryMatcher -> investigator -> m Bool
+hasHistory htype matcher (asId -> iid) = getHistory htype iid >>= historyMatches matcher

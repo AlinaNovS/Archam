@@ -1,0 +1,15 @@
+{
+    "fastPlayerWindow": "{'{'}fast{'}'} ОКНО ИГРОКА",
+
+    "determineSkillOfTestStep": "Определите навык проверки. Начинается проверка этого навыка.",
+    "commitCardsFromHandToSkillTestStep": "Назначьте карты из руки на проверку навыка.",
+    "revealChaosTokenStep": "Откройте жетон хаоса.",
+    "resolveChaosSymbolEffectsStep": "Разрешите эффект(ы) символа хаоса.",
+    "determineInvestigatorsModifiedSkillValueStep": "Определите изменённое значение навыка сыщика.",
+    "determineSuccessOrFailureOfSkillTestStep": "Определите успех/провал проверки навыка.",
+    "applySkillTestResultsStep": "Примените результаты проверки навыка.",
+    "skillTestEndsStep": "Проверка навыка заканчивается.",
+
+    "skipTriggersActiveNotice": "Включён пропуск триггеров — быстрые триггеры, не связанные с этой проверкой, скрываются.",
+    "skipTriggersAdjust": "Настроить"
+}

@@ -1,0 +1,630 @@
+<script lang="ts" setup>
+import { computed, inject, type Ref } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { handleEmbeddedI18n } from '@/arkham/i18n';
+import type { Game } from '@/arkham/types/Game';
+import { QuestionType, type Question } from '@/arkham/types/Question';
+import { Done, CardLabel, ChaosTokenLabel, Label, MessageType, PortraitLabel, TooltipLabel, ScenarioLabel, Info, type Message } from '@/arkham/types/Message';
+import { imgsrc, formatContent } from '@/arkham/helpers';
+import { cardArt, cardImage, investigatorPortrait } from '@/arkham/cardImages';
+import { chaosTokenImage } from '@/arkham/types/ChaosToken';
+import StoryEntry from '@/arkham/components/StoryEntry.vue';
+import PickSupplies from '@/arkham/components/PickSupplies.vue';
+import PickDestiny from '@/arkham/components/PickDestiny.vue';
+import ChoiceModal from '@/arkham/components/ChoiceModal.vue';
+import FormattedEntry from '@/arkham/components/FormattedEntry.vue';
+import * as ArkhamGame from '@/arkham/types/Game';
+import WorldMap, { type MapData } from '@/arkham/components/TheScarletKeys/WorldMap.vue';
+import BuildSpiritDeck from '@/arkham/components/BuildSpiritDeck.vue';
+
+export interface Props {
+  game: Game
+  playerId: string
+}
+
+const props = defineProps<Props>()
+const emit = defineEmits(['choose'])
+const solo = inject<Ref<boolean>>('solo')
+
+const ownQuestion = computed(() => props.game.question[props.playerId])
+
+const viewerEntry = computed<[string, Question] | null>(() => {
+  if (ownQuestion.value) return null
+  const entries = Object.entries(props.game.question) as [string, Question][]
+  return entries.length > 0 ? entries[0] : null
+})
+
+const viewOnly = computed(() => !ownQuestion.value && viewerEntry.value !== null)
+const effectivePlayerId = computed(() => viewerEntry.value?.[0] ?? props.playerId)
+
+const choices = computed(() => ArkhamGame.choices(props.game, effectivePlayerId.value))
+const question = computed(() => props.game.question[effectivePlayerId.value])
+
+const viewerInvestigatorName = computed(() => {
+  if (!viewOnly.value) return ''
+  const targetPlayerId = effectivePlayerId.value
+  const inv = Object.values(props.game.investigators).find(i => i.playerId === targetPlayerId)
+  return inv?.name.title ?? ''
+})
+
+const choiceInvestigator = computed(() => {
+  if (!solo?.value || props.game.playerCount < 2) return null
+  if (question.value?.tag !== QuestionType.READ) return null
+  if (Object.keys(props.game.question).length < 2 || choices.value.length === 0) return null
+  return Object.values(props.game.investigators).find(
+    (investigator) => investigator.playerId === effectivePlayerId.value,
+  ) ?? null
+})
+
+const choiceInvestigatorPortrait = computed(() => {
+  const investigator = choiceInvestigator.value
+  return investigator ? investigatorPortrait(props.game, investigator.id) : null
+})
+
+const { t } = useI18n()
+const cardLabelImage = (cardCode: string) => cardImage(cardCode)
+const label = function(body: string) {
+  return formatContent(handleEmbeddedI18n(body, t))
+}
+
+const portraitLabelImage = (investigatorId: string) => investigatorPortrait(props.game, investigatorId)
+
+const portraitChoices = computed<[PortraitLabel, number][]>(() => {
+  const q = question.value
+  if (!q) return []
+
+  if (q.tag === QuestionType.CHOOSE_ONE) {
+    return q.choices.flatMap<[PortraitLabel, number]>((c, idx) => c.tag === MessageType.PORTRAIT_LABEL ? [[c, idx]] : [])
+  }
+
+  if (q.tag === QuestionType.QUESTION_LABEL && q.question.tag === QuestionType.CHOOSE_ONE) {
+    return q.question.choices.flatMap<[PortraitLabel, number]>((c, idx) => c.tag === MessageType.PORTRAIT_LABEL ? [[c, idx]] : [])
+  }
+
+  return []
+})
+
+type StoryLabelChoice = Label | TooltipLabel | ChaosTokenLabel | CardLabel | Done | Info
+const isStoryLabelChoice = (c: Message): c is StoryLabelChoice =>
+  c.tag === MessageType.LABEL ||
+  c.tag === MessageType.INFO ||
+  c.tag === MessageType.TOOLTIP_LABEL ||
+  c.tag === MessageType.CARD_LABEL ||
+  c.tag === MessageType.DONE ||
+  c.tag === MessageType.CHAOS_TOKEN_LABEL
+
+const labelChoices = computed<[StoryLabelChoice, number][]>(() => {
+  const q = question.value
+  if (!q) return []
+
+  if (q.tag === QuestionType.QUESTION_LABEL) {
+    const inner = q.question
+    if (inner.tag !== QuestionType.CHOOSE_ONE && inner.tag !== QuestionType.CHOOSE_UP_TO_N && inner.tag !== QuestionType.CHOOSE_N) return []
+    return inner.choices.flatMap<[StoryLabelChoice, number]>((c, idx) => isStoryLabelChoice(c) ? [[c, idx]] : [])
+  }
+
+  if (q.tag === QuestionType.CHOOSE_ONE || q.tag === QuestionType.CHOOSE_UP_TO_N || q.tag === QuestionType.CHOOSE_N) {
+    return q.choices.flatMap<[StoryLabelChoice, number]>((c, idx) => isStoryLabelChoice(c) ? [[c, idx]] : [])
+  }
+
+  return []
+})
+
+const questionImage = computed(() => {
+  const q = question.value
+  if (!q || q.tag !== QuestionType.QUESTION_LABEL) return null
+  return q.card ? cardLabelImage(q.card) : null
+})
+
+const choose = (idx: number) => {
+  if (viewOnly.value) return
+  emit('choose', idx)
+}
+
+const flippableCard = (cardCode: string) => {
+  return {
+    cardCode,
+    doubleSided: true,
+    classSymbols: [],
+    cardType: 'UnknownType',
+    art: cardArt(cardCode),
+    level: 0,
+    traits: [],
+    name: "",
+    skills: [],
+    cost: null,
+    otherSide: `${cardCode}b`
+  }
+}
+
+const scenarioChoices = computed<[ScenarioLabel, number][]>(() => {
+  const q = question.value
+  if (!q) return []
+
+  if (q.tag === QuestionType.QUESTION_LABEL) {
+    const inner = q.question
+    if (inner.tag !== QuestionType.CHOOSE_ONE && inner.tag !== QuestionType.CHOOSE_UP_TO_N && inner.tag !== QuestionType.CHOOSE_N) return []
+    return inner.choices.flatMap<[ScenarioLabel, number]>((c, idx) => c.tag === MessageType.SCENARIO_LABEL ? [[c, idx]] : [])
+  }
+
+  if (q.tag === QuestionType.CHOOSE_ONE || q.tag === QuestionType.CHOOSE_UP_TO_N || q.tag === QuestionType.CHOOSE_N) {
+    return q.choices.flatMap<[ScenarioLabel, number]>((c, idx) => c.tag === MessageType.SCENARIO_LABEL ? [[c, idx]] : [])
+  }
+
+  return []
+})
+
+const scenarioBoxImage = (scenarioId: string) => {
+  return imgsrc(`boxes/${scenarioId}.jpg`)
+}
+
+const isEmbarkQuestion = (q: Question): q is Question & { tag: QuestionType.PICK_CAMPAIGN_SPECIFIC; contents: ['embark', MapData] } =>
+  q.tag === QuestionType.PICK_CAMPAIGN_SPECIFIC &&
+  Array.isArray(q.contents) &&
+  q.contents[0] === 'embark'
+
+const isBuildSpiritDeckQuestion = (q: Question): q is Question & { tag: QuestionType.PICK_SCENARIO_SPECIFIC } =>
+  q.tag === QuestionType.PICK_SCENARIO_SPECIFIC &&
+  Array.isArray(q.contents) &&
+  q.contents[0] === 'laidToRest.buildSpiritDeck'
+</script>
+
+<template>
+  <div :class="['story-question-root', { 'view-only': viewOnly }]">
+    <div v-if="viewOnly" class="waiting-banner">
+      {{ t('waitingForPlayer', { name: viewerInvestigatorName }) }}
+    </div>
+    <template v-else>
+    <template v-if="question && question.tag === QuestionType.READ">
+      <div v-if="choiceInvestigator" class="choice-investigator">
+        <img
+          v-if="choiceInvestigatorPortrait"
+          :src="choiceInvestigatorPortrait"
+          :alt="choiceInvestigator.name.title"
+        />
+        <span>{{ choiceInvestigator.name.title }}</span>
+      </div>
+      <StoryEntry
+        :game="game"
+        :playerId="effectivePlayerId"
+        :question="question"
+        @choose="choose"
+      />
+    </template>
+    <div class="question-label" v-else-if="question && question.tag === QuestionType.QUESTION_LABEL">
+      <div v-if="questionImage" class="question-image">
+        <img :src="questionImage" class="card" />
+      </div>
+      <div class="question-content">
+        <h2 v-html="label(question.label)"></h2>
+
+        <div class="portrait-choices" v-if="portraitChoices.length > 0">
+          <template v-for="[choice, index] in portraitChoices" :key="index">
+            <template v-if="choice.tag === MessageType.PORTRAIT_LABEL">
+              <a href='#' @click.prevent="choose(index)">
+                <img class="portrait card active no-overlay active" :src="portraitLabelImage(choice.investigatorId)"/>
+              </a>
+            </template>
+          </template>
+        </div>
+
+        <div class="scenario-choices" v-if="scenarioChoices.length > 0">
+          <template v-for="[choice, index] in scenarioChoices" :key="index">
+            <button class="scenario-tile button" @click="choose(index)">
+              <img :src="scenarioBoxImage(choice.scenarioId)" :alt="`Scenario ${choice.scenarioId}`" />
+              <span v-html="label(choice.label)"></span>
+            </button>
+          </template>
+        </div>
+
+        <div class="label-choices" v-if="labelChoices.length > 0">
+          <div class="card-labels" v-if="labelChoices.some(([choice, _]) => choice.tag === MessageType.CARD_LABEL)">
+            <template v-for="[choice, index] in labelChoices" :key="index">
+              <template v-if="choice.tag === MessageType.CARD_LABEL">
+                <a href='#' @click.prevent="choose(index)">
+                  <CardImage v-if="choice.flippable" :card="flippableCard(choice.cardCode)" />
+                  <img v-else class="card no-overlay" :src="cardLabelImage(choice.cardCode)"/>
+                </a>
+              </template>
+            </template>
+          </div>
+          <div class="token-labels" v-if="labelChoices.some(([choice, _]) => choice.tag === MessageType.CHAOS_TOKEN_LABEL)">
+            <template v-for="[choice, index] in labelChoices" :key="index">
+              <div v-if="choice.tag === MessageType.CHAOS_TOKEN_LABEL">
+                <img class="token front" :src="chaosTokenImage(choice.face)" @click="choose(index)">
+              </div>
+            </template>
+          </div>
+          <div class="other-labels" v-for="[choice, index] in labelChoices" :key="index">
+            <template v-if="choice.tag === MessageType.TOOLTIP_LABEL">
+              <button @click="choose(index)" v-tooltip="choice.tooltip">{{label(choice.label)}}</button>
+            </template>
+            <template v-if="choice.tag === MessageType.LABEL">
+              <button @click="choose(index)"><span v-html="formatContent(label(choice.label))"></span></button>
+            </template>
+            <template v-if="choice.tag === MessageType.INFO">
+              <FormattedEntry :entry="entry" v-for="entry in choice.flavor.body" />
+            </template>
+            <template v-if="choice.tag === MessageType.DONE">
+              <button @click="choose(index)">{{$t(choice.label)}}</button>
+            </template>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="question-label" v-else-if="question && isEmbarkQuestion(question)">
+      <WorldMap :game="game" :playerId="effectivePlayerId" :mapData="question.contents[1]" @choose="choose" :embark="true" />
+    </div>
+
+    <div class="question-label spirit-deck-question" v-else-if="question && isBuildSpiritDeckQuestion(question)">
+      <BuildSpiritDeck :game="game" :playerId="effectivePlayerId" :question="question" />
+    </div>
+
+    <div class="question-label" v-else-if="question && question.tag === QuestionType.PICK_SUPPLIES">
+      <PickSupplies :game="game" :playerId="effectivePlayerId" :question="question" @choose="choose" />
+    </div>
+    <div class="question-label" v-else-if="question && question.tag === QuestionType.PICK_DESTINY">
+      <PickDestiny :game="game" :playerId="effectivePlayerId" :question="question" @choose="choose" />
+    </div>
+    <template v-else-if="choices.length > 0">
+      <div class="choices box">
+        <div class="card-labels" v-if="labelChoices.some(([choice, _]) => choice.tag === MessageType.CARD_LABEL)">
+          <template v-for="[choice, index] in labelChoices" :key="index">
+            <template v-if="choice.tag === MessageType.CARD_LABEL">
+              <a href='#' @click.prevent="choose(index)">
+                <CardImage v-if="choice.flippable" :card="flippableCard(choice.cardCode)" />
+                <img v-else class="card no-overlay" :src="cardLabelImage(choice.cardCode)"/>
+              </a>
+            </template>
+          </template>
+        </div>
+        <div class="token-labels" v-if="labelChoices.some(([choice, _]) => choice.tag === MessageType.CHAOS_TOKEN_LABEL)">
+          <template v-for="[choice, index] in labelChoices" :key="index">
+            <div v-if="choice.tag === MessageType.CHAOS_TOKEN_LABEL">
+              <img class="token front" :src="chaosTokenImage(choice.face)" @click="choose(index)">
+            </div>
+          </template>
+        </div>
+
+        <template v-for="(choice, index) in choices" :key="index">
+          <div v-if="choice.tag === 'Done'">
+            <button @click="choose(index)">{{label(choice.label)}}</button>
+          </div>
+          <div v-if="choice.tag === 'Label'" class="choice-label">
+            <button @click="choose(index)"><span v-html="formatContent(label(choice.label))"></span></button>
+          </div>
+        </template>
+
+        <div class="portrait-choices" v-if="portraitChoices.length > 0">
+          <template v-for="[choice, index] in portraitChoices" :key="index">
+            <template v-if="choice.tag === MessageType.PORTRAIT_LABEL">
+              <a href='#' @click.prevent="choose(index)">
+                <img class="portrait card active" :src="portraitLabelImage(choice.investigatorId)"/>
+              </a>
+            </template>
+          </template>
+        </div>
+      </div>
+    </template>
+
+    <ChoiceModal
+      :game="game"
+      :playerId="effectivePlayerId"
+      :noStory="true"
+      v-else
+      @choose="choose"
+    />
+    </template>
+  </div>
+</template>
+
+<style scoped>
+.story-question-root {
+  display: contents;
+}
+
+.story-question-root.view-only {
+  pointer-events: none;
+  opacity: 0.85;
+}
+
+.story-question-root.view-only :is(button, a, .scenario-tile, .token-labels img, .portrait, .clickable) {
+  cursor: default;
+}
+
+.story-question-root.view-only .active,
+.story-question-root.view-only .portrait,
+.story-question-root.view-only .token-labels img {
+  border-color: transparent;
+}
+
+.story-question-root.view-only .scenario-tile {
+  outline-color: transparent;
+}
+
+.waiting-banner {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.85);
+  color: #BBB;
+  padding: 6px 16px;
+  text-align: center;
+  font-family: "Noto Sans", sans-serif;
+  font-size: 0.85em;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  pointer-events: none;
+  box-sizing: border-box;
+}
+
+.choice-investigator {
+  align-items: center;
+  align-self: center;
+  background: rgba(0, 0, 0, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  color: #EEE;
+  display: flex;
+  font-family: "Noto Sans", sans-serif;
+  font-size: 0.9em;
+  font-weight: 700;
+  gap: 10px;
+  margin: 14px auto 0;
+  padding: 5px 14px 5px 5px;
+  width: fit-content;
+}
+
+.choice-investigator img {
+  border-radius: 50%;
+  height: 42px;
+  object-fit: cover;
+  object-position: top;
+  width: 42px;
+}
+
+.question-content {
+  width: 60%;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 20px;
+  color: white;
+  border-radius: 15px;
+  &:has(h2) { padding: 0; }
+}
+.question-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100vh;
+  background: #26283B;
+}
+
+.question-label.spirit-deck-question.spirit-deck-question {
+  height: 100vh;
+  justify-content: flex-start;
+  overflow-y: auto;
+}
+
+p {
+  color: #666;
+  font-size: 2em;
+}
+
+button {
+  border: 0;
+  margin: 0 10px;
+  padding: 10px;
+  text-transform: uppercase;
+  background-color: var(--button-2);
+  font-weight: bold;
+  border-radius: 0.6em;
+  color: #EEE;
+  font: Arial, sans-serif;
+  &:hover {
+    background-color: #311b3e;
+  }
+}
+
+.card {
+  border-radius: 15px;
+}
+
+.label-choices {
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 10px;
+  margin: 10px;
+}
+
+.card-labels {
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: row;
+  gap: 10px;
+}
+
+.token-labels {
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: row;
+  gap: 10px;
+  place-content: center;
+  width: 100%;
+  container-type: inline-size;
+
+  img {
+    width: clamp(50px, 20cqw, 175px);
+    border-radius: 100vw;
+    border: 2px solid var(--select);
+    cursor: pointer;
+  }
+}
+
+.other-labels {
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: row;
+  gap: 10px;
+}
+
+.card {
+  width: calc(var(--card-width) * 2);
+}
+
+.question-label:not(:has(> .question-image)) {
+  justify-content: center;
+  h2 {
+    padding: 10px 20px;
+  }
+  > .question-content {
+    width: fit-content;
+    max-width: min(60%, 700px);
+    padding: 16px 20px;
+  }
+  .portrait-choices {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+    padding: 16px;
+    img.portrait {
+      aspect-ratio: 750 / 1050;
+      object-fit: cover;
+      object-position: top center;
+    }
+  }
+}
+.question-label:has(> .question-image) {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  align-self: center;
+  width: min(100%, 1100px);
+  height: fit-content;
+  margin-top: 24px;
+  gap: 24px;
+  padding: 24px;
+  box-sizing: border-box;
+  border-radius: 15px;
+  h2 {
+    color: white;
+    text-transform: uppercase;
+    font-size: 1.8em;
+    background: var(--neutral-extra-dark);
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
+    font-family: Teutonic, sans-serif;
+    padding: 10px 20px;
+  }
+  > .question-image {
+    img  {
+      width: calc(var(--card-width) * 4);
+    }
+  }
+  > .question-content {
+    background-color: rgba(0,0,0,0.3);
+    border-radius: 15px;
+    display: flex;
+    flex: 1 1 0;
+    flex-direction: column;
+    min-width: 0;
+    height: 100%;
+    gap: 10px;
+    padding-bottom: 10px;
+    .portrait-choices {
+      align-content: center;
+      justify-items: flex-start;
+      flex: 1;
+      display: flex;
+      align-self: center;
+      gap: 10px;
+    }
+  }
+  button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 800px) {
+  .question-label:has(> .question-image) {
+    flex-direction: column;
+    align-items: center;
+    padding: 16px;
+
+    > .question-content {
+      width: 100%;
+    }
+  }
+}
+
+.active {
+  border: 1px solid var(--select);
+}
+
+.question-content:has(> .scenario-choices) > h2 {
+  color: #f1efe9;
+  font-family: "Noto Sans", sans-serif;
+  font-size: clamp(1.25rem, 2vw, 1.5rem);
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+  margin: 0;
+  padding: 8px 16px;
+  text-align: center;
+}
+
+.scenario-choices {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  padding: 24px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.scenario-tile {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  background: var(--neutral-dark);
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+  outline: 2px solid transparent;
+  transition: outline-color 200ms ease, transform 200ms ease, box-shadow 200ms ease;
+  border: 1px solid rgb(255 255 255 / 10%);
+  display: flex;
+  flex-direction: column;
+  span {
+    padding: 12px 16px;
+  }
+}
+
+.scenario-tile img {
+  width: 100%;
+  display: block;
+  transition: filter 220ms ease, transform 220ms ease;
+}
+
+.scenario-tile:hover {
+  outline-color: var(--select, #6E8644);
+  transform: translateY(-4px);
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.45);
+  transform: scale(1.02);
+}
+
+.scenario-tile:hover img {
+  filter: none;
+  transform: scale(1.02);
+}
+
+.scenario-choices:hover:has(.scenario-tile:hover) .scenario-tile:not(:hover) img {
+  filter: grayscale(80%);
+}
+
+.scenario-tile:focus-visible {
+  outline-color: var(--select, #6E8644);
+}
+</style>

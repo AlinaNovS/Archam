@@ -1,0 +1,345 @@
+[
+  {
+    "id": ":half-life:Curse of the Rougarou",
+    "name": "Curse of the Rougarou",
+    "campaign": ":half-life",
+    "standalone": false,
+    "i18n": "curse-of-the-rougarou"
+  },
+  {
+    "id": ":half-life:Carnevale of Horrors",
+    "name": "Carnevale of Horrors",
+    "campaign": ":half-life",
+    "standalone": false,
+    "i18n": "carnevale-of-horrors"
+  },
+  {
+    "id": ":half-life:The Labyrinths of Lunacy",
+    "name": "The Labyrinths of Lunacy",
+    "campaign": ":half-life",
+    "standalone": false,
+    "i18n": "the-labyrinths-of-lunacy"
+  },
+  {
+    "id": ":half-life:Guardians of the Abyss",
+    "name": "Guardians of the Abyss",
+    "campaign": ":half-life",
+    "standalone": false,
+    "i18n": "guardians-of-the-abyss"
+  },
+  {
+    "id": ":half-life:Murder at the Excelsior Hotel",
+    "name": "Murder at the Excelsior Hotel",
+    "campaign": ":half-life",
+    "standalone": false,
+    "i18n": "murder-at-the-excelsior-hotel"
+  },
+  {
+    "id": ":half-life:The Blob that Ate Everything",
+    "name": "The Blob that Ate Everything",
+    "campaign": ":half-life",
+    "standalone": false,
+    "i18n": "the-blob-that-ate-everything"
+  },
+  {
+    "id": ":half-life:War of the Outer Gods",
+    "name": "War of the Outer Gods",
+    "campaign": ":half-life",
+    "standalone": false,
+    "i18n": "war-of-the-outer-gods"
+  },
+  {
+    "id": ":half-life:Machinations Through Time",
+    "name": "Machinations Through Time",
+    "campaign": ":half-life",
+    "standalone": false,
+    "i18n": "machinations-through-time"
+  },
+  {
+    "id": ":half-life:Fortune and Folly",
+    "name": "Fortune and Folly",
+    "campaign": ":half-life",
+    "standalone": false,
+    "i18n": "fortune-and-folly"
+  },
+  {
+    "id": ":half-life:The Midwinter Gala",
+    "name": "The Midwinter Gala",
+    "campaign": ":half-life",
+    "standalone": false,
+    "i18n": "the-midwinter-gala"
+  },
+  {
+    "id": ":half-life:Film Fatale",
+    "name": "Film Fatale",
+    "campaign": ":half-life",
+    "standalone": false,
+    "i18n": "film-fatale"
+  },
+  {
+    "id": ":half-life:Challenge Scenario - All or Nothing",
+    "name": "Challenge Scenario - All or Nothing",
+    "campaign": ":half-life",
+    "standalone": false,
+    "i18n": "challenge-scenario-all-or-nothing"
+  },
+  {
+    "id": ":half-life:Challenge Scenario - Bad Blood",
+    "name": "Challenge Scenario - Bad Blood",
+    "campaign": ":half-life",
+    "standalone": false,
+    "i18n": "challenge-scenario-bad-blood"
+  },
+  {
+    "id": ":half-life:Challenge Scenario - By the Book",
+    "name": "Challenge Scenario - By the Book",
+    "campaign": ":half-life",
+    "standalone": false,
+    "i18n": "challenge-scenario-by-the-book"
+  },
+  {
+    "id": ":half-life:Challenge Scenario - Laid to Rest",
+    "name": "Challenge Scenario - Laid to Rest",
+    "campaign": ":half-life",
+    "standalone": false,
+    "i18n": "challenge-scenario-laid-to-rest"
+  },
+  {
+    "id": ":half-life:Challenge Scenario - Read or Die",
+    "name": "Challenge Scenario - Read or Die",
+    "campaign": ":half-life",
+    "standalone": false,
+    "i18n": "challenge-scenario-read-or-die"
+  },
+  {
+    "id": ":half-life:Challenge Scenario - Red Tide Rising",
+    "name": "Challenge Scenario - Red Tide Rising",
+    "campaign": ":half-life",
+    "standalone": false,
+    "i18n": "challenge-scenario-red-tide-rising"
+  },
+  {
+    "id": ":half-life:Challenge Scenario - Relics of the Past",
+    "name": "Challenge Scenario - Relics of the Past",
+    "campaign": ":half-life",
+    "standalone": false,
+    "i18n": "challenge-scenario-relics-of-the-past"
+  },
+  {
+    "id": ":half-life:Challenge Scenario - Enthralling Encore",
+    "name": "Challenge Scenario - Enthralling Encore",
+    "campaign": ":half-life",
+    "standalone": false,
+    "i18n": "challenge-scenario-enthralling-encore"
+  },
+  {
+    "id": ":half-life:Barkham Horror - The Meddling of Meowlathotep",
+    "name": "Barkham Horror - The Meddling of Meowlathotep",
+    "campaign": ":half-life",
+    "standalone": false,
+    "i18n": "barkham-horror-the-meddling-of-meowlathotep"
+  },
+  {
+    "id": ":half-life:Against the Wendigo",
+    "name": "Against the Wendigo",
+    "campaign": ":half-life",
+    "standalone": false,
+    "i18n": "against-the-wendigo"
+  },
+  {
+    "id": ":half-life:And Then There Were None",
+    "name": "And Then There Were None",
+    "campaign": ":half-life",
+    "standalone": false,
+    "i18n": "and-then-there-were-none"
+  },
+  {
+    "id": ":half-life:Carnevale of Spiders",
+    "name": "Carnevale of Spiders",
+    "campaign": ":half-life",
+    "standalone": false,
+    "i18n": "carnevale-of-spiders"
+  },
+  {
+    "id": ":half-life:Clueless Cultist Coup",
+    "name": "Clueless Cultist Coup",
+    "campaign": ":half-life",
+    "standalone": false,
+    "i18n": "clueless-cultist-coup"
+  },
+  {
+    "id": ":half-life:Code Red at Bleeding Heart",
+    "name": "Code Red at Bleeding Heart",
+    "campaign": ":half-life",
+    "standalone": false,
+    "i18n": "code-red-at-bleeding-heart"
+  },
+  {
+    "id": ":half-life:Consternation on the Constellation",
+    "name": "Consternation on the Constellation",
+    "campaign": ":half-life",
+    "standalone": false,
+    "i18n": "consternation-on-the-constellation"
+  },
+  {
+    "id": ":half-life:Cosmic Pantheon",
+    "name": "Cosmic Pantheon",
+    "campaign": ":half-life",
+    "standalone": false,
+    "i18n": "cosmic-pantheon"
+  },
+  {
+    "id": ":half-life:Defense of the Arkham",
+    "name": "Defense of the Arkham",
+    "campaign": ":half-life",
+    "standalone": false,
+    "i18n": "defense-of-the-arkham"
+  },
+  {
+    "id": ":half-life:Devils In The Canyon",
+    "name": "Devils In The Canyon",
+    "campaign": ":half-life",
+    "standalone": false,
+    "i18n": "devils-in-the-canyon"
+  },
+  {
+    "id": ":half-life:Don't Starve - Scenario",
+    "name": "Don't Starve - Scenario",
+    "campaign": ":half-life",
+    "standalone": false,
+    "i18n": "don-t-starve-scenario"
+  },
+  {
+    "id": ":half-life:Election Night",
+    "name": "Election Night",
+    "campaign": ":half-life",
+    "standalone": false,
+    "i18n": "election-night"
+  },
+  {
+    "id": ":half-life:The Facts in the Case of M. Valdemar",
+    "name": "The Facts in the Case of M. Valdemar",
+    "campaign": ":half-life",
+    "standalone": false,
+    "i18n": "the-facts-in-the-case-of-m-valdemar"
+  },
+  {
+    "id": ":half-life:The Fall of the House of Usher",
+    "name": "The Fall of the House of Usher",
+    "campaign": ":half-life",
+    "standalone": false,
+    "i18n": "the-fall-of-the-house-of-usher"
+  },
+  {
+    "id": ":half-life:Fortune or Folly - Parallel Rex Murphy",
+    "name": "Fortune or Folly - Parallel Rex Murphy",
+    "campaign": ":half-life",
+    "standalone": false,
+    "i18n": "fortune-or-folly-parallel-rex-murphy"
+  },
+  {
+    "id": ":half-life:The Grand Oak Hotel",
+    "name": "The Grand Oak Hotel",
+    "campaign": ":half-life",
+    "standalone": false,
+    "i18n": "the-grand-oak-hotel"
+  },
+  {
+    "id": ":half-life:The Invisible Man",
+    "name": "The Invisible Man",
+    "campaign": ":half-life",
+    "standalone": false,
+    "i18n": "the-invisible-man"
+  },
+  {
+    "id": ":half-life:The Legend of Sleepy Hollow",
+    "name": "The Legend of Sleepy Hollow",
+    "campaign": ":half-life",
+    "standalone": false,
+    "i18n": "the-legend-of-sleepy-hollow"
+  },
+  {
+    "id": ":half-life:The Living Labyrinth",
+    "name": "The Living Labyrinth",
+    "campaign": ":half-life",
+    "standalone": false,
+    "i18n": "the-living-labyrinth"
+  },
+  {
+    "id": ":half-life:The Midwinter Gala - Fashionably Late",
+    "name": "The Midwinter Gala - Fashionably Late",
+    "campaign": ":half-life",
+    "standalone": false,
+    "i18n": "the-midwinter-gala-fashionably-late"
+  },
+  {
+    "id": ":half-life:Miskatonic Mouse",
+    "name": "Miskatonic Mouse",
+    "campaign": ":half-life",
+    "standalone": false,
+    "i18n": "miskatonic-mouse"
+  },
+  {
+    "id": ":half-life:Mythos Deviations",
+    "name": "Mythos Deviations",
+    "campaign": ":half-life",
+    "standalone": false,
+    "i18n": "mythos-deviations"
+  },
+  {
+    "id": ":half-life:Return to the Consternation on the Constellation",
+    "name": "Return to the Consternation on the Constellation",
+    "campaign": ":half-life",
+    "standalone": false,
+    "i18n": "return-to-the-consternation-on-the-constellation"
+  },
+  {
+    "id": ":half-life:Return to the Wendigo",
+    "name": "Return to the Wendigo",
+    "campaign": ":half-life",
+    "standalone": false,
+    "i18n": "return-to-the-wendigo"
+  },
+  {
+    "id": ":half-life:Snakes and Ladders",
+    "name": "Snakes and Ladders",
+    "campaign": ":half-life",
+    "standalone": false,
+    "i18n": "snakes-and-ladders"
+  },
+  {
+    "id": ":half-life:The Strange Case of Dr. Jekyll and Mr. Hyde",
+    "name": "The Strange Case of Dr. Jekyll and Mr. Hyde",
+    "campaign": ":half-life",
+    "standalone": false,
+    "i18n": "the-strange-case-of-dr-jekyll-and-mr-hyde"
+  },
+  {
+    "id": ":half-life:'Tis The Season",
+    "name": "'Tis The Season",
+    "campaign": ":half-life",
+    "standalone": false,
+    "i18n": "tis-the-season"
+  },
+  {
+    "id": ":half-life:When the World Screamed",
+    "name": "When the World Screamed",
+    "campaign": ":half-life",
+    "standalone": false,
+    "i18n": "when-the-world-screamed"
+  },
+  {
+    "id": ":half-life:The Witcher Horror",
+    "name": "The Witcher Horror",
+    "campaign": ":half-life",
+    "standalone": false,
+    "i18n": "the-witcher-horror"
+  },
+  {
+    "id": ":half-life:The Woods of the Black Goat",
+    "name": "The Woods of the Black Goat",
+    "campaign": ":half-life",
+    "standalone": false,
+    "i18n": "the-woods-of-the-black-goat"
+  }
+]

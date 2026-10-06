@@ -1,0 +1,47 @@
+module Arkham.Asset.Assets.RavenousMyconidUnidentified (ravenousMyconidUnidentified) where
+
+import Arkham.Ability
+import Arkham.Asset.Cards qualified as Cards
+import Arkham.Asset.Import.Lifted
+import Arkham.CampaignLogKey
+import Arkham.Event.Cards qualified as Events
+import Arkham.Helpers.Investigator (searchBondedJust)
+import Arkham.I18n
+import Arkham.Matcher
+import Arkham.Message.Lifted.Log
+import Arkham.Token
+
+newtype RavenousMyconidUnidentified = RavenousMyconidUnidentified AssetAttrs
+  deriving anyclass (IsAsset, HasModifiersFor)
+  deriving newtype (Show, Eq, ToJSON, FromJSON, Entity)
+
+ravenousMyconidUnidentified :: AssetCard RavenousMyconidUnidentified
+ravenousMyconidUnidentified =
+  assetWith
+    RavenousMyconidUnidentified
+    Cards.ravenousMyconidUnidentified
+    ((healthL ?~ 1) . (sanityL ?~ 1))
+
+instance HasAbilities RavenousMyconidUnidentified where
+  getAbilities (RavenousMyconidUnidentified a) =
+    [ cardI18n
+        $ scope "ravenousMyconidUnidentified"
+        $ withI18nTooltip "searchForUncannyGrowth"
+        $ controlled a 1 (youExist $ InvestigatorWithBondedCard $ cardIs Events.uncannyGrowth) actionAbility
+    , cardI18n
+        $ scope "ravenousMyconidUnidentified"
+        $ withI18nTooltip "classifyNewSpecies"
+        $ controlled a 2 (exists $ be a <> AssetWithUseCount Growth (atLeast 3)) actionAbility
+    ]
+
+instance RunMessage RavenousMyconidUnidentified where
+  runMessage msg a@(RavenousMyconidUnidentified attrs) = runQueueT $ case msg of
+    UseThisAbility iid (isSource attrs -> True) 1 -> do
+      uncannyGrowth <- searchBondedJust iid Events.uncannyGrowth
+      addToHand iid [uncannyGrowth]
+      pure a
+    UseThisAbility iid (isSource attrs -> True) 2 -> do
+      moveTokens (attrs.ability 2) attrs (ResourceTarget iid) Growth (attrs.use Growth)
+      record YouHaveClassifiedANewSpecies
+      pure a
+    _ -> RavenousMyconidUnidentified <$> liftRunMessage msg attrs

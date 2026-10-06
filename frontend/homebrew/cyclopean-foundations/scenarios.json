@@ -1,0 +1,345 @@
+[
+  {
+    "id": ":cyclopean-foundations:Curse of the Rougarou",
+    "name": "Curse of the Rougarou",
+    "campaign": ":cyclopean-foundations",
+    "standalone": false,
+    "i18n": "curse-of-the-rougarou"
+  },
+  {
+    "id": ":cyclopean-foundations:Carnevale of Horrors",
+    "name": "Carnevale of Horrors",
+    "campaign": ":cyclopean-foundations",
+    "standalone": false,
+    "i18n": "carnevale-of-horrors"
+  },
+  {
+    "id": ":cyclopean-foundations:The Labyrinths of Lunacy",
+    "name": "The Labyrinths of Lunacy",
+    "campaign": ":cyclopean-foundations",
+    "standalone": false,
+    "i18n": "the-labyrinths-of-lunacy"
+  },
+  {
+    "id": ":cyclopean-foundations:Guardians of the Abyss",
+    "name": "Guardians of the Abyss",
+    "campaign": ":cyclopean-foundations",
+    "standalone": false,
+    "i18n": "guardians-of-the-abyss"
+  },
+  {
+    "id": ":cyclopean-foundations:Murder at the Excelsior Hotel",
+    "name": "Murder at the Excelsior Hotel",
+    "campaign": ":cyclopean-foundations",
+    "standalone": false,
+    "i18n": "murder-at-the-excelsior-hotel"
+  },
+  {
+    "id": ":cyclopean-foundations:The Blob that Ate Everything",
+    "name": "The Blob that Ate Everything",
+    "campaign": ":cyclopean-foundations",
+    "standalone": false,
+    "i18n": "the-blob-that-ate-everything"
+  },
+  {
+    "id": ":cyclopean-foundations:War of the Outer Gods",
+    "name": "War of the Outer Gods",
+    "campaign": ":cyclopean-foundations",
+    "standalone": false,
+    "i18n": "war-of-the-outer-gods"
+  },
+  {
+    "id": ":cyclopean-foundations:Machinations Through Time",
+    "name": "Machinations Through Time",
+    "campaign": ":cyclopean-foundations",
+    "standalone": false,
+    "i18n": "machinations-through-time"
+  },
+  {
+    "id": ":cyclopean-foundations:Fortune and Folly",
+    "name": "Fortune and Folly",
+    "campaign": ":cyclopean-foundations",
+    "standalone": false,
+    "i18n": "fortune-and-folly"
+  },
+  {
+    "id": ":cyclopean-foundations:The Midwinter Gala",
+    "name": "The Midwinter Gala",
+    "campaign": ":cyclopean-foundations",
+    "standalone": false,
+    "i18n": "the-midwinter-gala"
+  },
+  {
+    "id": ":cyclopean-foundations:Film Fatale",
+    "name": "Film Fatale",
+    "campaign": ":cyclopean-foundations",
+    "standalone": false,
+    "i18n": "film-fatale"
+  },
+  {
+    "id": ":cyclopean-foundations:Challenge Scenario - All or Nothing",
+    "name": "Challenge Scenario - All or Nothing",
+    "campaign": ":cyclopean-foundations",
+    "standalone": false,
+    "i18n": "challenge-scenario-all-or-nothing"
+  },
+  {
+    "id": ":cyclopean-foundations:Challenge Scenario - Bad Blood",
+    "name": "Challenge Scenario - Bad Blood",
+    "campaign": ":cyclopean-foundations",
+    "standalone": false,
+    "i18n": "challenge-scenario-bad-blood"
+  },
+  {
+    "id": ":cyclopean-foundations:Challenge Scenario - By the Book",
+    "name": "Challenge Scenario - By the Book",
+    "campaign": ":cyclopean-foundations",
+    "standalone": false,
+    "i18n": "challenge-scenario-by-the-book"
+  },
+  {
+    "id": ":cyclopean-foundations:Challenge Scenario - Laid to Rest",
+    "name": "Challenge Scenario - Laid to Rest",
+    "campaign": ":cyclopean-foundations",
+    "standalone": false,
+    "i18n": "challenge-scenario-laid-to-rest"
+  },
+  {
+    "id": ":cyclopean-foundations:Challenge Scenario - Read or Die",
+    "name": "Challenge Scenario - Read or Die",
+    "campaign": ":cyclopean-foundations",
+    "standalone": false,
+    "i18n": "challenge-scenario-read-or-die"
+  },
+  {
+    "id": ":cyclopean-foundations:Challenge Scenario - Red Tide Rising",
+    "name": "Challenge Scenario - Red Tide Rising",
+    "campaign": ":cyclopean-foundations",
+    "standalone": false,
+    "i18n": "challenge-scenario-red-tide-rising"
+  },
+  {
+    "id": ":cyclopean-foundations:Challenge Scenario - Relics of the Past",
+    "name": "Challenge Scenario - Relics of the Past",
+    "campaign": ":cyclopean-foundations",
+    "standalone": false,
+    "i18n": "challenge-scenario-relics-of-the-past"
+  },
+  {
+    "id": ":cyclopean-foundations:Challenge Scenario - Enthralling Encore",
+    "name": "Challenge Scenario - Enthralling Encore",
+    "campaign": ":cyclopean-foundations",
+    "standalone": false,
+    "i18n": "challenge-scenario-enthralling-encore"
+  },
+  {
+    "id": ":cyclopean-foundations:Barkham Horror - The Meddling of Meowlathotep",
+    "name": "Barkham Horror - The Meddling of Meowlathotep",
+    "campaign": ":cyclopean-foundations",
+    "standalone": false,
+    "i18n": "barkham-horror-the-meddling-of-meowlathotep"
+  },
+  {
+    "id": ":cyclopean-foundations:Against the Wendigo",
+    "name": "Against the Wendigo",
+    "campaign": ":cyclopean-foundations",
+    "standalone": false,
+    "i18n": "against-the-wendigo"
+  },
+  {
+    "id": ":cyclopean-foundations:And Then There Were None",
+    "name": "And Then There Were None",
+    "campaign": ":cyclopean-foundations",
+    "standalone": false,
+    "i18n": "and-then-there-were-none"
+  },
+  {
+    "id": ":cyclopean-foundations:Carnevale of Spiders",
+    "name": "Carnevale of Spiders",
+    "campaign": ":cyclopean-foundations",
+    "standalone": false,
+    "i18n": "carnevale-of-spiders"
+  },
+  {
+    "id": ":cyclopean-foundations:Clueless Cultist Coup",
+    "name": "Clueless Cultist Coup",
+    "campaign": ":cyclopean-foundations",
+    "standalone": false,
+    "i18n": "clueless-cultist-coup"
+  },
+  {
+    "id": ":cyclopean-foundations:Code Red at Bleeding Heart",
+    "name": "Code Red at Bleeding Heart",
+    "campaign": ":cyclopean-foundations",
+    "standalone": false,
+    "i18n": "code-red-at-bleeding-heart"
+  },
+  {
+    "id": ":cyclopean-foundations:Consternation on the Constellation",
+    "name": "Consternation on the Constellation",
+    "campaign": ":cyclopean-foundations",
+    "standalone": false,
+    "i18n": "consternation-on-the-constellation"
+  },
+  {
+    "id": ":cyclopean-foundations:Cosmic Pantheon",
+    "name": "Cosmic Pantheon",
+    "campaign": ":cyclopean-foundations",
+    "standalone": false,
+    "i18n": "cosmic-pantheon"
+  },
+  {
+    "id": ":cyclopean-foundations:Defense of the Arkham",
+    "name": "Defense of the Arkham",
+    "campaign": ":cyclopean-foundations",
+    "standalone": false,
+    "i18n": "defense-of-the-arkham"
+  },
+  {
+    "id": ":cyclopean-foundations:Devils In The Canyon",
+    "name": "Devils In The Canyon",
+    "campaign": ":cyclopean-foundations",
+    "standalone": false,
+    "i18n": "devils-in-the-canyon"
+  },
+  {
+    "id": ":cyclopean-foundations:Don't Starve - Scenario",
+    "name": "Don't Starve - Scenario",
+    "campaign": ":cyclopean-foundations",
+    "standalone": false,
+    "i18n": "don-t-starve-scenario"
+  },
+  {
+    "id": ":cyclopean-foundations:Election Night",
+    "name": "Election Night",
+    "campaign": ":cyclopean-foundations",
+    "standalone": false,
+    "i18n": "election-night"
+  },
+  {
+    "id": ":cyclopean-foundations:The Facts in the Case of M. Valdemar",
+    "name": "The Facts in the Case of M. Valdemar",
+    "campaign": ":cyclopean-foundations",
+    "standalone": false,
+    "i18n": "the-facts-in-the-case-of-m-valdemar"
+  },
+  {
+    "id": ":cyclopean-foundations:The Fall of the House of Usher",
+    "name": "The Fall of the House of Usher",
+    "campaign": ":cyclopean-foundations",
+    "standalone": false,
+    "i18n": "the-fall-of-the-house-of-usher"
+  },
+  {
+    "id": ":cyclopean-foundations:Fortune or Folly - Parallel Rex Murphy",
+    "name": "Fortune or Folly - Parallel Rex Murphy",
+    "campaign": ":cyclopean-foundations",
+    "standalone": false,
+    "i18n": "fortune-or-folly-parallel-rex-murphy"
+  },
+  {
+    "id": ":cyclopean-foundations:The Grand Oak Hotel",
+    "name": "The Grand Oak Hotel",
+    "campaign": ":cyclopean-foundations",
+    "standalone": false,
+    "i18n": "the-grand-oak-hotel"
+  },
+  {
+    "id": ":cyclopean-foundations:The Invisible Man",
+    "name": "The Invisible Man",
+    "campaign": ":cyclopean-foundations",
+    "standalone": false,
+    "i18n": "the-invisible-man"
+  },
+  {
+    "id": ":cyclopean-foundations:The Legend of Sleepy Hollow",
+    "name": "The Legend of Sleepy Hollow",
+    "campaign": ":cyclopean-foundations",
+    "standalone": false,
+    "i18n": "the-legend-of-sleepy-hollow"
+  },
+  {
+    "id": ":cyclopean-foundations:The Living Labyrinth",
+    "name": "The Living Labyrinth",
+    "campaign": ":cyclopean-foundations",
+    "standalone": false,
+    "i18n": "the-living-labyrinth"
+  },
+  {
+    "id": ":cyclopean-foundations:The Midwinter Gala - Fashionably Late",
+    "name": "The Midwinter Gala - Fashionably Late",
+    "campaign": ":cyclopean-foundations",
+    "standalone": false,
+    "i18n": "the-midwinter-gala-fashionably-late"
+  },
+  {
+    "id": ":cyclopean-foundations:Miskatonic Mouse",
+    "name": "Miskatonic Mouse",
+    "campaign": ":cyclopean-foundations",
+    "standalone": false,
+    "i18n": "miskatonic-mouse"
+  },
+  {
+    "id": ":cyclopean-foundations:Mythos Deviations",
+    "name": "Mythos Deviations",
+    "campaign": ":cyclopean-foundations",
+    "standalone": false,
+    "i18n": "mythos-deviations"
+  },
+  {
+    "id": ":cyclopean-foundations:Return to the Consternation on the Constellation",
+    "name": "Return to the Consternation on the Constellation",
+    "campaign": ":cyclopean-foundations",
+    "standalone": false,
+    "i18n": "return-to-the-consternation-on-the-constellation"
+  },
+  {
+    "id": ":cyclopean-foundations:Return to the Wendigo",
+    "name": "Return to the Wendigo",
+    "campaign": ":cyclopean-foundations",
+    "standalone": false,
+    "i18n": "return-to-the-wendigo"
+  },
+  {
+    "id": ":cyclopean-foundations:Snakes and Ladders",
+    "name": "Snakes and Ladders",
+    "campaign": ":cyclopean-foundations",
+    "standalone": false,
+    "i18n": "snakes-and-ladders"
+  },
+  {
+    "id": ":cyclopean-foundations:The Strange Case of Dr. Jekyll and Mr. Hyde",
+    "name": "The Strange Case of Dr. Jekyll and Mr. Hyde",
+    "campaign": ":cyclopean-foundations",
+    "standalone": false,
+    "i18n": "the-strange-case-of-dr-jekyll-and-mr-hyde"
+  },
+  {
+    "id": ":cyclopean-foundations:'Tis The Season",
+    "name": "'Tis The Season",
+    "campaign": ":cyclopean-foundations",
+    "standalone": false,
+    "i18n": "tis-the-season"
+  },
+  {
+    "id": ":cyclopean-foundations:When the World Screamed",
+    "name": "When the World Screamed",
+    "campaign": ":cyclopean-foundations",
+    "standalone": false,
+    "i18n": "when-the-world-screamed"
+  },
+  {
+    "id": ":cyclopean-foundations:The Witcher Horror",
+    "name": "The Witcher Horror",
+    "campaign": ":cyclopean-foundations",
+    "standalone": false,
+    "i18n": "the-witcher-horror"
+  },
+  {
+    "id": ":cyclopean-foundations:The Woods of the Black Goat",
+    "name": "The Woods of the Black Goat",
+    "campaign": ":cyclopean-foundations",
+    "standalone": false,
+    "i18n": "the-woods-of-the-black-goat"
+  }
+]

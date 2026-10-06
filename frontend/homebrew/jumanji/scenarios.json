@@ -1,0 +1,345 @@
+[
+  {
+    "id": ":jumanji:Curse of the Rougarou",
+    "name": "Curse of the Rougarou",
+    "campaign": ":jumanji",
+    "standalone": false,
+    "i18n": "curse-of-the-rougarou"
+  },
+  {
+    "id": ":jumanji:Carnevale of Horrors",
+    "name": "Carnevale of Horrors",
+    "campaign": ":jumanji",
+    "standalone": false,
+    "i18n": "carnevale-of-horrors"
+  },
+  {
+    "id": ":jumanji:The Labyrinths of Lunacy",
+    "name": "The Labyrinths of Lunacy",
+    "campaign": ":jumanji",
+    "standalone": false,
+    "i18n": "the-labyrinths-of-lunacy"
+  },
+  {
+    "id": ":jumanji:Guardians of the Abyss",
+    "name": "Guardians of the Abyss",
+    "campaign": ":jumanji",
+    "standalone": false,
+    "i18n": "guardians-of-the-abyss"
+  },
+  {
+    "id": ":jumanji:Murder at the Excelsior Hotel",
+    "name": "Murder at the Excelsior Hotel",
+    "campaign": ":jumanji",
+    "standalone": false,
+    "i18n": "murder-at-the-excelsior-hotel"
+  },
+  {
+    "id": ":jumanji:The Blob that Ate Everything",
+    "name": "The Blob that Ate Everything",
+    "campaign": ":jumanji",
+    "standalone": false,
+    "i18n": "the-blob-that-ate-everything"
+  },
+  {
+    "id": ":jumanji:War of the Outer Gods",
+    "name": "War of the Outer Gods",
+    "campaign": ":jumanji",
+    "standalone": false,
+    "i18n": "war-of-the-outer-gods"
+  },
+  {
+    "id": ":jumanji:Machinations Through Time",
+    "name": "Machinations Through Time",
+    "campaign": ":jumanji",
+    "standalone": false,
+    "i18n": "machinations-through-time"
+  },
+  {
+    "id": ":jumanji:Fortune and Folly",
+    "name": "Fortune and Folly",
+    "campaign": ":jumanji",
+    "standalone": false,
+    "i18n": "fortune-and-folly"
+  },
+  {
+    "id": ":jumanji:The Midwinter Gala",
+    "name": "The Midwinter Gala",
+    "campaign": ":jumanji",
+    "standalone": false,
+    "i18n": "the-midwinter-gala"
+  },
+  {
+    "id": ":jumanji:Film Fatale",
+    "name": "Film Fatale",
+    "campaign": ":jumanji",
+    "standalone": false,
+    "i18n": "film-fatale"
+  },
+  {
+    "id": ":jumanji:Challenge Scenario - All or Nothing",
+    "name": "Challenge Scenario - All or Nothing",
+    "campaign": ":jumanji",
+    "standalone": false,
+    "i18n": "challenge-scenario-all-or-nothing"
+  },
+  {
+    "id": ":jumanji:Challenge Scenario - Bad Blood",
+    "name": "Challenge Scenario - Bad Blood",
+    "campaign": ":jumanji",
+    "standalone": false,
+    "i18n": "challenge-scenario-bad-blood"
+  },
+  {
+    "id": ":jumanji:Challenge Scenario - By the Book",
+    "name": "Challenge Scenario - By the Book",
+    "campaign": ":jumanji",
+    "standalone": false,
+    "i18n": "challenge-scenario-by-the-book"
+  },
+  {
+    "id": ":jumanji:Challenge Scenario - Laid to Rest",
+    "name": "Challenge Scenario - Laid to Rest",
+    "campaign": ":jumanji",
+    "standalone": false,
+    "i18n": "challenge-scenario-laid-to-rest"
+  },
+  {
+    "id": ":jumanji:Challenge Scenario - Read or Die",
+    "name": "Challenge Scenario - Read or Die",
+    "campaign": ":jumanji",
+    "standalone": false,
+    "i18n": "challenge-scenario-read-or-die"
+  },
+  {
+    "id": ":jumanji:Challenge Scenario - Red Tide Rising",
+    "name": "Challenge Scenario - Red Tide Rising",
+    "campaign": ":jumanji",
+    "standalone": false,
+    "i18n": "challenge-scenario-red-tide-rising"
+  },
+  {
+    "id": ":jumanji:Challenge Scenario - Relics of the Past",
+    "name": "Challenge Scenario - Relics of the Past",
+    "campaign": ":jumanji",
+    "standalone": false,
+    "i18n": "challenge-scenario-relics-of-the-past"
+  },
+  {
+    "id": ":jumanji:Challenge Scenario - Enthralling Encore",
+    "name": "Challenge Scenario - Enthralling Encore",
+    "campaign": ":jumanji",
+    "standalone": false,
+    "i18n": "challenge-scenario-enthralling-encore"
+  },
+  {
+    "id": ":jumanji:Barkham Horror - The Meddling of Meowlathotep",
+    "name": "Barkham Horror - The Meddling of Meowlathotep",
+    "campaign": ":jumanji",
+    "standalone": false,
+    "i18n": "barkham-horror-the-meddling-of-meowlathotep"
+  },
+  {
+    "id": ":jumanji:Against the Wendigo",
+    "name": "Against the Wendigo",
+    "campaign": ":jumanji",
+    "standalone": false,
+    "i18n": "against-the-wendigo"
+  },
+  {
+    "id": ":jumanji:And Then There Were None",
+    "name": "And Then There Were None",
+    "campaign": ":jumanji",
+    "standalone": false,
+    "i18n": "and-then-there-were-none"
+  },
+  {
+    "id": ":jumanji:Carnevale of Spiders",
+    "name": "Carnevale of Spiders",
+    "campaign": ":jumanji",
+    "standalone": false,
+    "i18n": "carnevale-of-spiders"
+  },
+  {
+    "id": ":jumanji:Clueless Cultist Coup",
+    "name": "Clueless Cultist Coup",
+    "campaign": ":jumanji",
+    "standalone": false,
+    "i18n": "clueless-cultist-coup"
+  },
+  {
+    "id": ":jumanji:Code Red at Bleeding Heart",
+    "name": "Code Red at Bleeding Heart",
+    "campaign": ":jumanji",
+    "standalone": false,
+    "i18n": "code-red-at-bleeding-heart"
+  },
+  {
+    "id": ":jumanji:Consternation on the Constellation",
+    "name": "Consternation on the Constellation",
+    "campaign": ":jumanji",
+    "standalone": false,
+    "i18n": "consternation-on-the-constellation"
+  },
+  {
+    "id": ":jumanji:Cosmic Pantheon",
+    "name": "Cosmic Pantheon",
+    "campaign": ":jumanji",
+    "standalone": false,
+    "i18n": "cosmic-pantheon"
+  },
+  {
+    "id": ":jumanji:Defense of the Arkham",
+    "name": "Defense of the Arkham",
+    "campaign": ":jumanji",
+    "standalone": false,
+    "i18n": "defense-of-the-arkham"
+  },
+  {
+    "id": ":jumanji:Devils In The Canyon",
+    "name": "Devils In The Canyon",
+    "campaign": ":jumanji",
+    "standalone": false,
+    "i18n": "devils-in-the-canyon"
+  },
+  {
+    "id": ":jumanji:Don't Starve - Scenario",
+    "name": "Don't Starve - Scenario",
+    "campaign": ":jumanji",
+    "standalone": false,
+    "i18n": "don-t-starve-scenario"
+  },
+  {
+    "id": ":jumanji:Election Night",
+    "name": "Election Night",
+    "campaign": ":jumanji",
+    "standalone": false,
+    "i18n": "election-night"
+  },
+  {
+    "id": ":jumanji:The Facts in the Case of M. Valdemar",
+    "name": "The Facts in the Case of M. Valdemar",
+    "campaign": ":jumanji",
+    "standalone": false,
+    "i18n": "the-facts-in-the-case-of-m-valdemar"
+  },
+  {
+    "id": ":jumanji:The Fall of the House of Usher",
+    "name": "The Fall of the House of Usher",
+    "campaign": ":jumanji",
+    "standalone": false,
+    "i18n": "the-fall-of-the-house-of-usher"
+  },
+  {
+    "id": ":jumanji:Fortune or Folly - Parallel Rex Murphy",
+    "name": "Fortune or Folly - Parallel Rex Murphy",
+    "campaign": ":jumanji",
+    "standalone": false,
+    "i18n": "fortune-or-folly-parallel-rex-murphy"
+  },
+  {
+    "id": ":jumanji:The Grand Oak Hotel",
+    "name": "The Grand Oak Hotel",
+    "campaign": ":jumanji",
+    "standalone": false,
+    "i18n": "the-grand-oak-hotel"
+  },
+  {
+    "id": ":jumanji:The Invisible Man",
+    "name": "The Invisible Man",
+    "campaign": ":jumanji",
+    "standalone": false,
+    "i18n": "the-invisible-man"
+  },
+  {
+    "id": ":jumanji:The Legend of Sleepy Hollow",
+    "name": "The Legend of Sleepy Hollow",
+    "campaign": ":jumanji",
+    "standalone": false,
+    "i18n": "the-legend-of-sleepy-hollow"
+  },
+  {
+    "id": ":jumanji:The Living Labyrinth",
+    "name": "The Living Labyrinth",
+    "campaign": ":jumanji",
+    "standalone": false,
+    "i18n": "the-living-labyrinth"
+  },
+  {
+    "id": ":jumanji:The Midwinter Gala - Fashionably Late",
+    "name": "The Midwinter Gala - Fashionably Late",
+    "campaign": ":jumanji",
+    "standalone": false,
+    "i18n": "the-midwinter-gala-fashionably-late"
+  },
+  {
+    "id": ":jumanji:Miskatonic Mouse",
+    "name": "Miskatonic Mouse",
+    "campaign": ":jumanji",
+    "standalone": false,
+    "i18n": "miskatonic-mouse"
+  },
+  {
+    "id": ":jumanji:Mythos Deviations",
+    "name": "Mythos Deviations",
+    "campaign": ":jumanji",
+    "standalone": false,
+    "i18n": "mythos-deviations"
+  },
+  {
+    "id": ":jumanji:Return to the Consternation on the Constellation",
+    "name": "Return to the Consternation on the Constellation",
+    "campaign": ":jumanji",
+    "standalone": false,
+    "i18n": "return-to-the-consternation-on-the-constellation"
+  },
+  {
+    "id": ":jumanji:Return to the Wendigo",
+    "name": "Return to the Wendigo",
+    "campaign": ":jumanji",
+    "standalone": false,
+    "i18n": "return-to-the-wendigo"
+  },
+  {
+    "id": ":jumanji:Snakes and Ladders",
+    "name": "Snakes and Ladders",
+    "campaign": ":jumanji",
+    "standalone": false,
+    "i18n": "snakes-and-ladders"
+  },
+  {
+    "id": ":jumanji:The Strange Case of Dr. Jekyll and Mr. Hyde",
+    "name": "The Strange Case of Dr. Jekyll and Mr. Hyde",
+    "campaign": ":jumanji",
+    "standalone": false,
+    "i18n": "the-strange-case-of-dr-jekyll-and-mr-hyde"
+  },
+  {
+    "id": ":jumanji:'Tis The Season",
+    "name": "'Tis The Season",
+    "campaign": ":jumanji",
+    "standalone": false,
+    "i18n": "tis-the-season"
+  },
+  {
+    "id": ":jumanji:When the World Screamed",
+    "name": "When the World Screamed",
+    "campaign": ":jumanji",
+    "standalone": false,
+    "i18n": "when-the-world-screamed"
+  },
+  {
+    "id": ":jumanji:The Witcher Horror",
+    "name": "The Witcher Horror",
+    "campaign": ":jumanji",
+    "standalone": false,
+    "i18n": "the-witcher-horror"
+  },
+  {
+    "id": ":jumanji:The Woods of the Black Goat",
+    "name": "The Woods of the Black Goat",
+    "campaign": ":jumanji",
+    "standalone": false,
+    "i18n": "the-woods-of-the-black-goat"
+  }
+]
