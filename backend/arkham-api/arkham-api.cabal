@@ -3632,9 +3632,18 @@ library
       Arkham.History
       Arkham.History.Types
       Arkham.Homebrew.CardRegistry
+      Arkham.Homebrew.BloodborneCityOfTheUnseen.Campaign
+      Arkham.Homebrew.BloodborneCityOfTheUnseen.ChaosBag
+      Arkham.Homebrew.BloodborneCityOfTheUnseen.Content
+      Arkham.Homebrew.BloodborneCityOfTheUnseen.Helpers
+      Arkham.Homebrew.BloodborneCityOfTheUnseen.Import
       Arkham.Homebrew.AgesUnwound.Acts.FindSafety
+      Arkham.Homebrew.AgesUnwound.Agendas.GazeOfThreeEyes
       Arkham.Homebrew.AgesUnwound.Agendas.Hunted
+      Arkham.Homebrew.AgesUnwound.Agendas.MorningBreaks
+      Arkham.Homebrew.AgesUnwound.Agendas.Sentinel
       Arkham.Homebrew.AgesUnwound.Agendas.SomethingUnnatural
+      Arkham.Homebrew.AgesUnwound.Agendas.Watched
       Arkham.Homebrew.AgesUnwound.Campaign
       Arkham.Homebrew.AgesUnwound.CampaignSteps
       Arkham.Homebrew.AgesUnwound.CardDefEntries

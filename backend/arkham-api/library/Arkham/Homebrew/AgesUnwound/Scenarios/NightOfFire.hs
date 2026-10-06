@@ -21,6 +21,12 @@ set-aside enemies (Myriad Assassin, Irregulars, Eternity's Sentinel, Time
 Spirit) referenced by the agenda 1b flip. This slice only gathers the
 Night of Fire set itself and gets one agenda/act/location on the table so
 the scenario is enterable end-to-end.
+
+2026-10-06: agenda deck now carries all 3 confirmed stages (doom thresholds
+3/8/5 per the SCED TTS source's GMNotes) so the deck can actually advance
+through to its final stage without a dispatch crash. Act deck is still only
+1 stage -- the real act structure (how many acts, their names) still isn't
+confirmed by any source found so far, intentionally not guessed at.
 -}
 instance RunMessage NightOfFire where
   runMessage msg s@(NightOfFire attrs) = runQueueT $ scenarioI18n "nightOfFire" $ case msg of
@@ -32,7 +38,7 @@ instance RunMessage NightOfFire where
 
       gather Set.NightOfFire
 
-      setAgendaDeck [Agendas.hunted]
+      setAgendaDeck [Agendas.hunted, Agendas.watched, Agendas.gazeOfThreeEyes]
       setActDeck [Acts.findSafety]
 
       rivertown <- place Locations.rivertown
