@@ -1,14 +1,24 @@
 module Arkham.Homebrew.AgesUnwound.Scenarios.NightOfFire (nightOfFire) where
 
+import Arkham.Helpers.FlavorText
 import Arkham.Homebrew.AgesUnwound.CardDefs.Acts qualified as Acts
 import Arkham.Homebrew.AgesUnwound.CardDefs.Agendas qualified as Agendas
 import Arkham.Homebrew.AgesUnwound.CardDefs.Locations qualified as Locations
+import Arkham.Homebrew.AgesUnwound.Import
 import Arkham.Homebrew.AgesUnwound.Sets qualified as Set
 import Arkham.Scenario.Import.Lifted
 
 newtype NightOfFire = NightOfFire ScenarioAttrs
   deriving anyclass (IsScenario, HasModifiersFor)
   deriving newtype (Show, Eq, ToJSON, FromJSON, Entity)
+
+-- | No scenario-specific chaos token modifiers transcribed yet (pilot slice,
+-- same as everything else flagged NOT YET IMPLEMENTED in this file) -- defer
+-- entirely to the campaign's own chaosBagContents, same delegating pattern
+-- used by several official scenarios (e.g. AThousandShapesOfHorror,
+-- ALightInTheFog) for token faces they don't override.
+instance HasChaosTokenValue NightOfFire where
+  getChaosTokenValue iid tokenFace (NightOfFire attrs) = getChaosTokenValue iid tokenFace attrs
 
 nightOfFire :: Difficulty -> NightOfFire
 nightOfFire difficulty = scenario NightOfFire ":ages-unwound:001" "Night of Fire" difficulty []

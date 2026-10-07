@@ -34,7 +34,36 @@ const chapter1Campaigns = computed(() =>
 const chapter2Campaigns = computed(() =>
   props.campaigns.filter((c) => CHAPTER_2_CAMPAIGN_IDS.has(c.id))
 )
-const WORKING_HOMEBREW_IDS = new Set([':circus-ex-mortis', ':dark-matter'])
+const WORKING_HOMEBREW_IDS = new Set([
+  ':circus-ex-mortis',
+  ':dark-matter',
+  ':ages-unwound',
+  ':bloodborne-city-of-the-unseen',
+  ':betrayal-at-the-mountains-of-madness',
+  ':call-of-the-plaguebearer',
+  ':celtic-rising',
+  ':close-encounters-of-the-lv-426-kind',
+  ':cyclopean-foundations',
+  ':darkham-horror',
+  ':echoes-of-the-ancient-sands',
+  ':half-life',
+  ':heart-of-darkness',
+  ':into-the-shadowlands',
+  ':jumanji',
+  ':kaimonogatari',
+  ':lovecrafter-3077',
+  ':made-in-abyss',
+  ':souls-of-darkness',
+  ':the-approaching-storm',
+  ':the-crown-of-egil',
+  ':the-putrid-testament',
+  ':the-war-of-the-worlds',
+  ':the-wind-of-the-pale-moonlight',
+  ':the-worlds-of-android',
+  ':unofficial-return-to-the-innsmouth-conspiracy',
+  ':unofficial-return-to-the-scarlet-keys',
+  ':winter-winds',
+])
 const homebrewCampaigns = computed(() =>
   props.campaigns.filter((c) => c.homebrew && WORKING_HOMEBREW_IDS.has(c.id))
 )

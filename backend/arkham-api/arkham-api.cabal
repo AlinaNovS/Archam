@@ -3765,6 +3765,7 @@ library
       Arkham.Homebrew.AgesUnwound.Agendas.SomethingUnnatural
       Arkham.Homebrew.AgesUnwound.Agendas.Watched
       Arkham.Homebrew.AgesUnwound.Campaign
+      Arkham.Homebrew.AgesUnwound.Helpers
       Arkham.Homebrew.AgesUnwound.CampaignSteps
       Arkham.Homebrew.AgesUnwound.CardDefEntries
       Arkham.Homebrew.AgesUnwound.CardDefs.Acts
