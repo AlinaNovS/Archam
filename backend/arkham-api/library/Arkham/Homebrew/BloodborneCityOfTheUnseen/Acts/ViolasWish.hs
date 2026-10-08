@@ -1,21 +1,37 @@
 module Arkham.Homebrew.BloodborneCityOfTheUnseen.Acts.ViolasWish (violasWish) where
 
+import Arkham.Ability
 import Arkham.Act.Import.Lifted
+import Arkham.Helpers.Location (withLocationOf)
 import Arkham.Homebrew.BloodborneCityOfTheUnseen.CardDefs.Acts qualified as Cards
+import Arkham.Homebrew.BloodborneCityOfTheUnseen.Helpers (removeBarrierBetweenConnected)
+import Arkham.Matcher hiding (DuringTurn)
 
 newtype ViolasWish = ViolasWish ActAttrs
-  deriving anyclass (IsAct, HasModifiersFor, HasAbilities)
+  deriving anyclass IsAct
   deriving newtype (Show, Eq, ToJSON, FromJSON, Entity)
 
-{- | Placeholder -- see 'Arkham.Homebrew.BloodborneCityOfTheUnseen.CardDefs.Acts.violasWish'.
-The "barricade" removal ability and the "Viola Gascoigne in victory display"
-advance condition both need real content (an enemy CardDef for Viola
-Gascoigne, and the already-identified reusable 'Barricades'/'placeBarrier'
-mechanism from 'Arkham.Scenarios.InTooDeep.Helpers') before this can advance
-for real.
+instance HasModifiersFor ViolasWish
+
+{- | The "Viola Gascoigne in victory display: advance" objective is NOT YET
+IMPLEMENTED -- Viola Gascoigne doesn't have a CardDef yet. The "remove a
+barricade for 1 clue" half IS real, same mechanism as
+'Arkham.Homebrew.BloodborneCityOfTheUnseen.Acts.MoonlitRevival'.
 -}
 violasWish :: ActCard ViolasWish
 violasWish = act (3, A) ViolasWish Cards.violasWish Nothing
 
+instance HasAbilities ViolasWish where
+  getAbilities (ViolasWish a) =
+    extend
+      a
+      [ restrictedAbility a 1 (exists $ YourLocation <> LocationWithAdjacentBarrier)
+          $ FastAbility (GroupClueCost (StaticWithPerPlayer 1 1) Anywhere)
+      ]
+
 instance RunMessage ViolasWish where
-  runMessage msg (ViolasWish attrs) = ViolasWish <$> runMessage msg attrs
+  runMessage msg a@(ViolasWish attrs) = runQueueT $ case msg of
+    UseThisAbility iid (isSource attrs -> True) 1 -> do
+      withLocationOf iid (removeBarrierBetweenConnected iid)
+      pure a
+    _ -> ViolasWish <$> liftRunMessage msg attrs

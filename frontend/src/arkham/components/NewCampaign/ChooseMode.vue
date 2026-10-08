@@ -52,6 +52,20 @@ const WORKING_HOMEBREW_IDS = new Set([
 const homebrewCampaigns = computed(() =>
   props.campaigns.filter((c) => c.homebrew && WORKING_HOMEBREW_IDS.has(c.id))
 )
+
+// Which homebrew campaigns have real, sourced Russian narrative text (not
+// just RU card art) -- circus-ex-mortis/dark-matter via
+// frontend/homebrew/<id>/locales/ru/, Bloodborne via the backend's own
+// scenarioI18n for its one implemented scenario. Anything homebrew NOT
+// listed here shows the "not yet translated" ribbon -- keeps the badge
+// honest as more Tier-B campaigns get added to WORKING_HOMEBREW_IDS ahead
+// of their own translation work.
+const TRANSLATED_HOMEBREW_IDS = new Set([
+  ':circus-ex-mortis',
+  ':dark-matter',
+  ':bloodborne-city-of-the-unseen',
+])
+const isUntranslated = (c: Campaign) => c.homebrew && !TRANSLATED_HOMEBREW_IDS.has(c.id)
 const chapter1SideStories = computed(() =>
   props.sideStories.filter((s) => !isChapter2(s.id) && !isHomebrew(s.id))
 )
@@ -220,7 +234,7 @@ function selectGameMode(mode: 'Campaign' | 'SideStory') {
           <div
             class="vt-box"
             :style="selectedCampaign == c.id ? { 'view-transition-name': 'selected-game-box' } : {}"
-            :class="{ beta: c.beta, alpha: c.alpha }"
+            :class="{ beta: c.beta, alpha: c.alpha, untranslated: isUntranslated(c) }"
           >
             <input
               v-if="!missingBoxArt[c.id]"
@@ -243,6 +257,9 @@ function selectGameMode(mode: 'Campaign' | 'SideStory') {
           </div>
           <span v-if="c.designer" class="designer-credit">
             {{ $t('create.designedBy', { name: c.designer }) }}
+          </span>
+          <span v-if="isUntranslated(c)" class="untranslated-note">
+            {{ $t('create.notYetTranslated') }}
           </span>
         </div>
       </template>
@@ -580,6 +597,36 @@ input[type='radio']:checked + label {
 .vt-box.alpha:after {
   content: 'alpha';
   background: darkred;
+}
+
+.vt-box.untranslated:before {
+  content: 'EN';
+  position: absolute;
+  z-index: var(--z-index-1070);
+  width: 86px;
+  height: 26px;
+  top: 9px;
+  right: -22px;
+  text-align: center;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  font-family: sans-serif;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: white;
+  line-height: 28px;
+  transform: rotate(45deg);
+  box-shadow: 0 10px 18px rgba(0,0,0,0.35);
+  background: #3c4a63;
+}
+
+.untranslated-note {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(140, 164, 206, 0.85);
 }
 
 .beta-warning,
