@@ -34,35 +34,20 @@ const chapter1Campaigns = computed(() =>
 const chapter2Campaigns = computed(() =>
   props.campaigns.filter((c) => CHAPTER_2_CAMPAIGN_IDS.has(c.id))
 )
+// 25 other homebrew campaigns wired up 2026-10 (24 Tier-A reskins + Ages
+// Unwound) currently just chain pre-existing official standalone scenarios
+// under a different name/cover -- not their own real content. Hidden from
+// the picker until each has genuine campaign-specific implementation; see
+// [[project-arkham-homebrew-campaigns]].
+//
+// Bloodborne - City of the Unseen is the exception: Scenario 1 ("The Hunt
+// Begins") is real, sourced-from-the-actual-campaign content (locations,
+// agendas, acts, RU card art), not a reskin -- shown even though only 1 of
+// its 8 scenarios exists yet (the campaign currently ends there).
 const WORKING_HOMEBREW_IDS = new Set([
   ':circus-ex-mortis',
   ':dark-matter',
-  ':ages-unwound',
   ':bloodborne-city-of-the-unseen',
-  ':betrayal-at-the-mountains-of-madness',
-  ':call-of-the-plaguebearer',
-  ':celtic-rising',
-  ':close-encounters-of-the-lv-426-kind',
-  ':cyclopean-foundations',
-  ':darkham-horror',
-  ':echoes-of-the-ancient-sands',
-  ':half-life',
-  ':heart-of-darkness',
-  ':into-the-shadowlands',
-  ':jumanji',
-  ':kaimonogatari',
-  ':lovecrafter-3077',
-  ':made-in-abyss',
-  ':souls-of-darkness',
-  ':the-approaching-storm',
-  ':the-crown-of-egil',
-  ':the-putrid-testament',
-  ':the-war-of-the-worlds',
-  ':the-wind-of-the-pale-moonlight',
-  ':the-worlds-of-android',
-  ':unofficial-return-to-the-innsmouth-conspiracy',
-  ':unofficial-return-to-the-scarlet-keys',
-  ':winter-winds',
 ])
 const homebrewCampaigns = computed(() =>
   props.campaigns.filter((c) => c.homebrew && WORKING_HOMEBREW_IDS.has(c.id))
@@ -238,6 +223,7 @@ function selectGameMode(mode: 'Campaign' | 'SideStory') {
             :class="{ beta: c.beta, alpha: c.alpha }"
           >
             <input
+              v-if="!missingBoxArt[c.id]"
               type="image"
               class="campaign-box"
               :class="{ 'selected-campaign': selectedCampaign == c.id }"
@@ -245,6 +231,15 @@ function selectGameMode(mode: 'Campaign' | 'SideStory') {
               @error="missingBoxArt[c.id] = true"
               @click.prevent="selectedCampaign = c.id; emits('go')"
             />
+            <button
+              v-else
+              type="button"
+              class="campaign-box-placeholder"
+              :class="{ 'selected-campaign': selectedCampaign == c.id }"
+              @click="selectedCampaign = c.id; emits('go')"
+            >
+              {{ c.name }}
+            </button>
           </div>
           <span v-if="c.designer" class="designer-credit">
             {{ $t('create.designedBy', { name: c.designer }) }}
@@ -640,6 +635,9 @@ input[type='radio']:checked + label {
 }
 
 .campaign-box-placeholder {
+  appearance: none;
+  box-sizing: border-box;
+  width: 100%;
   aspect-ratio: 1 / 1;
   display: flex;
   align-items: center;
@@ -654,9 +652,11 @@ input[type='radio']:checked + label {
     var(--background-dark, #1a1a1a);
   color: rgba(206, 206, 206, 0.92);
   font-family: Teutonic, serif;
-  font-size: 1.6em;
-  line-height: 1.2;
-  letter-spacing: 0.08em;
+  font-size: clamp(0.82rem, 1.3vw, 1.15rem);
+  line-height: 1.25;
+  letter-spacing: 0.04em;
+  overflow-wrap: break-word;
+  hyphens: auto;
   cursor: pointer;
   transition: border-color 160ms ease, color 160ms ease;
 }

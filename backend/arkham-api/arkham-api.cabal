@@ -3753,8 +3753,31 @@ library
       Arkham.Homebrew.WinterWinds.Helpers
       Arkham.Homebrew.WinterWinds.Import
       Arkham.Homebrew.BloodborneCityOfTheUnseen.Campaign
+    Arkham.Homebrew.BloodborneCityOfTheUnseen.Acts.BeastAndTheCrow
+    Arkham.Homebrew.BloodborneCityOfTheUnseen.Acts.CityOfTheUnseen
+    Arkham.Homebrew.BloodborneCityOfTheUnseen.Acts.MoonlitRevival
+    Arkham.Homebrew.BloodborneCityOfTheUnseen.Acts.ViolasWish
+    Arkham.Homebrew.BloodborneCityOfTheUnseen.Agendas.ClericBeastsFury
+    Arkham.Homebrew.BloodborneCityOfTheUnseen.Locations.ExaminationRoomA
+    Arkham.Homebrew.BloodborneCityOfTheUnseen.Locations.ExaminationRoomB
+    Arkham.Homebrew.BloodborneCityOfTheUnseen.Locations.HospitalCourtyard
+    Arkham.Homebrew.BloodborneCityOfTheUnseen.Locations.Sickroom
+    Arkham.Homebrew.BloodborneCityOfTheUnseen.Agendas.HuntBegins
+    Arkham.Homebrew.BloodborneCityOfTheUnseen.Agendas.MereBadDream
+    Arkham.Homebrew.BloodborneCityOfTheUnseen.Agendas.NightOfCurses
+    Arkham.Homebrew.BloodborneCityOfTheUnseen.Agendas.NightTerrors
+    Arkham.Homebrew.BloodborneCityOfTheUnseen.Agendas.YharnamJustice
+    Arkham.Homebrew.BloodborneCityOfTheUnseen.CampaignSteps
+    Arkham.Homebrew.BloodborneCityOfTheUnseen.CardDefEntries
+    Arkham.Homebrew.BloodborneCityOfTheUnseen.CardDefs.Acts
+    Arkham.Homebrew.BloodborneCityOfTheUnseen.CardDefs.Agendas
+    Arkham.Homebrew.BloodborneCityOfTheUnseen.CardDefs.Locations
+    Arkham.Homebrew.BloodborneCityOfTheUnseen.CardEntries
+    Arkham.Homebrew.BloodborneCityOfTheUnseen.Scenarios.HuntBegins
+    Arkham.Homebrew.BloodborneCityOfTheUnseen.Sets
       Arkham.Homebrew.BloodborneCityOfTheUnseen.ChaosBag
       Arkham.Homebrew.BloodborneCityOfTheUnseen.Content
+      Arkham.Homebrew.BloodborneCityOfTheUnseen.Defs
       Arkham.Homebrew.BloodborneCityOfTheUnseen.Helpers
       Arkham.Homebrew.BloodborneCityOfTheUnseen.Import
       Arkham.Homebrew.AgesUnwound.Acts.FindSafety
