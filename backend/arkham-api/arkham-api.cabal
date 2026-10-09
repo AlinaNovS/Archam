@@ -3763,6 +3763,22 @@ library
     Arkham.Homebrew.BloodborneCityOfTheUnseen.Locations.ExaminationRoomB
     Arkham.Homebrew.BloodborneCityOfTheUnseen.Locations.HospitalCourtyard
     Arkham.Homebrew.BloodborneCityOfTheUnseen.Enemies.BloodDrunkHunter
+    Arkham.Homebrew.BloodborneCityOfTheUnseen.Enemies.ClericBeast
+    Arkham.Homebrew.BloodborneCityOfTheUnseen.Enemies.ScourgeBeast
+    Arkham.Homebrew.BloodborneCityOfTheUnseen.Enemies.HuntingParty
+    Arkham.Homebrew.BloodborneCityOfTheUnseen.Enemies.ElderlyHuntsman
+    Arkham.Homebrew.BloodborneCityOfTheUnseen.Enemies.BloodCrazedHuntingHounds
+    Arkham.Homebrew.BloodborneCityOfTheUnseen.Enemies.AshenBloodBeast
+    Arkham.Homebrew.BloodborneCityOfTheUnseen.Treacheries.YharnamHospitality
+    Arkham.Homebrew.BloodborneCityOfTheUnseen.Treacheries.UncontrolledFire
+    Arkham.Homebrew.BloodborneCityOfTheUnseen.Treacheries.TheSweetStench
+    Arkham.Homebrew.BloodborneCityOfTheUnseen.Treacheries.SlakeTheThirst
+    Arkham.Homebrew.BloodborneCityOfTheUnseen.Treacheries.RudeAwakening
+    Arkham.Homebrew.BloodborneCityOfTheUnseen.Treacheries.DreadfulEffigy
+    Arkham.Homebrew.BloodborneCityOfTheUnseen.Treacheries.BloodDrunkTreachery
+    Arkham.Homebrew.BloodborneCityOfTheUnseen.Treacheries.AshenAffliction
+    Arkham.Homebrew.BloodborneCityOfTheUnseen.Treacheries.ViewHalloo
+    Arkham.Homebrew.BloodborneCityOfTheUnseen.Treacheries.GleefulAtrocities
     Arkham.Homebrew.BloodborneCityOfTheUnseen.Locations.Sickroom
     Arkham.Homebrew.BloodborneCityOfTheUnseen.Agendas.HuntBegins
     Arkham.Homebrew.BloodborneCityOfTheUnseen.Agendas.MereBadDream
@@ -3775,6 +3791,7 @@ library
     Arkham.Homebrew.BloodborneCityOfTheUnseen.CardDefs.Agendas
     Arkham.Homebrew.BloodborneCityOfTheUnseen.CardDefs.Enemies
     Arkham.Homebrew.BloodborneCityOfTheUnseen.CardDefs.Locations
+    Arkham.Homebrew.BloodborneCityOfTheUnseen.CardDefs.Treacheries
     Arkham.Homebrew.BloodborneCityOfTheUnseen.CardEntries
     Arkham.Homebrew.BloodborneCityOfTheUnseen.Scenarios.HuntBegins
     Arkham.Homebrew.BloodborneCityOfTheUnseen.Sets

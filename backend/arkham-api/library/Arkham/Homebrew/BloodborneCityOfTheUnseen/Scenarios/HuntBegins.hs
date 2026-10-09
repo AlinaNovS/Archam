@@ -7,6 +7,7 @@ import Arkham.Homebrew.BloodborneCityOfTheUnseen.CardDefs.Acts qualified as Acts
 import Arkham.Homebrew.BloodborneCityOfTheUnseen.CardDefs.Agendas qualified as Agendas
 import Arkham.Homebrew.BloodborneCityOfTheUnseen.CardDefs.Locations qualified as Locations
 import Arkham.Homebrew.BloodborneCityOfTheUnseen.Import
+import Arkham.Homebrew.BloodborneCityOfTheUnseen.Sets qualified as EncounterSets
 import Arkham.Matcher
 import Arkham.Message.Lifted.Choose
 import Arkham.Scenario.Import.Lifted
@@ -118,6 +119,8 @@ instance RunMessage HuntBegins where
       setup $ ul do
         li "placeLocations"
         li "startAt"
+
+      gather EncounterSets.HuntBegins
 
       setAgendaDeck [Agendas.huntBegins, Agendas.nightOfCurses, Agendas.mereBadDream]
       setActDeck [Acts.moonlitRevival, Acts.cityOfTheUnseen, Acts.violasWish, Acts.beastAndTheCrow]
