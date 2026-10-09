@@ -21,7 +21,7 @@ info "Готовлю $DEPLOY_DIR"
 mkdir -p "$DEPLOY_DIR/config" "$DEPLOY_DIR/img" "$DEPLOY_DIR/migrations" "$DEPLOY_DIR/scripts"
 PW="$DEPLOY_DIR/config/postgres_password.txt"
 [ -d "$PW" ] && rmdir "$PW"
-if [ ! -s "$PW" ]; then openssl rand -hex 32 > "$PW"; chmod 600 "$PW"; fi
+if [ ! -s "$PW" ]; then openssl rand -hex 32 > "$PW"; chmod 644 "$PW"; fi
 [ -f "$DEPLOY_DIR/.env" ] || printf 'HTTP_PORT=80\n# ASSET_HOST=https://assets.arkhamhorror.app\n' > "$DEPLOY_DIR/.env"
 mkdir -p /root/.ssh && chmod 700 /root/.ssh
 [ -f "$KEY_FILE" ] || ssh-keygen -t ed25519 -N "" -C "github-actions-deploy" -f "$KEY_FILE" >/dev/null
