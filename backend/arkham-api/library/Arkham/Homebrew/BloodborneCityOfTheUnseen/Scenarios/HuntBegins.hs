@@ -79,8 +79,26 @@ instance HasChaosTokenValue HuntBegins where
     ElderThing -> pure $ toChaosTokenValue attrs ElderThing 2 3
     otherFace -> getChaosTokenValue iid otherFace attrs
 
+{- | Grid layout was previously an empty list, which left every location's
+on-screen position unset -- the frontend collapsed all 5 cards onto the
+exact same pixel coordinates (confirmed via a live game's DB dump: every
+location had identical 'position: null', and the rendered card
+'getBoundingClientRect()'s were pixel-identical). This cross-shaped grid
+matches the real connection graph: Hospital Courtyard is the hub (connects
+to all 4 others, 2 by symbol match + City Center Plaza by explicit card
+text); Sickroom also connects to both Examination Rooms by symbol match.
+-}
 huntBegins :: Difficulty -> HuntBegins
-huntBegins difficulty = scenario HuntBegins ":bloodborne-city-of-the-unseen:001" "The Hunt Begins" difficulty []
+huntBegins difficulty =
+  scenario
+    HuntBegins
+    ":bloodborne-city-of-the-unseen:001"
+    "The Hunt Begins"
+    difficulty
+    [ "        .                examinationRoomA   .                "
+    , "sickroom        hospitalCourtyard   cityCenterPlaza"
+    , "        .                examinationRoomB   .                "
+    ]
 
 {- | Pilot slice for the FIRST real (non-reused) scenario of this campaign --
 see 'Arkham.Homebrew.BloodborneCityOfTheUnseen.Campaign' for why the earlier
@@ -105,9 +123,15 @@ instance RunMessage HuntBegins where
       setActDeck [Acts.moonlitRevival, Acts.cityOfTheUnseen, Acts.violasWish, Acts.beastAndTheCrow]
 
       courtyard <- place Locations.hospitalCourtyard
-      _ <- place Locations.examinationRoomA
-      _ <- place Locations.examinationRoomB
-      _ <- place Locations.sickroom
+      push $ SetLocationLabel courtyard "hospitalCourtyard"
+      examA <- place Locations.examinationRoomA
+      push $ SetLocationLabel examA "examinationRoomA"
+      examB <- place Locations.examinationRoomB
+      push $ SetLocationLabel examB "examinationRoomB"
+      sick <- place Locations.sickroom
+      push $ SetLocationLabel sick "sickroom"
+      plaza <- place Locations.cityCenterPlaza
+      push $ SetLocationLabel plaza "cityCenterPlaza"
       startAt courtyard
     ScenarioCountIncrementBy (Barriers l1 l2) n -> do
       let meta' = incrementBarriers n l1 l2 $ toResultDefault (Meta mempty) attrs.meta

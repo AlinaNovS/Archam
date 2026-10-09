@@ -21,14 +21,11 @@ cityOfTheUnseen = act (2, A) CityOfTheUnseen Cards.cityOfTheUnseen Nothing
 requisite number of clues as a group to advance" (3 clues per investigator,
 confirmed by visually reading the card). Real advance condition wired the
 same way as 'Arkham.Homebrew.BloodborneCityOfTheUnseen.Acts.MoonlitRevival'.
-City Center Plaza itself is NOT YET PLACED by this pilot's Setup (it's part
-of the "Act 2 Locations" set-aside pile referenced on the Act 1 act card,
-which this pilot doesn't reveal) -- so this ability is correctly wired but
-currently unreachable until that location-reveal step is added in a
-follow-up pass; not a crash risk, just inert until then.
-
-Ability 2 (remove a barricade for 1 clue) IS reachable now, same as
-MoonlitRevival's.
+City Center Plaza is now placed at Setup (see Scenarios/HuntBegins.hs) and
+connected to Hospital Courtyard via explicit card-text connection (see
+Locations/CityCenterPlaza.hs/HospitalCourtyard.hs) -- no "Act 2 locations"
+set-aside pile was ever found on the actual cards; that was an earlier
+session's unverified guess. Both abilities here are reachable now.
 -}
 instance HasAbilities CityOfTheUnseen where
   getAbilities (CityOfTheUnseen a) =

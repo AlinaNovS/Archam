@@ -3758,9 +3758,11 @@ library
     Arkham.Homebrew.BloodborneCityOfTheUnseen.Acts.MoonlitRevival
     Arkham.Homebrew.BloodborneCityOfTheUnseen.Acts.ViolasWish
     Arkham.Homebrew.BloodborneCityOfTheUnseen.Agendas.ClericBeastsFury
+    Arkham.Homebrew.BloodborneCityOfTheUnseen.Locations.CityCenterPlaza
     Arkham.Homebrew.BloodborneCityOfTheUnseen.Locations.ExaminationRoomA
     Arkham.Homebrew.BloodborneCityOfTheUnseen.Locations.ExaminationRoomB
     Arkham.Homebrew.BloodborneCityOfTheUnseen.Locations.HospitalCourtyard
+    Arkham.Homebrew.BloodborneCityOfTheUnseen.Enemies.BloodDrunkHunter
     Arkham.Homebrew.BloodborneCityOfTheUnseen.Locations.Sickroom
     Arkham.Homebrew.BloodborneCityOfTheUnseen.Agendas.HuntBegins
     Arkham.Homebrew.BloodborneCityOfTheUnseen.Agendas.MereBadDream
@@ -3771,6 +3773,7 @@ library
     Arkham.Homebrew.BloodborneCityOfTheUnseen.CardDefEntries
     Arkham.Homebrew.BloodborneCityOfTheUnseen.CardDefs.Acts
     Arkham.Homebrew.BloodborneCityOfTheUnseen.CardDefs.Agendas
+    Arkham.Homebrew.BloodborneCityOfTheUnseen.CardDefs.Enemies
     Arkham.Homebrew.BloodborneCityOfTheUnseen.CardDefs.Locations
     Arkham.Homebrew.BloodborneCityOfTheUnseen.CardEntries
     Arkham.Homebrew.BloodborneCityOfTheUnseen.Scenarios.HuntBegins
