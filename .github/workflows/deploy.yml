@@ -1,0 +1,140 @@
+name: Build & Deploy
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  DEPLOY_DIR: /opt/archam
+
+jobs:
+  build:
+    name: Build image
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    outputs:
+      image: ${{ steps.meta.outputs.image }}
+    steps:
+      - name: Free disk space on runner
+        uses: jlumbroso/free-disk-space@v1.3.1
+        with:
+          tool-cache: true
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: false
+          docker-images: true
+          swap-storage: false
+
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Image name (lowercase)
+        id: meta
+        run: echo "image=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Restore Haskell build cache
+        uses: actions/cache@v4
+        with:
+          path: buildkit-cache
+          key: buildkit-${{ hashFiles('backend/stack.yaml.lock') }}-${{ github.sha }}
+          restore-keys: |
+            buildkit-${{ hashFiles('backend/stack.yaml.lock') }}-
+            buildkit-
+
+      - name: Inject Haskell build cache into BuildKit
+        uses: reproducible-containers/buildkit-cache-dance@v3.1.2
+        with:
+          cache-map: |
+            {
+              "buildkit-cache/stack-home":    { "id": "stack-home-amd64-9.14.1-3.16.0.0-3.7.1",         "target": "/root/.stack" },
+              "buildkit-cache/stack-shared":  { "id": "stack-work-shared-amd64-9.14.1-3.16.0.0-3.7.1",  "target": "/opt/arkham/src/backend/.stack-work" },
+              "buildkit-cache/stack-api":     { "id": "stack-api-amd64-9.14.1-3.16.0.0-3.7.1",          "target": "/opt/arkham/src/backend/arkham-api/.stack-work" },
+              "buildkit-cache/stack-discover":{ "id": "stack-discover-amd64-9.14.1-3.16.0.0-3.7.1",     "target": "/opt/arkham/src/backend/cards-discover/.stack-work" }
+            }
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ${{ steps.meta.outputs.image }}:latest
+            ${{ steps.meta.outputs.image }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    name: Deploy to server
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Assemble files for the server
+        run: |
+          mkdir -p bundle/scripts
+          cp deploy/docker-compose.yml bundle/docker-compose.yml
+          cp setup.sql migrate.sh bundle/
+          cp -r migrations bundle/migrations
+          cp scripts/fetch-assets.sh bundle/scripts/fetch-assets.sh
+
+      - name: Copy files to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          source: bundle
+          target: ${{ env.DEPLOY_DIR }}
+          strip_components: 1
+          overwrite: true
+
+      - name: Pull new image and restart
+        uses: appleboy/ssh-action@v1.2.0
+        env:
+          IMAGE: ${{ needs.build.outputs.image }}:latest
+          GHCR_USER: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEPLOY_DIR: ${{ env.DEPLOY_DIR }}
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          envs: IMAGE,GHCR_USER,GHCR_TOKEN,DEPLOY_DIR
+          script: |
+            set -e
+            cd "$DEPLOY_DIR"
+            if grep -q '^ARCHAM_IMAGE=' .env 2>/dev/null; then
+              sed -i "s|^ARCHAM_IMAGE=.*|ARCHAM_IMAGE=$IMAGE|" .env
+            else
+              echo "ARCHAM_IMAGE=$IMAGE" >> .env
+            fi
+            echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+            docker compose pull web
+            docker compose up -d --remove-orphans
+            docker logout ghcr.io
+            docker image prune -f
+            docker compose ps

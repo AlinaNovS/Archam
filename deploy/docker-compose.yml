@@ -1,0 +1,68 @@
+services:
+  db:
+    image: postgres:14.6-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=arkham_pg_user
+      - POSTGRES_PASSWORD_FILE=/run/secrets/postgres_password
+      - POSTGRES_DB=arkham-horror-backend
+    user: postgres
+    cap_drop:
+      - ALL
+    mem_limit: 512M
+    volumes:
+      - pgdata:/var/lib/postgresql/data:rw
+      - ./setup.sql:/docker-entrypoint-initdb.d/create_tables.sql:ro
+    secrets:
+      - postgres_password
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 120s
+
+  migrate:
+    image: postgres:14.6-alpine
+    restart: "no"
+    depends_on:
+      db:
+        condition: service_healthy
+    entrypoint: ["sh", "/migrate.sh"]
+    volumes:
+      - ./migrations:/migrations:ro
+      - ./migrate.sh:/migrate.sh:ro
+    secrets:
+      - postgres_password
+
+  web:
+    image: ${ARCHAM_IMAGE:-ghcr.io/alinanovs/archam:latest}
+    restart: always
+    env_file: .env
+    secrets:
+      - postgres_password
+    ports:
+      - "${HTTP_PORT:-80}:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    volumes:
+      - ./img:/opt/arkham/src/frontend/dist/img
+
+  fetch-images:
+    profiles: ["fetch-images"]
+    image: amazon/aws-cli
+    volumes:
+      - ./img:/workspace/frontend/public/img
+      - ./scripts/fetch-assets.sh:/workspace/scripts/fetch-assets.sh:ro
+    entrypoint: ["/bin/bash", "/workspace/scripts/fetch-assets.sh"]
+    command: en
+
+volumes:
+  pgdata:
+
+secrets:
+  postgres_password:
+    file: ./config/postgres_password.txt
