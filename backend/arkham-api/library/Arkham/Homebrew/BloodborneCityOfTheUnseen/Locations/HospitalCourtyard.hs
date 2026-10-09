@@ -7,8 +7,8 @@ import Arkham.Location.Import.Lifted
 import Arkham.Matcher (be)
 
 newtype HospitalCourtyard = HospitalCourtyard LocationAttrs
-  deriving anyclass (IsLocation, HasAbilities)
-  deriving newtype (Show, Eq, ToJSON, FromJSON, Entity)
+  deriving anyclass IsLocation
+  deriving newtype (Show, Eq, ToJSON, FromJSON, Entity, HasAbilities)
 
 -- | Clue count (1/investigator) confirmed via GMNotes. Shroud value is a
 -- placeholder pending real card-sheet transcription (not in GMNotes).

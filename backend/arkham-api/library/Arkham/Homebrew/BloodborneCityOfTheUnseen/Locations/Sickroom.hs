@@ -5,8 +5,8 @@ import Arkham.Homebrew.BloodborneCityOfTheUnseen.CardDefs.Locations qualified as
 import Arkham.Location.Import.Lifted
 
 newtype Sickroom = Sickroom LocationAttrs
-  deriving anyclass (IsLocation, HasModifiersFor, HasAbilities)
-  deriving newtype (Show, Eq, ToJSON, FromJSON, Entity)
+  deriving anyclass (IsLocation, HasModifiersFor)
+  deriving newtype (Show, Eq, ToJSON, FromJSON, Entity, HasAbilities)
 
 -- | Clue count (2/investigator) confirmed via GMNotes. Shroud value is a
 -- placeholder pending real card-sheet transcription (not in GMNotes).

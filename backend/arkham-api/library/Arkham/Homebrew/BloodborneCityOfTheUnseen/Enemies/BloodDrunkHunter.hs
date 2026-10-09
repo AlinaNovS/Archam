@@ -6,8 +6,8 @@ import Arkham.Helpers.SkillTest (getSkillTest, getSkillTestAction, getSkillTestT
 import Arkham.Homebrew.BloodborneCityOfTheUnseen.CardDefs.Enemies qualified as Cards
 
 newtype BloodDrunkHunter = BloodDrunkHunter EnemyAttrs
-  deriving anyclass (IsEnemy, HasAbilities)
-  deriving newtype (Show, Eq, ToJSON, FromJSON, Entity)
+  deriving anyclass IsEnemy
+  deriving newtype (Show, Eq, ToJSON, FromJSON, Entity, HasAbilities)
 
 bloodDrunkHunter :: EnemyCard BloodDrunkHunter
 bloodDrunkHunter = enemy BloodDrunkHunter Cards.bloodDrunkHunter

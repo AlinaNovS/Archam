@@ -7,8 +7,8 @@ import Arkham.Location.Import.Lifted
 import Arkham.Matcher (be)
 
 newtype CityCenterPlaza = CityCenterPlaza LocationAttrs
-  deriving anyclass (IsLocation, HasAbilities)
-  deriving newtype (Show, Eq, ToJSON, FromJSON, Entity)
+  deriving anyclass IsLocation
+  deriving newtype (Show, Eq, ToJSON, FromJSON, Entity, HasAbilities)
 
 -- | Shroud 3, 1 clue/investigator, both confirmed by visually reading the
 -- real card. "Hospital Courtyard is connected to City Center Plaza and vice
