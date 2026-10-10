@@ -40,6 +40,38 @@ function buildEnTitlesBySuffix(): Map<string, string> {
   return out
 }
 
+// Homebrew campaigns (frontend/homebrew/<slug>/) live in a completely separate
+// locale tree (see src/locales/homebrew.ts) and their scenario JSON never
+// carries a top-level "title" key the way official scenarios do -- so they
+// can't be picked up by the glob-and-pair logic above. 2026-10-10: confirmed
+// via GameRow.vue showing raw English homebrew scenario names in the active-
+// games list despite the campaigns themselves being otherwise translated.
+// Titles below aren't invented -- each is the Russian proper-noun/heading
+// already used in that scenario's own translated text (e.g. "Scenario IIIb:
+// In the Shadow of Earth" / "Сценарию IIIb: В тени Земли" in
+// dark-matter/locales/{en,ru}/interludes.json), not a fresh guess.
+const homebrewTitles: Record<string, string> = {
+  // Dark Matter (frontend/homebrew/dark-matter/scenarios.json)
+  'The Tatterdemalion': 'Таттердемалион',
+  'Electric Nightmare': 'Электрический кошмар',
+  'Lost Quantum': 'Затерянный квант',
+  'In the Shadow of Earth': 'В тени Земли',
+  'Strange Moons': 'Странные луны',
+  'The Machine in Yellow': 'Машина в Жёлтом',
+  'Fragment of Carcosa': 'Фрагмент Каркозы',
+  Starfall: 'Звездопад',
+  // Circus Ex Mortis (frontend/homebrew/circus-ex-mortis/scenarios.json) --
+  // only the first 2 of 8 listed scenarios are actually implemented/
+  // translated so far; the other 6 have no source text to translate from.
+  'One Night Only': 'Только одна ночь',
+  'The Primrose Path': 'Дорога соблазна',
+  // Bloodborne - City of the Unseen -- backend already sends this scenario's
+  // own name pre-localized via scenarioI18n for in-game display, but
+  // GameRow.vue's active-games list reads scenario.name.title (always
+  // English per the backend), so it still needs an entry here too.
+  'The Hunt Begins': 'Охота начинается',
+}
+
 function buildTranslationMap(): Map<string, string> {
   const enBySuffix = buildEnTitlesBySuffix()
   const out = new Map<string, string>()
@@ -51,6 +83,9 @@ function buildTranslationMap(): Map<string, string> {
     if (enTitle) {
       out.set(enTitle, ruTitle)
     }
+  }
+  for (const [enTitle, ruTitle] of Object.entries(homebrewTitles)) {
+    out.set(enTitle, ruTitle)
   }
   return out
 }

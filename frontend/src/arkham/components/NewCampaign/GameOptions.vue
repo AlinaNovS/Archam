@@ -8,6 +8,7 @@ import type { Scenario, Campaign } from '@/arkham/data'
 import type { GameMode, MultiplayerVariant, CampaignType } from '@/arkham/types/NewGame'
 import { ACHIEVEMENT_CAMPAIGN_IDS } from '@/arkham/achievements'
 import { useSettings } from '@/stores/settings'
+import { translatedDeckRequirement } from '@/arkham/deckRequirementTitles'
 
 type FullCampaignOption = {
   key: string
@@ -388,7 +389,7 @@ function setOptEnabled(o: RecommendedToggle, enabled: boolean) {
       <div v-if="deckRequirements.length" class="card deck-requirements-card">
         <div class="card-title">Deck Requirements</div>
         <ul class="deck-requirements">
-          <li v-for="requirement in deckRequirements" :key="requirement">{{ requirement }}</li>
+          <li v-for="requirement in deckRequirements" :key="requirement">{{ translatedDeckRequirement(requirement) }}</li>
         </ul>
       </div>
 

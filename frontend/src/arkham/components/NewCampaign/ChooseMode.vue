@@ -2,6 +2,7 @@
 import { computed, ref, watch } from 'vue'
 import type { Scenario, Campaign } from '@/arkham/data'
 import { imgsrc } from '@/arkham/helpers'
+import { translatedDeckRequirement } from '@/arkham/deckRequirementTitles'
 
 type GameMode = 'Campaign' | 'SideStory'
 type CampaignGroup = 'chapter1' | 'chapter2' | 'homebrew'
@@ -222,7 +223,7 @@ function selectGameMode(mode: 'Campaign' | 'SideStory') {
           {{ $t('create.requiresInvestigator', { name: s.requiredInvestigator }) }}
         </span>
         <span v-for="requirement in s.deckRequirements" :key="requirement" class="requires-investigator">
-          {{ requirement }}
+          {{ translatedDeckRequirement(requirement) }}
         </span>
       </div>
     </div>
