@@ -71,12 +71,12 @@ sendError msg = do
 sendRevelation :: HasGameLogger m => PlayerId -> Value -> m ()
 sendRevelation pid msg = do
   f <- getLogger
-  liftIO $ f (ClientCardOnly pid "Revelation" msg)
+  liftIO $ f (ClientCardOnly pid "$game.revelation" msg)
 
 sendReveal :: HasGameLogger m => Value -> m ()
 sendReveal msg = do
   f <- getLogger
-  liftIO $ f (ClientCard "Revealed" msg)
+  liftIO $ f (ClientCard "$game.revealed" msg)
 
 sendEnemy :: HasGameLogger m => Text -> Value -> m ()
 sendEnemy title msg = do

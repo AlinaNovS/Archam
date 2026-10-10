@@ -6,14 +6,16 @@ import Arkham.Location.CardDefs.Import
 -- hunt_begins
 -- | Icon + connections confirmed via the SCED TTS source
 -- (bloodborne_city_of_the_unseen.json GMNotes locationFront) -- 2026-10-07,
--- no guessing. The printed "Diamond" connector doesn't match any of this
--- scenario's 5 locations (none has a Diamond icon) -- appears to be an
--- unused connector slot on the physical card, not a missing location;
--- City Center Plaza connects via an explicit card-text override instead
--- (see Locations/CityCenterPlaza.hs), not via symbol matching.
+-- no guessing. The printed symbol previously read as an unused "Diamond"
+-- connector is actually this card's printed action-ability icon (an arrow),
+-- not a connector at all -- confirmed 2026-10-10 once the real ability was
+-- found and implemented (see Locations/HospitalCourtyard.hs); removed from
+-- the connections list. City Center Plaza connects via an explicit
+-- card-text override instead (see Locations/CityCenterPlaza.hs), not via
+-- symbol matching.
 hospitalCourtyard :: CardDef
 hospitalCourtyard =
-  location ":bloodborne-city-of-the-unseen:012" "Hospital Courtyard" mempty Square [Circle, Triangle, Diamond] Set.HuntBegins
+  location ":bloodborne-city-of-the-unseen:012" "Hospital Courtyard" mempty Square [Circle, Triangle] Set.HuntBegins
 
 -- | Two physical copies of this location exist in the scenario (confirmed
 -- via the TTS source having two distinct GUIDs with identical GMNotes) --

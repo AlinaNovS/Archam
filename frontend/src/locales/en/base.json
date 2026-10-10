@@ -285,6 +285,9 @@
     "areYouSureUndoScenario": "Are you sure you wish to undo to the beginning of the scenario?",
     "playabilityChecks": "Playability Checks",
     "unableToDownloadExport": "Unable to download export",
+    "tokensToAssign": "Tokens to assign",
+    "revelation": "Revelation",
+    "revealed": "Revealed",
     "shortcutSection": {
       "game": "Game",
       "undo": "Undo",

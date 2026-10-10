@@ -9,7 +9,7 @@ eventHorizon = act ":dark-matter:018" "Event Horizon" 1 Set.TheTatterdemalion
 
 artificalInsanity :: CardDef
 artificalInsanity =
-  act ":dark-matter:019" "Artifical Insanity" 2 Set.TheTatterdemalion
+  act ":dark-matter:019" "Artificial Insanity" 2 Set.TheTatterdemalion
 
 reconnected :: CardDef
 reconnected = act ":dark-matter:020" "Reconnected" 3 Set.TheTatterdemalion

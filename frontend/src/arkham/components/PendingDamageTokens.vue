@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { computed, ref, watch, onUnmounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { Game } from '@/arkham/types/Game'
 import * as ArkhamGame from '@/arkham/types/Game'
 import { imgsrc } from '@/arkham/helpers'
@@ -8,6 +9,8 @@ const props = defineProps<{
   game: Game
   playerId: string
 }>()
+
+const { t } = useI18n()
 
 const pending = computed(() => ArkhamGame.damageAssignmentTokens(props.game, props.playerId))
 
@@ -37,7 +40,7 @@ const horrorToken = imgsrc('tokens/horror-token.png')
     <div
       v-if="tokens && (tokens.damage > 0 || tokens.horror > 0)"
       class="pending-damage-tokens"
-      v-tooltip="'Tokens to assign'"
+      v-tooltip="t('game.tokensToAssign')"
     >
       <span v-if="tokens.damage > 0" class="token-entry">
         <img :src="damageToken" class="token" />

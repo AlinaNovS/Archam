@@ -285,6 +285,9 @@
     "areYouSureUndoScenario": "Вы уверены, что хотите отменить до начала сценария?",
     "playabilityChecks": "Проверки играбельности",
     "unableToDownloadExport": "Не удалось скачать экспорт",
+    "tokensToAssign": "Жетоны для назначения",
+    "revelation": "Откровение",
+    "revealed": "Вскрыто",
     "shortcutSection": {
       "game": "Игра",
       "undo": "Отмена",
