@@ -6,6 +6,7 @@ import { toCamelCase } from '@/arkham/helpers'
 import { useI18n } from 'vue-i18n';
 import { scenarioIdToI18n } from '@/arkham/types/Scenario'
 import { ScenarioOptions, defaultScenarioOptions, scenarioOptionsDecoder } from '@/arkham/types/ScenarioOptions';
+import { translatedScenarioTitle } from '@/arkham/scenarioTitles';
 
 // Resolves a scenario name by id, including scenarios nested inside
 // multi-scenario side stories (e.g. Guardians of the Abyss). Tries the
@@ -22,10 +23,10 @@ function findScenarioName(scenarioId: string, t?: (key: string) => string, te?: 
     }
   }
   for (const s of scenarios) {
-    if (s.returnTo && s.returnTo === scenarioId) return s.returnToName
-    if (s.id === scenarioId && !s.scenarios) return s.name
+    if (s.returnTo && s.returnTo === scenarioId) return translatedScenarioTitle(s.returnToName)
+    if (s.id === scenarioId && !s.scenarios) return translatedScenarioTitle(s.name)
     const part = s.scenarios?.find((p) => p.id === scenarioId)
-    if (part) return part.name
+    if (part) return translatedScenarioTitle(part.name)
   }
   return undefined
 }

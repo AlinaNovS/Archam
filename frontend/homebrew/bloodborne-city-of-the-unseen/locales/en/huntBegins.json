@@ -1,0 +1,8 @@
+{
+  "huntBegins": {
+    "setup": {
+      "placeLocations": "Put the Hospital Courtyard, 1st Floor Examination Room (x2), 1st Floor Sickroom, and City Center Plaza locations into play.",
+      "startAt": "Each investigator begins play at the Hospital Courtyard."
+    }
+  }
+}

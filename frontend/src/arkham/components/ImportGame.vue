@@ -8,6 +8,7 @@ import InvestigatorRow from '@/arkham/components/InvestigatorRow.vue'
 import LogIcons from '@/arkham/components/LogIcons.vue'
 import { imgsrc } from '@/arkham/helpers'
 import { setGameLocalStorageItem } from '@/arkham/localStorage'
+import { translatedScenarioTitle } from '@/arkham/scenarioTitles'
 
 const router = useRouter()
 
@@ -68,7 +69,7 @@ async function onFileChange(e: Event) {
     gamePreview.value = {
       name: json.campaignData?.name ?? null,
       scenarioId: scenario?.id ?? null,
-      scenarioTitle: scenario?.name?.title ?? null,
+      scenarioTitle: scenario?.name?.title ? translatedScenarioTitle(scenario.name.title) : null,
       campaignId: campaign?.id ?? null,
       campaignName: typeof campaign?.name === 'string' ? campaign.name : (campaign?.name?.title ?? null),
       difficulty: scenario?.difficulty ?? campaign?.difficulty ?? null,
