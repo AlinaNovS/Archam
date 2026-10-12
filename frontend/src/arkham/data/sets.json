@@ -428,6 +428,15 @@
     "code": "core2026",
     "cycle": 12
   },
+  {
+    "name": "Children of Blood",
+    "min": 13001,
+    "max": 13119,
+    "playerCards": 0,
+    "code": "cob",
+    "cycle": 13,
+    "previewUnimplemented": true
+  },
 
   {
     "name": "Return to Night of the Zealot",

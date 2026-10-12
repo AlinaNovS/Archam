@@ -18,6 +18,7 @@ import theScarletKeys from '@/locales/en/theScarletKeys'
 import theFeastOfHemlockVale from '@/locales/en/theFeastOfHemlockVale'
 import brethrenOfAsh from '@/locales/en/brethrenOfAsh'
 import theDrownedCity from '@/locales/en/theDrownedCity'
+import childrenOfBlood from '@/locales/en/childrenOfBlood'
 import standalone from '@/locales/en/standalone'
 import theLabyrinthsOfLunacyLog from '@/locales/en/theLabyrinthsOfLunacy.json'
 import gameBoard from '@/locales/en/gameBoard/gameBoard'
@@ -46,6 +47,7 @@ export default
   , theFeastOfHemlockVale
   , brethrenOfAsh
   , theDrownedCity
+  , childrenOfBlood
   , ...homebrewMessages('en')
   , standalone
   , theLabyrinthsOfLunacy: theLabyrinthsOfLunacyLog

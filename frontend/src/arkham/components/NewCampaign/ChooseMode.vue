@@ -8,7 +8,7 @@ type GameMode = 'Campaign' | 'SideStory'
 type CampaignGroup = 'chapter1' | 'chapter2' | 'homebrew'
 type ScenarioGroup = 'sideStories' | 'challengeScenarios'
 
-const CHAPTER_2_CAMPAIGN_IDS = new Set(['12'])
+const CHAPTER_2_CAMPAIGN_IDS = new Set(['12', '13'])
 
 const props = defineProps<{
   campaigns: Campaign[]
