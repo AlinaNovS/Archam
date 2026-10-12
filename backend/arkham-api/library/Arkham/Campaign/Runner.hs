@@ -37,6 +37,7 @@ import Arkham.Tarot
 import Arkham.UltimatumsAndBoons
 import Arkham.Xp
 import Data.Aeson.Key qualified as Aeson
+import Data.Aeson.Types (parseMaybe)
 import Data.Map.Strict qualified as Map
 
 defaultCampaignRunner :: IsCampaign a => Runner a
