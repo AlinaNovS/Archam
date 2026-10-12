@@ -504,17 +504,34 @@ data Message
     toasted by the API layer (the engine only announces it).
     -}
     EarnAchievement Achievement
+  | {- | Like 'EarnAchievement', but credited to a single investigator's player
+    rather than the whole table.
+    -}
+    EarnAchievementBy InvestigatorId Achievement
   | {- | Checklist items completed toward a cross-playthrough achievement
     (see 'achievementChecklist'); the API layer merges them into the
     per-user progress row and awards the earn when the list is complete.
     -}
     AchievementProgress Achievement [Text]
+  | {- | Like 'AchievementProgress', but credited to a single investigator's
+    player.
+    -}
+    AchievementProgressBy InvestigatorId Achievement [Text]
   | SetLocationOffset LocationId Double Double
   | ResetLocationOffsets
   | SetAsIfAtIgnored InvestigatorId Bool
   | SetGameRunWindows Bool
   | SetGameState GameState
   | SetGlobal Target Aeson.Key Value
+  | {- | Add to a numeric global. The arithmetic happens when the message is
+    processed, not when it is pushed, so the bump survives a 'Simultaneously'
+    block (each branch runs with a cleared queue, but shares game state).
+    -}
+    IncrementGlobal Target Aeson.Key Int
+  | {- | Insert into a list global, most-recent first. Same processing-time
+    rationale as 'IncrementGlobal'.
+    -}
+    InsertGlobal Target Aeson.Key Value
   | MoveWithSkillTest Message
   | MovedWithSkillTest SkillTestId Message
   | ClearInvestigators

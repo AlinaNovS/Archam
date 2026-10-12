@@ -166,6 +166,31 @@ data TheDrownedCityAchievement
 
 $(deriveJSON defaultOptions ''TheDrownedCityAchievement)
 
+-- | Children of Blood (campaign "13").
+data ChildrenOfBloodAchievement
+  = HideAndSeek
+  | FriendlyNeighborhoodInvestigator
+  | TrophyCollector
+  | NoMeatSlabUnhooked
+  | FilingPaperwork
+  | ThatLlLearnHim
+  | SafetyInspector
+  | ThanksForYourVote
+  | HellHathNoFury
+  | LookOutBelow
+  | APartyEveryoneCanEnjoy
+  | IfYouCantBeatThem
+  | YouGotRedOnYou
+  | DontForgetYourPPE
+  | BathedInBlood
+  | AndAllIGotWereTheseBloodyFangs
+  | ItsPartOfMyBackstory
+  | WaterfrontWetWork
+  deriving stock (Show, Eq, Ord, Data, Generic, Bounded, Enum)
+
+$(deriveJSON defaultOptions ''ChildrenOfBloodAchievement)
+
+
 {- | The Dream-Quest (campaign "06", side A). The Dream-Eaters prints two
 achievement lists, one per mini-campaign, and both are earnable in the same
 campaign id — the split is a presentation concern ('achievementCampaignPart'),
@@ -340,6 +365,7 @@ data Achievement
   | EdgeOfTheEarthAchievement EdgeOfTheEarthAchievement
   | TheScarletKeysAchievement TheScarletKeysAchievement
   | TheFeastOfHemlockValeAchievement TheFeastOfHemlockValeAchievement
+  | ChildrenOfBloodAchievement ChildrenOfBloodAchievement
   deriving stock (Eq, Show, Ord, Data)
 
 allAchievements :: [Achievement]
@@ -356,6 +382,7 @@ allAchievements =
     <> map EdgeOfTheEarthAchievement [minBound ..]
     <> map TheScarletKeysAchievement [minBound ..]
     <> map TheFeastOfHemlockValeAchievement [minBound ..]
+    <> map ChildrenOfBloodAchievement [minBound ..]
 
 -- | Flat constructor name; the wire and database representation.
 achievementName :: Achievement -> Text
@@ -372,6 +399,7 @@ achievementName = \case
   EdgeOfTheEarthAchievement a -> tshow a
   TheScarletKeysAchievement a -> tshow a
   TheFeastOfHemlockValeAchievement a -> tshow a
+  ChildrenOfBloodAchievement a -> tshow a
 
 parseAchievement :: Text -> Maybe Achievement
 parseAchievement t = lookup t achievementsByName
@@ -508,6 +536,10 @@ achievementChecklist = \case
       , "TheRuinousChime"
       , "TheWellspringOfFortune"
       ]
+  ChildrenOfBloodAchievement ItsPartOfMyBackstory ->
+    Just ["DanielaReyes", "MigueldelaCruz"]
+  ChildrenOfBloodAchievement WaterfrontWetWork ->
+    Just ["Easy", "Standard", "Hard", "Expert"]
   _ -> Nothing
 
 -- | Campaign ids this achievement can be earned in.
@@ -527,6 +559,7 @@ achievementCampaigns = \case
   EdgeOfTheEarthAchievement _ -> ["08"]
   TheScarletKeysAchievement _ -> ["09"]
   TheFeastOfHemlockValeAchievement _ -> ["10"]
+  ChildrenOfBloodAchievement _ -> ["13"]
 
 {- | Sub-grouping within a campaign, for lists that are printed per mini-campaign.
 Only The Dream-Eaters has one: its achievements are split between The Dream-Quest

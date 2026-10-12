@@ -15,9 +15,11 @@ import Arkham.Classes.HasGame
 import Arkham.Classes.HasQueue
 import Arkham.Game.Base
 import Arkham.Game.Settings (settingsAchievementsEnabled)
-import Arkham.Id (unCampaignId)
+import Arkham.Id (InvestigatorId, unCampaignId)
 import Arkham.Message
 import Arkham.Prelude
+import Arkham.Target
+import Data.Aeson.Key qualified as Key
 
 -- Inlined rather than Arkham.Game.Utils.modeCampaign: campaign modules import
 -- this module, and Game.Utils pulls Entities -> Campaign.Campaigns (a cycle).
@@ -61,3 +63,53 @@ achievementProgress achievement items = do
     $ push
     $ Priority
     $ AchievementProgress achievement items
+
+{- | Earn an achievement for a single investigator's player only. Same gating
+and Priority rationale as 'earnAchievement'.
+-}
+earnAchievementBy
+  :: (HasGame m, HasQueue Message m) => InvestigatorId -> Achievement -> m ()
+earnAchievementBy iid achievement = do
+  enabled <- settingsAchievementsEnabled . gameSettings <$> getGame
+  mCampaignId <- currentCampaignId
+  when (enabled && maybe False (`elem` achievementCampaigns achievement) mCampaignId)
+    $ push
+    $ Priority
+    $ EarnAchievementBy iid achievement
+
+-- | Report checklist items for a single investigator's player only.
+achievementProgressBy
+  :: (HasGame m, HasQueue Message m) => InvestigatorId -> Achievement -> [Text] -> m ()
+achievementProgressBy iid achievement items = do
+  enabled <- settingsAchievementsEnabled . gameSettings <$> getGame
+  mCampaignId <- currentCampaignId
+  when (enabled && notNull items && maybe False (`elem` achievementCampaigns achievement) mCampaignId)
+    $ push
+    $ Priority
+    $ AchievementProgressBy iid achievement items
+
+{- | Bump a campaign-store counter and re-check it once the bump has landed.
+The threshold check has to move with it: at push time the counter is still
+stale. The trailing 'Do' is where it belongs -- match it with 'CounterBumped'.
+-}
+bumpCounter :: HasQueue Message m => Text -> Int -> m ()
+bumpCounter k n = pushAll [Priority msg, Priority (Do msg)]
+ where
+  msg = IncrementGlobal CampaignTarget (Key.fromText k) n
+
+{- | List-valued counterpart of 'bumpCounter': insert into a set-like list
+global, most-recent first. Match the follow-up with 'GlobalInserted'.
+-}
+insertGlobal :: (HasQueue Message m, ToJSON a) => Text -> a -> m ()
+insertGlobal k v = pushAll [Priority msg, Priority (Do msg)]
+ where
+  msg = InsertGlobal CampaignTarget (Key.fromText k) (toJSON v)
+
+-- | The deferred check emitted by 'bumpCounter'; the counter now reads its new value.
+pattern CounterBumped :: Text -> Message
+pattern CounterBumped k <- Do (IncrementGlobal CampaignTarget (Key.toText -> k) _)
+
+-- | The deferred check emitted by 'insertGlobal'.
+pattern GlobalInserted :: Text -> Message
+pattern GlobalInserted k <- Do (InsertGlobal CampaignTarget (Key.toText -> k) _)
+

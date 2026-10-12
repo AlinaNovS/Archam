@@ -53,6 +53,12 @@ defaultCampaignRunner msg a = case msg of
         )
   SetGlobal CampaignTarget k v -> do
     pure $ updateAttrs a (storeL . at (Aeson.toText k) ?~ v)
+  IncrementGlobal CampaignTarget k n -> do
+    let bump mv = toJSON $ n + fromMaybe 0 (mv >>= parseMaybe parseJSON)
+    pure $ updateAttrs a (storeL . at (Aeson.toText k) %~ Just . bump)
+  InsertGlobal CampaignTarget k v -> do
+    let prepend mvs = toJSON $ nub $ v : fromMaybe [] (mvs >>= parseMaybe parseJSON)
+    pure $ updateAttrs a (storeL . at (Aeson.toText k) %~ Just . prepend)
   SetCampaignMeta v -> do
     pure $ updateAttrs a (metaL .~ v)
   AddCampaignModifiersForAll modTypes -> do
