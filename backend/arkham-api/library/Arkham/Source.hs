@@ -317,6 +317,12 @@ isAbilitySource a idx (PaymentSource inner) = isAbilitySource a idx inner
 isAbilitySource a idx (UseAbilitySource _ b idx') | idx == idx' = isSource a b
 isAbilitySource _ _ _ = False
 
+-- | Drop the investigator credited on 'UseAbilitySource' so an ability source
+-- compares equal regardless of who used it.
+asAbilitySource :: Source -> Source
+asAbilitySource (UseAbilitySource _ s n) = AbilitySource s n
+asAbilitySource s = s
+
 isProxyAbilitySource :: Sourceable a => a -> Int -> Source -> Bool
 isProxyAbilitySource a idx (AbilitySource (ProxySource _ b) idx') | idx == idx' = isSource a b
 isProxyAbilitySource a idx (UseAbilitySource _ (ProxySource _ b) idx') | idx == idx' = isSource a b

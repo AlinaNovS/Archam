@@ -855,7 +855,7 @@ payCost msg c iid skipAdditionalCosts cost = do
                   [ AbilityLabel
                       iid
                       (mkAbility (SourceableWithCardCode @CardCode "90078" iid) 1 $ freeReaction NotAnyWindow)
-                      [Window #when (Window.WouldAddChaosTokensToChaosBag (Just iid) $ replicate n #curse) (Just batchId)]
+                      [Window #when (Window.WouldAddChaosTokensToChaosBag (Just iid) $ replicate n #curse) (Just batchId) Nothing]
                       []
                       []
                   ]

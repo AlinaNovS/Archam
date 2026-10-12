@@ -242,7 +242,7 @@ changeDrawnBy drawer newDrawer =
     Window.DrawCard who _ _ -> who == drawer
     _ -> False
   changeWindow = \case
-    Window.Window t (Window.DrawCard who c f) batchId | who == drawer -> Window.Window t (Window.DrawCard newDrawer c f) batchId
+    w@(Window.windowType -> Window.DrawCard who c f) | who == drawer -> w {Window.windowType = Window.DrawCard newDrawer c f}
     other -> other
 
 attach :: (HasQueue Message m, Attachable a, Targetable target) => a -> target -> m ()

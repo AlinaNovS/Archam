@@ -311,9 +311,9 @@ instance RunMessage SkillTest where
           False
         Do (CheckWindows [Window Timing.When (Window.WouldPassSkillTest _ _) _]) ->
           False
-        CheckWindows [Window Timing.After (Window.SkillTestStep ResolveChaosSymbolEffectsStep) _] ->
+        CheckWindows [Window Timing.After (Window.SkillTestStep ResolveChaosSymbolEffectsStep) _ _] ->
           False
-        Do (CheckWindows [Window Timing.After (Window.SkillTestStep ResolveChaosSymbolEffectsStep) _]) ->
+        Do (CheckWindows [Window Timing.After (Window.SkillTestStep ResolveChaosSymbolEffectsStep) _ _]) ->
           False
         Ask player' (ChooseOne [SkillTestApplyResultsButton])
           | player == player' -> False

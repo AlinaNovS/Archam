@@ -100,7 +100,7 @@ wouldWindows window = do
   batchId <- getRandom
   pure
     ( batchId
-    , [ CheckWindows [Window timing window (Just batchId)]
+    , [ CheckWindows [Window timing window (Just batchId) Nothing]
       | timing <- [Timing.When, Timing.AtIf, Timing.After]
       ]
     )
