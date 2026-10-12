@@ -27,7 +27,7 @@ instance HasAbilities ReminiscenceSecrets where
         -- trigger it, and skipping costs skips the placement.
         mkAbility a 2
           $ triggered
-            (WouldDiscoverClues #when Anyone (locationWithInvestigator iid) AnyValue)
+            (WouldDiscoverClues #when Anyone (locationWithInvestigator iid) AnyValue AnySource)
             (InvestigatorPlaceClueOnLocationCost ThatInvestigator (Static 1))
       ]
     _ -> []

@@ -176,7 +176,7 @@ data WindowMatcher
   | DiscoveringLastClue Timing Who Where
   | LastClueRemovedFromLocation Timing LocationMatcher
   | DiscoverClues Timing Who Where ValueMatcher
-  | WouldDiscoverClues Timing Who Where ValueMatcher
+  | WouldDiscoverClues Timing Who Where ValueMatcher SourceMatcher
   | GainsClues Timing Who ValueMatcher
   | GainsResources Timing Who SourceMatcher ValueMatcher
   | SpendsResources Timing Who ValueMatcher

@@ -1,7 +1,7 @@
 module Arkham.Treachery.Cards.ChildrenOfBlood.Afflicted.RottingRemains (rottingRemains) where
 
 import Arkham.Treachery.CardDefs.ChildrenOfBlood.Afflicted qualified as Cards
-import Arkham.Treachery.Cards.NightOfTheZealot.StrikingFear.RottingRemains qualified as Base
+import Arkham.Treachery.Cards.RottingRemains qualified as Base
 import Arkham.Treachery.Import.Lifted
 
 newtype RottingRemains = RottingRemains Base.RottingRemains

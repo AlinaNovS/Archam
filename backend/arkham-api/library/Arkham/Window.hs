@@ -42,6 +42,7 @@ data Window = Window
   { windowTiming :: Timing
   , windowType :: WindowType
   , windowBatchId :: Maybe BatchId
+  , windowConditionTick :: Maybe Int
   }
   deriving stock (Show, Eq, Ord, Data)
 
@@ -55,19 +56,19 @@ instance HasField "kind" Window WindowType where
   getField = windowType
 
 mkWindow :: Timing -> WindowType -> Window
-mkWindow timing windowType = Window timing windowType Nothing
+mkWindow timing windowType = Window timing windowType Nothing Nothing
 
 mkCancel :: WindowType -> Window
-mkCancel windowType = Window #cancel windowType Nothing
+mkCancel windowType = Window #cancel windowType Nothing Nothing
 
 mkWhen :: WindowType -> Window
-mkWhen windowType = Window #when windowType Nothing
+mkWhen windowType = Window #when windowType Nothing Nothing
 
 mkAtIf :: WindowType -> Window
-mkAtIf windowType = Window #at windowType Nothing
+mkAtIf windowType = Window #at windowType Nothing Nothing
 
 mkAfter :: WindowType -> Window
-mkAfter windowType = Window #after windowType Nothing
+mkAfter windowType = Window #after windowType Nothing Nothing
 getBatchId :: [Window] -> BatchId
 getBatchId ws = case getMaybeBatchId ws of
   Just batchId -> batchId

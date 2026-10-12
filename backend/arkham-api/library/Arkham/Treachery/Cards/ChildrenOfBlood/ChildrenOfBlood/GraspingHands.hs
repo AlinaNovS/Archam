@@ -1,7 +1,7 @@
 module Arkham.Treachery.Cards.ChildrenOfBlood.ChildrenOfBlood.GraspingHands (graspingHands) where
 
 import Arkham.Treachery.CardDefs.ChildrenOfBlood.ChildrenOfBlood qualified as Cards
-import Arkham.Treachery.Cards.NightOfTheZealot.Ghouls.GraspingHands qualified as Base
+import Arkham.Treachery.Cards.GraspingHands qualified as Base
 import Arkham.Treachery.Import.Lifted
 
 newtype GraspingHands = GraspingHands Base.GraspingHands

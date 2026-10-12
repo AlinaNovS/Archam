@@ -166,6 +166,9 @@ may be different printings (their derived 'Eq' would say no).
 canonicalCardCode :: CardDef -> CardCode
 canonicalCardCode c = foldl' min (cdCardCode c) (cdAlternateCardCodes c)
 
+startsOnOtherSideTag :: Text
+startsOnOtherSideTag = "starts-on-other-side"
+
 data IsRevelation
   = NoRevelation
   | IsRevelation
