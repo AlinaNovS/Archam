@@ -6248,6 +6248,7 @@ library
       Arkham.Stats
       Arkham.Story
       Arkham.Story.CardDefs.Base
+      Arkham.Story.CardDefs.Import
       Arkham.Story.Cards
       Arkham.Story.Cards.ABitterRivalry
       Arkham.Story.Cards.AboveAndBelow
