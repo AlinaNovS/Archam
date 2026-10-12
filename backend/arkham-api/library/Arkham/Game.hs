@@ -1056,6 +1056,11 @@ getInvestigatorsMatching MatcherFunc {..} matcher = do
             . attr investigatorSealedChaosTokens
         )
         as
+    InvestigatorWithMostSealedChaosToken chaosTokenMatcher -> do
+      most <-
+        highestAmongst UneliminatedInvestigator
+          $ fieldMapM InvestigatorSealedChaosTokens (countM (`matches` IncludeSealed chaosTokenMatcher))
+      as & runMatchesM \i -> pure $ toId i `elem` most
     ThatInvestigator -> error "ThatInvestigator must be resolved in criteria"
     InvestigatorWithAnyFailedSkillTestsThisTurn -> flip runMatchesM as \i -> do
       x <- getHistoryField TurnHistory (toId i) HistorySkillTestsPerformed
@@ -1580,6 +1585,10 @@ getInvestigatorsMatching MatcherFunc {..} matcher = do
         EncounterDeckTarget -> scenarioField ScenarioHasEncounterDeck
         _ -> pure True
 
+highestAmongst
+  :: HasGame m => InvestigatorMatcher -> (InvestigatorId -> m Int) -> m [InvestigatorId]
+highestAmongst matcher f = maxes <$> (select matcher >>= (`forToSnd` f))
+
 isHighestAmongst
   :: HasGame m
   => InvestigatorId
@@ -1762,6 +1771,7 @@ getTreacheriesMatching matcher = do
     TreacheryWithModifier modifierType -> \t -> do
       modifiers' <- getModifiers (toTarget t)
       pure $ modifierType `elem` modifiers'
+    TreacheryDrawnFromDeck deck -> fieldMap TreacheryDrawnFrom (== Just deck) . toId
     TreacheryDiscardedBy investigatorMatcher -> \t -> do
       let discardee = fromMaybe (attr treacheryDrawnBy t) (attr treacheryDiscardedBy t)
       iids <- select investigatorMatcher

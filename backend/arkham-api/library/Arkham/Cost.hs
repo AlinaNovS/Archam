@@ -86,6 +86,7 @@ data Payment
   | SupplyPayment Supply
   | AddCurseTokenPayment Int
   | AddFrostTokenPayment Int
+  | AddTokenPayment Int ChaosTokenFace
   deriving stock (Show, Eq, Ord, Data)
 
 instance Plated Payment where
@@ -193,6 +194,7 @@ data Cost
   | SealCost ChaosTokenMatcher
   | SealMultiCost Int ChaosTokenMatcher
   | AddFrostTokenCost Int
+  | AddTokenCost Int ChaosTokenFace
   | AddCurseTokenCost Int
   | AddCurseTokensCost Int Int
   | AddCurseTokensEqualToShroudCost

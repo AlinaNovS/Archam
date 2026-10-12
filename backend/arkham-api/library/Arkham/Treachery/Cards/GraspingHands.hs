@@ -1,4 +1,4 @@
-module Arkham.Treachery.Cards.GraspingHands (graspingHands) where
+module Arkham.Treachery.Cards.GraspingHands (GraspingHands (..), graspingHands) where
 
 import Arkham.Treachery.Cards qualified as Cards
 import Arkham.Treachery.Import.Lifted

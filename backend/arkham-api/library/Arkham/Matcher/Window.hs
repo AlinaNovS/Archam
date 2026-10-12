@@ -177,6 +177,8 @@ data WindowMatcher
   | LastClueRemovedFromLocation Timing LocationMatcher
   | DiscoverClues Timing Who Where ValueMatcher
   | WouldDiscoverClues Timing Who Where ValueMatcher SourceMatcher
+  | ChaosTokenSealedOn Timing Who ChaosTokenMatcher
+  | EnemyDealsDamage Timing EnemyMatcher
   | GainsClues Timing Who ValueMatcher
   | GainsResources Timing Who SourceMatcher ValueMatcher
   | SpendsResources Timing Who ValueMatcher

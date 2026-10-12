@@ -4,6 +4,7 @@
 module Arkham.Matcher.Treachery where
 
 import Arkham.Card.CardCode
+import Arkham.Deck (DeckSignifier)
 import Arkham.Card.Id
 import Arkham.Id
 import {-# SOURCE #-} Arkham.Matcher.Asset
@@ -53,6 +54,7 @@ data TreacheryMatcher
   | TreacheryWithResolvedEffectsBy InvestigatorMatcher
   | TreacheryDiscardedBy InvestigatorMatcher
   | TreacheryWithModifier ModifierType
+  | TreacheryDrawnFromDeck DeckSignifier
   | AnyTreachery
   | InPlayTreachery
   | HiddenTreachery

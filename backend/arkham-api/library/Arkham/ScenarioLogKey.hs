@@ -187,6 +187,14 @@ data ScenarioLogKey
   | AffrontedTheRulerOfThisRealm
   | -- Investigator Cards
     YouOweBiancaResources (Labeled InvestigatorId) Int
+  | -- | Children of Blood: River of Blood
+    TheInvestigatorsFoundASacrificialDagger
+  | -- | Children of Blood: New Horizons
+    TheInvestigatorsStoleTheManagersKeys
+  | TheInvestigatorsFoundTheManagersKeys
+  | TheInvestigatorsFoundForgedPermits
+  | TheInvestigatorsFoundASheetOfArcaneSymbols
+  | TheInvestigatorsSpokeWithPriscillaThomas
   deriving stock (Eq, Show, Ord, Data)
 
 data ScenarioCountKey

@@ -3,6 +3,7 @@
 module Arkham.CampaignLogKey where
 
 import Arkham.Campaigns.BrethrenOfAsh.Key
+import Arkham.Campaigns.ChildrenOfBlood.Key
 import Arkham.Campaigns.EdgeOfTheEarth.Key
 import Arkham.Campaigns.NightOfTheZealot.Key
 import Arkham.Campaigns.TheCircleUndone.Key
@@ -43,6 +44,7 @@ data CampaignLogKey
   | TheFeastOfHemlockValeKey TheFeastOfHemlockValeKey
   | BrethrenOfAshKey BrethrenOfAshKey
   | TheDrownedCityKey TheDrownedCityKey
+  | ChildrenOfBloodKey ChildrenOfBloodKey
   | -- | The single shared wrapper through which any homebrew campaign plugs its
     -- own key enum into the log — the homebrew analogue of the per-campaign
     -- @…Key …Key@ constructors above, but injected rather than hardcoded. Each
@@ -117,6 +119,7 @@ instance FromJSON CampaignLogKey where
       <|> (TheFeastOfHemlockValeKey <$> parseJSON o)
       <|> (BrethrenOfAshKey <$> parseJSON o)
       <|> (TheDrownedCityKey <$> parseJSON o)
+      <|> (ChildrenOfBloodKey <$> parseJSON o)
       <|> (TheLabyrinthsOfLunacyKey <$> parseJSON o)
       <|> $(mkParseJSON defaultOptions ''CampaignLogKey) o
       <|> parseStringKey o
@@ -291,6 +294,12 @@ instance IsCampaignLogKey TheDrownedCityKey where
     TheDrownedCityKey k -> Just k
     _ -> Nothing
 
+instance IsCampaignLogKey ChildrenOfBloodKey where
+  toCampaignLogKey = ChildrenOfBloodKey
+  fromCampaignLogKey = \case
+    ChildrenOfBloodKey k -> Just k
+    _ -> Nothing
+
 instance IsCampaignLogKey TheLabyrinthsOfLunacyKey where
   toCampaignLogKey = TheLabyrinthsOfLunacyKey
   fromCampaignLogKey = \case
@@ -360,6 +369,7 @@ instance ToGameLoggerFormat CampaignLogKey where
     TheFeastOfHemlockValeKey k -> pack . go $ show k
     BrethrenOfAshKey k -> pack . go $ show k
     TheDrownedCityKey k -> pack . go $ show k
+    ChildrenOfBloodKey k -> pack . go $ show k
     HomebrewCampaignLogKey t -> pack . go $ unpack t
     s -> pack . go $ show s
    where

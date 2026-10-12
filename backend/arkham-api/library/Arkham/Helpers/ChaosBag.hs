@@ -40,6 +40,30 @@ getRemainingCurseTokens = selectCount $ InTokenPool #curse
 getRemainingBlessTokens :: HasGame m => m Int
 getRemainingBlessTokens = selectCount $ InTokenPool #bless
 
+getRemainingBloodTokens :: HasGame m => m Int
+getRemainingBloodTokens = selectCount $ InTokenPool #blood
+
+{- | The size of the physical supply a face is drawn from, or 'Nothing' when the
+face is minted on demand. Covers the official pooled faces; homebrew custom
+chaos tokens are not pool-capped here.
+-}
+chaosTokenFacePool :: ChaosTokenFace -> Maybe Int
+chaosTokenFacePool = \case
+  BlessToken -> Just 10
+  CurseToken -> Just 10
+  FrostToken -> Just 8
+  BloodToken -> Just 12
+  _ -> Nothing
+
+-- | Whether n more tokens of this face could be added to the chaos bag.
+canAddChaosTokenFaces :: HasGame m => Int -> ChaosTokenFace -> m Bool
+canAddChaosTokenFaces n face = case chaosTokenFacePool face of
+  Nothing -> pure True
+  Just _ -> (>= n) <$> selectCount (InTokenPool $ ChaosTokenFaceIs face)
+
+canAddChaosTokenFace :: HasGame m => ChaosTokenFace -> m Bool
+canAddChaosTokenFace = canAddChaosTokenFaces 1
+
 getSealedChaosTokens :: HasGame m => m [ChaosToken]
 getSealedChaosTokens =
   concat

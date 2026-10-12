@@ -387,6 +387,18 @@ matcherTiming m = case gmapQ cast m of
   (mTiming : _) -> mTiming
   [] -> Nothing
 
+-- An investigator's basic Fight/Evade/Engage/Investigate/Move is an ability *on* the
+-- enemy card, so its source unwraps to an EnemySource -- but the enemy is not the one
+-- doing it.
+isBasicActionSource :: Source -> Bool
+isBasicActionSource = \case
+  UseAbilitySource _ _ idx -> idx >= AbilityAttack && idx <= AbilityMove
+  AbilitySource _ idx -> idx >= AbilityAttack && idx <= AbilityMove
+  IndexedSource _ s -> isBasicActionSource s
+  ProxySource s s' -> isBasicActionSource s || isBasicActionSource s'
+  PaymentSource s -> isBasicActionSource s
+  _ -> False
+
 windowMatches
   :: (HasGame m, HasCallStack)
   => InvestigatorId
@@ -1755,6 +1767,11 @@ windowMatches iid rawSource window'@(windowTiming &&& windowType -> (timing', wT
         Window.IgnoreChaosToken who token ->
           andM [matchWho iid who whoMatcher, matchChaosToken who token tokenMatcher]
         _ -> noMatch
+    Matcher.ChaosTokenSealedOn timing whoMatcher tokenMatcher ->
+      guardTiming timing $ \case
+        Window.ChaosTokenSealedOn who token ->
+          andM [matchWho iid who whoMatcher, matchChaosToken who token tokenMatcher]
+        _ -> noMatch
     Matcher.ChaosTokenSealed timing whoMatcher tokenMatcher ->
       guardTiming timing $ \case
         Window.ChaosTokenSealed who token ->
@@ -1993,6 +2010,11 @@ windowMatches iid rawSource window'@(windowTiming &&& windowType -> (timing', wT
             , sourceMatches source' sourceMatcher
             ]
         _ -> noMatch
+    Matcher.EnemyDealsDamage timing enemyMatcher -> guardTiming timing $ \case
+      Window.DealtDamage source' _ _ _
+        | not (isBasicActionSource source') ->
+            sourceMatches source' (Matcher.SourceIsEnemy enemyMatcher)
+      _ -> noMatch
     Matcher.EnemyDealtDamage timing damageEffectMatcher enemyMatcher sourceMatcher ->
       guardTiming timing $ \case
         Window.DealtDamage source' damageEffect (EnemyTarget eid) _ ->

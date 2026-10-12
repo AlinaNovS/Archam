@@ -370,6 +370,7 @@ data WindowType
   | ResolvesTreachery InvestigatorId TreacheryId
   | ResolvesChaosToken InvestigatorId ChaosToken
   | ChaosTokenSealed InvestigatorId ChaosToken
+  | ChaosTokenSealedOn InvestigatorId ChaosToken
   | ChaosTokenReleased InvestigatorId ChaosToken
   | IgnoreChaosToken InvestigatorId ChaosToken
   | CancelChaosToken InvestigatorId ChaosToken
