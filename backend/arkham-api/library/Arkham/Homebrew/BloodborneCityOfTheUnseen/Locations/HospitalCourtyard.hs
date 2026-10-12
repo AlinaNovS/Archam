@@ -32,10 +32,17 @@ pointed out the printed action arrow had no corresponding ability). Modeled
 on the real official precedent 'Location.Cards.SecurityOffice_128' (search
 top 6, draw found card), with the matcher narrowed to Item-or-Supply traits
 and 'playerLimit PerGame' for the "once per investigator" restriction.
+2026-10-11: the printed icon is a single action-ability chevron (costs 1 of
+the investigator's 3 actions), not a Fast-ability icon -- user caught this
+by reading the card closely; originally miscoded as 'FastAbility Free'
+despite citing the correct precedent above. Fixed to 'actionAbility'
+(ActionCost 1) -- NOT 'doubleActionAbility' like SecurityOffice_128 itself,
+since that card's own icon is the 2-action version and this one's printed
+icon is confirmed single, not doubled.
 -}
 instance HasAbilities HospitalCourtyard where
   getAbilities (HospitalCourtyard a) =
-    extend a [playerLimit PerGame $ restricted a 1 Here $ FastAbility Free]
+    extend a [playerLimit PerGame $ restricted a 1 Here actionAbility]
 
 instance RunMessage HospitalCourtyard where
   runMessage msg l@(HospitalCourtyard attrs) = runQueueT $ case msg of
