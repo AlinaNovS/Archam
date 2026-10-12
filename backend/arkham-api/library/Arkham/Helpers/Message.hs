@@ -649,7 +649,7 @@ cancelDoom target n = do
       _ -> error "mismatched"
 
     replaceWindowDoomAmount m Window {..} =
-      Window {windowTiming, windowBatchId, windowType = replaceWindowTypeDoomAmount m windowType}
+      Window {windowTiming, windowBatchId, windowConditionTick, windowType = replaceWindowTypeDoomAmount m windowType}
 
     replaceDoomAmount m = \case
       CheckWindows ws -> CheckWindows (map (replaceWindowDoomAmount m) ws)
