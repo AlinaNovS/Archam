@@ -4,6 +4,7 @@
   "homebrew": true,
   "chapter": 1,
   "designer": "aughhhh",
+  "beta": true,
   "difficultyLevels": {
     "Easy": [
       "PlusOne",
