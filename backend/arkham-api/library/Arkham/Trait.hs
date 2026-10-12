@@ -77,6 +77,8 @@ data Trait
   | Coterie
   | Courage
   | Covenant
+  | Dawn
+  | Day
   | Creature
   | Crew
   | CrimeScene
@@ -93,6 +95,7 @@ data Trait
   | Desperate
   | Detective
   | Developed
+  | Dusk
   | Dhole
   | Dilemma
   | Dinosaur
@@ -172,6 +175,7 @@ data Trait
   | Insect
   | Insight
   | Instrument
+  | Lab
   | Island
   | Istanbul
   | Item
@@ -209,6 +213,7 @@ data Trait
   | Misfortune
   | Miskatonic
   | Mnar
+  | Night
   | Monster
   | Montreal
   | Mountain
@@ -252,6 +257,7 @@ data Trait
   | Profession
   | PresentDay
   | Private
+  | Reward
   | Prop
   | Providence
   | Public
@@ -345,6 +351,7 @@ data Trait
   | Uncharted
   | Unhallowed
   | Unpracticed
+  | Warehouse
   | Unstable
   | Upgrade
   | Vale
