@@ -32,7 +32,7 @@ instance RunMessage ChosenOfZburamoarteFightingTheHunger where
   runMessage msg a@(ChosenOfZburamoarteFightingTheHunger attrs) = runQueueT $ case msg of
     UseThisAbility _ (isSource attrs -> True) 1 -> do
       n <- min 5 <$> getRemainingBloodTokens
-      repeated n $ addChaosTokenForGame #blood
+      repeated n $ addChaosToken #blood
       pure a
     RevealChaosToken _ iid token -> do
       withSkillTestSource \_ -> do
