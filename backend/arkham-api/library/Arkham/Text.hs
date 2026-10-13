@@ -102,6 +102,18 @@ i18nEntry t = I18nEntry (intercalate "." (?scope <> [t])) ?scopeVars
 i18nWithTitle :: HasI18n => Text -> FlavorText
 i18nWithTitle t = FlavorText (Just $ toI18n $ t <> ".title") [i18nEntry $ t <> ".body"]
 
+headerEntry :: HasI18n => Scope -> FlavorTextEntry
+headerEntry t = HeaderEntry 1 (intercalate "." (?scope <> [t]))
+
+{- | 'i18nWithTitle' with the title also shown as a heading in the body, the way
+a scenario intro is presented.
+-}
+i18nWithHeading :: HasI18n => Text -> FlavorText
+i18nWithHeading t =
+  FlavorText
+    (Just $ toI18n $ t <> ".title")
+    [headerEntry $ t <> ".title", i18nEntry $ t <> ".body"]
+
 toI18n :: HasI18n => Text -> Text
 toI18n = ("$" <>) . ikey
 

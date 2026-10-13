@@ -70,7 +70,7 @@ instance RunMessage NewHorizons where
   runMessage msg s@(NewHorizons attrs) = runQueueT $ scenarioI18n $ case msg of
     PreScenarioSetup -> do
       addChaosToken #cultist
-      storyWithChooseOneM
+      storyWithChooseOneM'
         ( scope "intro" do
             h "title"
             p "body"
@@ -323,7 +323,7 @@ spendExperienceToRemoveBlood attrs msg key = do
   resolutionFlavorWithChooseOne
     (withVars ["xp" .= xp] $ setTitle (key <> ".title") >> p (key <> ".body"))
     $ popScope do
-      labeledValidate (hasBlood && available >= cost) "spendExperienceToRemoveBlood"
+      labeledValidate' (hasBlood && available >= cost) "spendExperienceToRemoveBlood"
         $ doStep cost msg
       labeled "doNotSpendExperience" nothing
 
