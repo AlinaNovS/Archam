@@ -104,7 +104,7 @@ runNotzAchievements msg = whenEligibleCampaign $ case msg of
     cardDef <- fieldMap EnemyCard toCardDef eid
 
     when (Ghoul `elem` traits) do
-      bumpCounter ghoulsDefeatedKey
+      bumpCounter ghoulsDefeatedKey 1
       -- "Pinch Hitter": 3 Ghouls with one Baseball Bat, without it breaking.
       -- Kills are counted per asset id; a broken (discarded) bat's id simply
       -- never reaches 3, and a re-played copy enters with a fresh id.
@@ -118,7 +118,7 @@ runNotzAchievements msg = whenEligibleCampaign $ case msg of
             earnAchievement $ NightOfTheZealotAchievement PinchHitter
 
     when (Cultist `elem` traits && cdUnique cardDef) do
-      bumpCounter uniqueCultistsDefeatedKey
+      bumpCounter uniqueCultistsDefeatedKey 1
 
     when (cardDef == Enemies.ghoulPriest) do
       -- "The Zealot's Revenge": Lita Chantler's reaction (+1 damage while the
@@ -267,7 +267,4 @@ setStore k v = push $ SetGlobal CampaignTarget (Key.fromText k) (toJSON v)
 storedInt :: (HasCallStack, HasGame m) => Text -> m Int
 storedInt k = fromMaybe 0 <$> stored k
 
-bumpCounter :: (HasCallStack, HasGame m, HasQueue Message m) => Text -> m ()
-bumpCounter k = do
-  n <- storedInt k
-  setStore k (n + 1)
+
