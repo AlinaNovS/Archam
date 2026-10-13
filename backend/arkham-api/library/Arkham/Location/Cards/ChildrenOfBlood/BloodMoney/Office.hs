@@ -1,4 +1,4 @@
-module Arkham.Location.Cards.ChildrenOfBlood.BloodMoney.Office (office) where
+module Arkham.Location.Cards.ChildrenOfBlood.BloodMoney.Office (officeChildrenOfBlood) where
 
 import Arkham.Ability
 import Arkham.Location.CardDefs.ChildrenOfBlood.BloodMoney qualified as Cards
@@ -10,8 +10,8 @@ newtype Office = Office LocationAttrs
   deriving anyclass (IsLocation, HasModifiersFor)
   deriving newtype (Show, Eq, ToJSON, FromJSON, Entity)
 
-office :: LocationCard Office
-office = symbolLabel $ location Office Cards.office 4 (PerPlayer 1)
+officeChildrenOfBlood :: LocationCard Office
+officeChildrenOfBlood = symbolLabel $ location Office Cards.officeChildrenOfBlood 4 (PerPlayer 1)
 
 instance HasAbilities Office where
   getAbilities (Office a) =

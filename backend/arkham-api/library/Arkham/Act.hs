@@ -547,4 +547,13 @@ allActs = (mapFrom someActCardCode Registry.acts <>) $
     , SomeActCard thePhantomShop
     , SomeActCard fightBack
     , SomeActCard banishHim
+    , -- Children of Blood
+      SomeActCard bloodbathChildrenOfBlood
+    , SomeActCard bringDownTheBeast
+    , SomeActCard cornerTheSuspect
+    , SomeActCard dealOrNoDeal
+    , SomeActCard locateTheLair
+    , SomeActCard theSearchForAnswers
+    , SomeActCard toNewHorizons
+    , SomeActCard whereIsWilkes
     ]

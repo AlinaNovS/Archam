@@ -1,4 +1,4 @@
-module Arkham.Location.Cards.ChildrenOfBlood.BloodMoney.Balcony (balcony) where
+module Arkham.Location.Cards.ChildrenOfBlood.BloodMoney.Balcony (balconyChildrenOfBlood) where
 
 import Arkham.Ability
 import Arkham.Helpers.Modifiers hiding (gameModifier)
@@ -12,8 +12,8 @@ newtype Balcony = Balcony LocationAttrs
   deriving anyclass (IsLocation, HasModifiersFor)
   deriving newtype (Show, Eq, ToJSON, FromJSON, Entity)
 
-balcony :: LocationCard Balcony
-balcony = symbolLabel $ location Balcony Cards.balcony 1 (Static 0)
+balconyChildrenOfBlood :: LocationCard Balcony
+balconyChildrenOfBlood = symbolLabel $ location Balcony Cards.balconyChildrenOfBlood 1 (Static 0)
 
 instance HasAbilities Balcony where
   getAbilities (Balcony a) =

@@ -110,8 +110,8 @@ suspiciousGuest =
     , cdKeywords = setFromList [Keyword.Aloof, Keyword.Doomed]
     }
 
-childOfBlood :: CardDef
-childOfBlood =
+childOfBloodBloodMoney :: CardDef
+childOfBloodBloodMoney =
   (enemy "13091" "Child of Blood" BloodMoney 3)
     { cdHealthDamage = healthDamage 1
     , cdSanityDamage = sanityDamage 1

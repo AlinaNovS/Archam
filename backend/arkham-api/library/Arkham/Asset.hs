@@ -1683,4 +1683,12 @@ allAssets =
       , SomeAssetCard obsidianClawPower
       , SomeAssetCard johnRaymondLegrasse
       , SomeAssetCard horrorInClay
+      , -- Children of Blood
+        SomeAssetCard charlieKaneKnowsAGuy
+      , SomeAssetCard chosenOfZburamoarteCompelledToFeed
+      , SomeAssetCard chosenOfZburamoarteFightingTheHunger
+      , SomeAssetCard detectiveReynoldsInOverHisHead
+      , SomeAssetCard fangOfZburamoarte
+      , SomeAssetCard forgedPermit
+      , SomeAssetCard sanguineSong
       ]

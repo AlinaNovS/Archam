@@ -1,4 +1,4 @@
-module Arkham.Location.Cards.ChildrenOfBlood.BloodMoney.Study (study) where
+module Arkham.Location.Cards.ChildrenOfBlood.BloodMoney.Study (studyChildrenOfBlood) where
 
 import Arkham.Ability
 import Arkham.Location.CardDefs.ChildrenOfBlood.BloodMoney qualified as Cards
@@ -9,8 +9,8 @@ newtype Study = Study LocationAttrs
   deriving anyclass (IsLocation, HasModifiersFor)
   deriving newtype (Show, Eq, ToJSON, FromJSON, Entity)
 
-study :: LocationCard Study
-study = symbolLabel $ location Study Cards.study 3 (PerPlayer 1)
+studyChildrenOfBlood :: LocationCard Study
+studyChildrenOfBlood = symbolLabel $ location Study Cards.studyChildrenOfBlood 3 (PerPlayer 1)
 
 instance HasAbilities Study where
   getAbilities (Study a) =

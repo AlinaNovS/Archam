@@ -26,7 +26,7 @@ instance HasAbilities WhereIsWilkes where
     [ mkAbility x 1
         $ Objective
         $ forced
-        $ Enters #after Anyone (locationIs Locations.masterBedroom)
+        $ Enters #after Anyone (locationIs Locations.masterBedroomChildrenOfBlood)
     ]
 
 instance RunMessage WhereIsWilkes where
@@ -35,7 +35,7 @@ instance RunMessage WhereIsWilkes where
       advancedWithOther attrs
       pure a
     AdvanceAct (isSide B attrs -> True) _ _ -> do
-      masterBedroom <- selectJust $ locationIs Locations.masterBedroom
+      masterBedroom <- selectJust $ locationIs Locations.masterBedroomChildrenOfBlood
       wilkes <- getSetAsideCardsMatching (#enemy <> CardWithTitle "Howard Wilkes")
       for_ wilkes \card -> do
         eid <- createEnemyAt card masterBedroom

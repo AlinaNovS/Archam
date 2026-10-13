@@ -14,8 +14,8 @@ torturousTransformation =
     { cdCardTraits = setFromList [Power, Blight]
     }
 
-rottingRemains :: CardDef
-rottingRemains =
+rottingRemainsChildrenOfBlood :: CardDef
+rottingRemainsChildrenOfBlood =
   (treachery "13096" "Rotting Remains" Afflicted 2)
     { cdCardTraits = singleton Terror
     }

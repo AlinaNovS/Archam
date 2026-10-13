@@ -277,4 +277,6 @@ allStories = (mapFrom someStoryCardCode Registry.stories <>) $
     , SomeStoryCard hopeFades
     , -- Bad Blood
       SomeStoryCard triumphAndSubjugation
+    , -- Children of Blood
+      SomeStoryCard bloodToken
     ]

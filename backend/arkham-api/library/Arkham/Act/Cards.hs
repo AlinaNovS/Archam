@@ -1,6 +1,9 @@
 module Arkham.Act.Cards (module Arkham.Act.Cards, module X) where
 
 import Arkham.Act.CardDefs.Base as X
+import Arkham.Act.CardDefs.ChildrenOfBlood.BloodMoney as X
+import Arkham.Act.CardDefs.ChildrenOfBlood.NewHorizons as X
+import Arkham.Act.CardDefs.ChildrenOfBlood.RiverOfBlood as X
 import Arkham.Homebrew.Defs qualified as Homebrew
 import Arkham.Act.CardDefs.Core2026 as X
 import Arkham.Act.CardDefs.EdgeOfTheEarth as X

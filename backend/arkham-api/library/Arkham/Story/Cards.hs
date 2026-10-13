@@ -7,6 +7,7 @@ import Arkham.Homebrew.Defs qualified as Homebrew
 import Arkham.Name
 import Arkham.Prelude
 import Arkham.Story.CardDefs.Base
+import Arkham.Story.CardDefs.ChildrenOfBlood
 import Arkham.Trait
 
 allStoryCards :: Map CardCode CardDef
@@ -231,6 +232,7 @@ allStoryCards =
       , deckOfPossibilities
       , realityAcid
       , triumphAndSubjugation
+      , bloodToken
       ]
 
 victory :: Int -> CardDef -> CardDef

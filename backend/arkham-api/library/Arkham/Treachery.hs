@@ -1107,4 +1107,25 @@ allTreacheries = (mapFromList (concatMap someTreacheryCardCodes Registry.treache
       , SomeTreacheryCard stillBehindYou
       , SomeTreacheryCard deepOneAmbush
       , SomeTreacheryCard infernalMachinery
+      , -- Children of Blood
+        SomeTreacheryCard graspingHandsChildrenOfBlood
+      , SomeTreacheryCard rottingRemainsChildrenOfBlood
+      , SomeTreacheryCard frenziedHunger
+      , SomeTreacheryCard torturousTransformation
+      , SomeTreacheryCard unnaturalStrength
+      , SomeTreacheryCard blightedBlood
+      , SomeTreacheryCard grislyCompulsion
+      , SomeTreacheryCard sanguineRebirth
+      , SomeTreacheryCard bloodMoon
+      , SomeTreacheryCard bloodthirst
+      , SomeTreacheryCard nowhereToHide
+      , SomeTreacheryCard ofTheNight
+      , SomeTreacheryCard theBloodBlight
+      , SomeTreacheryCard misinformation
+      , SomeTreacheryCard echoingInDarkness
+      , SomeTreacheryCard feedingGrounds
+      , SomeTreacheryCard burningDaylight
+      , SomeTreacheryCard morbidRituals
+      , SomeTreacheryCard inTheShadows
+      , SomeTreacheryCard voicesInTheNight
       ]

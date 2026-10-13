@@ -7432,6 +7432,13 @@ library
       Arkham.Treachery.Cards.ChildrenOfBlood.SanguineSecrets.MorbidRituals
       Arkham.Treachery.Cards.ChildrenOfBlood.Stalked.InTheShadows
       Arkham.Treachery.Cards.ChildrenOfBlood.Stalked.VoicesInTheNight
+      Arkham.Asset.Assets.CharlieKaneKnowsAGuy
+      Arkham.Asset.Assets.ChosenOfZburamoarteCompelledToFeed
+      Arkham.Asset.Assets.ChosenOfZburamoarteFightingTheHunger
+      Arkham.Asset.Assets.DetectiveReynoldsInOverHisHead
+      Arkham.Asset.Assets.FangOfZburamoarte
+      Arkham.Asset.Assets.ForgedPermit
+      Arkham.Asset.Assets.SanguineSong
   other-modules:
       Paths_arkham_api
   hs-source-dirs:

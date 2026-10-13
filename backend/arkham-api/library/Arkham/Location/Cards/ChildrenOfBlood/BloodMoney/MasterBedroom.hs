@@ -1,4 +1,4 @@
-module Arkham.Location.Cards.ChildrenOfBlood.BloodMoney.MasterBedroom (masterBedroom) where
+module Arkham.Location.Cards.ChildrenOfBlood.BloodMoney.MasterBedroom (masterBedroomChildrenOfBlood) where
 
 import Arkham.Card
 import Arkham.Cost
@@ -16,8 +16,8 @@ newtype MasterBedroom = MasterBedroom LocationAttrs
   deriving anyclass IsLocation
   deriving newtype (Show, Eq, ToJSON, FromJSON, Entity)
 
-masterBedroom :: LocationCard MasterBedroom
-masterBedroom = symbolLabel $ location MasterBedroom Cards.masterBedroom 4 (PerPlayer 2)
+masterBedroomChildrenOfBlood :: LocationCard MasterBedroom
+masterBedroomChildrenOfBlood = symbolLabel $ location MasterBedroom Cards.masterBedroomChildrenOfBlood 4 (PerPlayer 2)
 
 instance HasModifiersFor MasterBedroom where
   getModifiersFor (MasterBedroom a) =

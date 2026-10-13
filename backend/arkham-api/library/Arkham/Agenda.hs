@@ -485,4 +485,17 @@ allAgendas = (mapFrom someAgendaCardCode Registry.agendas <>) $
     , SomeAgendaCard theComingStorm
     , SomeAgendaCard theDoomOfArkham
     , SomeAgendaCard theFinalSeal
+    , -- Children of Blood
+      SomeAgendaCard busyDay
+    , SomeAgendaCard diggingDeeperV1
+    , SomeAgendaCard diggingDeeperV2
+    , SomeAgendaCard feedingFrenzyV1
+    , SomeAgendaCard feedingFrenzyV2
+    , SomeAgendaCard partyWithoutAHost
+    , SomeAgendaCard quietNight
+    , SomeAgendaCard theFinalNight
+    , SomeAgendaCard theFirstDay
+    , SomeAgendaCard theFirstNightChildrenOfBlood
+    , SomeAgendaCard theSecondDay
+    , SomeAgendaCard underABloodMoon
     ]

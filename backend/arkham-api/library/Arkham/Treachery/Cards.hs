@@ -3,6 +3,21 @@ module Arkham.Treachery.Cards (module Arkham.Treachery.Cards, module X) where
 
 import Arkham.Homebrew.Defs qualified as Homebrew
 import Arkham.Treachery.CardDefs.Base as X
+import Arkham.Treachery.CardDefs.ChildrenOfBlood.Afflicted as X
+import Arkham.Treachery.CardDefs.ChildrenOfBlood.AgentsOfZburamoarte as X
+import Arkham.Treachery.CardDefs.ChildrenOfBlood.BloodBlight as X
+import Arkham.Treachery.CardDefs.ChildrenOfBlood.BloodMoney as X
+import Arkham.Treachery.CardDefs.ChildrenOfBlood.BloodMoon as X
+import Arkham.Treachery.CardDefs.ChildrenOfBlood.Bloodthirst as X
+import Arkham.Treachery.CardDefs.ChildrenOfBlood.ChildrenOfBlood as X
+import Arkham.Treachery.CardDefs.ChildrenOfBlood.Hunted as X
+import Arkham.Treachery.CardDefs.ChildrenOfBlood.Infected as X
+import Arkham.Treachery.CardDefs.ChildrenOfBlood.Misinformation as X
+import Arkham.Treachery.CardDefs.ChildrenOfBlood.NewHorizons as X
+import Arkham.Treachery.CardDefs.ChildrenOfBlood.PreyedUpon as X
+import Arkham.Treachery.CardDefs.ChildrenOfBlood.RiverOfBlood as X
+import Arkham.Treachery.CardDefs.ChildrenOfBlood.SanguineSecrets as X
+import Arkham.Treachery.CardDefs.ChildrenOfBlood.Stalked as X
 import Arkham.Treachery.CardDefs.Core2026 as X
 import Arkham.Treachery.CardDefs.EdgeOfTheEarth as X
 import Arkham.Treachery.CardDefs.NightOfTheZealot as X

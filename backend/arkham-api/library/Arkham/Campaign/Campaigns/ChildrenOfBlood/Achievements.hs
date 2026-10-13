@@ -51,7 +51,7 @@ runChildrenOfBloodAchievements msg = whenEligibleCampaign $ case msg of
   -- advanced, Julia can no longer be defeated "before" it.
   AdvanceAgenda aid -> whenScenarioIs riverOfBloodId do
     cardDef <- fieldMap AgendaCard toCardDef aid
-    when (cardDef == Agendas.theFirstNight) $ setStore agenda2AdvancedKey True
+    when (cardDef == Agendas.theFirstNightChildrenOfBlood) $ setStore agenda2AdvancedKey True
   Defeated (EnemyTarget eid) _ source _ -> do
     cardDef <- fieldMap EnemyCard toCardDef eid
     let title = toTitle cardDef.name
@@ -73,7 +73,7 @@ runChildrenOfBloodAchievements msg = whenEligibleCampaign $ case msg of
       -- as the source, so the killing source unwraps to a Julia Stern enemy.
       juliaKilled <- sourceIsEnemyNamed "Julia Stern" source
       when juliaKilled $ earn HellHathNoFury
-      viaBalcony <- isLocationAbility Locations.balcony 1 source
+      viaBalcony <- isLocationAbility Locations.balconyChildrenOfBlood 1 source
       when viaBalcony $ earn LookOutBelow
 
   -- Story assets and rewards reach a deck through the campaign's card list.

@@ -3,6 +3,15 @@ module Arkham.Enemy.Cards (module Arkham.Enemy.Cards, module X) where
 import Arkham.Enemy.CardDefs.AllOrNothing as X
 import Arkham.Enemy.CardDefs.BadBlood as X
 import Arkham.Enemy.CardDefs.Base as X
+import Arkham.Enemy.CardDefs.ChildrenOfBlood.AgentsOfZburamoarte as X
+import Arkham.Enemy.CardDefs.ChildrenOfBlood.BloodMoney as X
+import Arkham.Enemy.CardDefs.ChildrenOfBlood.ChildrenOfBlood as X
+import Arkham.Enemy.CardDefs.ChildrenOfBlood.Mongrels as X
+import Arkham.Enemy.CardDefs.ChildrenOfBlood.NewHorizons as X
+import Arkham.Enemy.CardDefs.ChildrenOfBlood.PreyedUpon as X
+import Arkham.Enemy.CardDefs.ChildrenOfBlood.RiverOfBlood as X
+import Arkham.Enemy.CardDefs.ChildrenOfBlood.SanguineSecrets as X
+import Arkham.Enemy.CardDefs.ChildrenOfBlood.Vermin as X
 import Arkham.Enemy.CardDefs.ByTheBook as X
 import Arkham.Enemy.CardDefs.Core2026 as X
 import Arkham.Enemy.CardDefs.EdgeOfTheEarth as X

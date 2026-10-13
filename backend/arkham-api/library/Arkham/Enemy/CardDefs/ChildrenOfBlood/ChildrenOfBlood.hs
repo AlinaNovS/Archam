@@ -3,8 +3,8 @@ module Arkham.Enemy.CardDefs.ChildrenOfBlood.ChildrenOfBlood where
 import Arkham.Enemy.CardDefs.Import
 import Arkham.Keyword qualified as Keyword
 
-childOfBlood :: CardDef
-childOfBlood =
+childOfBloodChildrenOfBlood :: CardDef
+childOfBloodChildrenOfBlood =
   (enemy "13103" "Child of Blood" ChildrenOfBlood 3)
     { cdHealthDamage = healthDamage 1
     , cdSanityDamage = sanityDamage 1

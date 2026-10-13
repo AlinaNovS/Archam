@@ -255,15 +255,15 @@ instance RunMessage BloodMoney where
         , if defeatedZburamoarte then Agendas.feedingFrenzyV2 else Agendas.feedingFrenzyV1
         , Agendas.underABloodMoon
         ]
-      setActDeck [Acts.dealOrNoDeal, Acts.whereIsWilkes, Acts.bloodbath]
+      setActDeck [Acts.dealOrNoDeal, Acts.whereIsWilkes, Acts.bloodbathChildrenOfBlood]
 
-      office <- place Locations.office
-      study <- place Locations.study
+      office <- place Locations.officeChildrenOfBlood
+      study <- place Locations.studyChildrenOfBlood
       diningHall <- place Locations.diningHall
-      place_ Locations.kitchen
+      place_ Locations.kitchenChildrenOfBlood
       startAt =<< place Locations.foyerBoringParty
-      setAside [Locations.masterBedroom]
-      if isEasyStandard attrs then setAside [Locations.balcony] else removeEvery [Locations.balcony]
+      setAside [Locations.masterBedroomChildrenOfBlood]
+      if isEasyStandard attrs then setAside [Locations.balconyChildrenOfBlood] else removeEvery [Locations.balconyChildrenOfBlood]
 
       enemyAt_ Enemies.priscillaThomas diningHall
       enemyAt_ Enemies.suspiciousGuest study

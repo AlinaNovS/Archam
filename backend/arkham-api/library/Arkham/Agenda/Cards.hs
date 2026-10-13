@@ -1,6 +1,9 @@
 module Arkham.Agenda.Cards (module Arkham.Agenda.Cards, module X) where
 
 import Arkham.Agenda.CardDefs.Base as X
+import Arkham.Agenda.CardDefs.ChildrenOfBlood.BloodMoney as X
+import Arkham.Agenda.CardDefs.ChildrenOfBlood.NewHorizons as X
+import Arkham.Agenda.CardDefs.ChildrenOfBlood.RiverOfBlood as X
 import Arkham.Homebrew.Defs qualified as Homebrew
 import Arkham.Agenda.CardDefs.NightOfTheZealot as X
 import Arkham.Agenda.CardDefs.TheDunwichLegacy as X

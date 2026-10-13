@@ -108,7 +108,7 @@ instance RunMessage RiverOfBlood where
       when (n >= 3) $ gather Set.Afflicted
 
       setAgendaDeck
-        [Agendas.theFirstDay, Agendas.theFirstNight, Agendas.theSecondDay, Agendas.theFinalNight]
+        [Agendas.theFirstDay, Agendas.theFirstNightChildrenOfBlood, Agendas.theSecondDay, Agendas.theFinalNight]
       setActDeck [Acts.locateTheLair, Acts.cornerTheSuspect]
 
       if isEasyStandard attrs

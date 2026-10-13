@@ -1,4 +1,4 @@
-module Arkham.Enemy.Cards.ChildrenOfBlood.ChildrenOfBlood.ChildOfBlood (childOfBlood) where
+module Arkham.Enemy.Cards.ChildrenOfBlood.ChildrenOfBlood.ChildOfBlood (childOfBloodChildrenOfBlood) where
 
 import Arkham.Enemy.CardDefs.ChildrenOfBlood.ChildrenOfBlood qualified as Cards
 import Arkham.Enemy.Import.Lifted
@@ -8,7 +8,7 @@ newtype ChildOfBlood = ChildOfBlood EnemyAttrs
   deriving anyclass (IsEnemy, HasModifiersFor, RunMessage)
   deriving newtype (Show, Eq, ToJSON, FromJSON, Entity, HasAbilities)
 
-childOfBlood :: EnemyCard ChildOfBlood
-childOfBlood =
-  enemy ChildOfBlood Cards.childOfBlood
+childOfBloodChildrenOfBlood :: EnemyCard ChildOfBlood
+childOfBloodChildrenOfBlood =
+  enemy ChildOfBlood Cards.childOfBloodChildrenOfBlood
     & setPrey (InvestigatorWithMostSealedChaosToken #blood)

@@ -1017,4 +1017,32 @@ allEnemies =
       , SomeEnemyCard deepOneThrall
       , SomeEnemyCard elderDeepOne
       , SomeEnemyCard persistentConstruct
+      , -- Children of Blood
+        SomeEnemyCard blightedWorker
+      , SomeEnemyCard bloodCrazedMongrel
+      , SomeEnemyCard bloodCrazedVermin
+      , SomeEnemyCard bloodCrazedZealot
+      , SomeEnemyCard childOfBloodBloodMoney
+      , SomeEnemyCard childOfBloodChildrenOfBlood
+      , SomeEnemyCard factoryWorker
+      , SomeEnemyCard howardWilkesFirstChildOfZburamoarte
+      , SomeEnemyCard howardWilkesTooFarGone
+      , SomeEnemyCard howardWilkesUltimatePredator
+      , SomeEnemyCard javierRivera
+      , SomeEnemyCard juliaSternChildOfVengeance
+      , SomeEnemyCard juliaSternFirstVictimOfNewHorizons
+      , SomeEnemyCard juliaSternOnTheRun
+      , SomeEnemyCard juliaSternOutForBlood
+      , SomeEnemyCard juliaSternPreyingUponArkham
+      , SomeEnemyCard juliaSternStalkingTheStreets
+      , SomeEnemyCard nightFeeder
+      , SomeEnemyCard nightWatchman
+      , SomeEnemyCard priscillaThomas
+      , SomeEnemyCard sanguineCultist
+      , SomeEnemyCard spawnOfZburamoarte
+      , SomeEnemyCard suspiciousGuest
+      , SomeEnemyCard waterfrontCivilian
+      , SomeEnemyCard zburamoarteLethargicBeast
+      , SomeEnemyCard zburamoarteProgenitorOfMonsters
+      , SomeEnemyCard zburamoarteTheSourceOfTheBlight
       ]

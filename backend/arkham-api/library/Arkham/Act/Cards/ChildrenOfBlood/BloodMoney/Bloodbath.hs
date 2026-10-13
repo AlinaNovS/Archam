@@ -1,4 +1,4 @@
-module Arkham.Act.Cards.ChildrenOfBlood.BloodMoney.Bloodbath (bloodbath) where
+module Arkham.Act.Cards.ChildrenOfBlood.BloodMoney.Bloodbath (bloodbathChildrenOfBlood) where
 
 import Arkham.Ability
 import Arkham.Act.CardDefs.ChildrenOfBlood.BloodMoney qualified as Cards
@@ -18,8 +18,8 @@ newtype Bloodbath = Bloodbath ActAttrs
   deriving anyclass (IsAct, HasModifiersFor)
   deriving newtype (Show, Eq, ToJSON, FromJSON, Entity)
 
-bloodbath :: ActCard Bloodbath
-bloodbath = act (3, A) Bloodbath Cards.bloodbath Nothing
+bloodbathChildrenOfBlood :: ActCard Bloodbath
+bloodbathChildrenOfBlood = act (3, A) Bloodbath Cards.bloodbathChildrenOfBlood Nothing
 
 instance HasAbilities Bloodbath where
   getAbilities = actAbilities \x ->

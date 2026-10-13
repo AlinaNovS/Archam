@@ -2,6 +2,9 @@ module Arkham.Location.Cards (module Arkham.Location.Cards, module X) where
 
 import Arkham.Homebrew.Defs qualified as Homebrew
 import Arkham.Location.CardDefs.Base as X
+import Arkham.Location.CardDefs.ChildrenOfBlood.BloodMoney as X
+import Arkham.Location.CardDefs.ChildrenOfBlood.NewHorizons as X
+import Arkham.Location.CardDefs.ChildrenOfBlood.RiverOfBlood as X
 import Arkham.Location.CardDefs.ByTheBook as X
 import Arkham.Location.CardDefs.Core2026 as X
 import Arkham.Location.CardDefs.EdgeOfTheEarth as X

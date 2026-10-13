@@ -16,11 +16,11 @@ diningHall :: CardDef
 diningHall =
   location "13077" "Dining Hall" [Hall] Square [Circle, T, Triangle, Diamond] BloodMoney
 
-study :: CardDef
-study = location "13078" "Study" [] T [Circle, Square, Triangle, Hourglass] BloodMoney
+studyChildrenOfBlood :: CardDef
+studyChildrenOfBlood = location "13078" "Study" [] T [Circle, Square, Triangle, Hourglass] BloodMoney
 
-masterBedroom :: CardDef
-masterBedroom =
+masterBedroomChildrenOfBlood :: CardDef
+masterBedroomChildrenOfBlood =
   victory 1
     $ locationWithUnrevealed
       "13079"
@@ -34,11 +34,11 @@ masterBedroom =
       [Square, T, Moon]
       BloodMoney
 
-kitchen :: CardDef
-kitchen = victory 1 $ location "13080" "Kitchen" [] Diamond [Square] BloodMoney
+kitchenChildrenOfBlood :: CardDef
+kitchenChildrenOfBlood = victory 1 $ location "13080" "Kitchen" [] Diamond [Square] BloodMoney
 
-office :: CardDef
-office = victory 1 $ location "13081" "Office" [] Hourglass [T] BloodMoney
+officeChildrenOfBlood :: CardDef
+officeChildrenOfBlood = victory 1 $ location "13081" "Office" [] Hourglass [T] BloodMoney
 
-balcony :: CardDef
-balcony = victory 1 $ location "13082" "Balcony" [] Moon [Triangle] BloodMoney
+balconyChildrenOfBlood :: CardDef
+balconyChildrenOfBlood = victory 1 $ location "13082" "Balcony" [] Moon [Triangle] BloodMoney

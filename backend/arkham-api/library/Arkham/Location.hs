@@ -1468,4 +1468,48 @@ allLocations =
       , SomeLocationCard southsideRuined
       , SomeLocationCard westernRooftops
       , SomeLocationCard easternRooftops
+      , -- Children of Blood
+        SomeLocationCard backAlleyDawn
+      , SomeLocationCard backAlleyDusk
+      , SomeLocationCard balconyChildrenOfBlood
+      , SomeLocationCard cavernEntranceDarkestDepths
+      , SomeLocationCard cavernEntranceShallowTunnels
+      , SomeLocationCard descendingTunnel
+      , SomeLocationCard diningHall
+      , SomeLocationCard erwinBridgeDawn
+      , SomeLocationCard erwinBridgeDusk
+      , SomeLocationCard factoryFloorEastDay
+      , SomeLocationCard factoryFloorEastNight
+      , SomeLocationCard factoryFloorWestDay
+      , SomeLocationCard factoryFloorWestNight
+      , SomeLocationCard foyerBloodyNight
+      , SomeLocationCard foyerBoringParty
+      , SomeLocationCard garrisonStreetDawn
+      , SomeLocationCard garrisonStreetDusk
+      , SomeLocationCard hiddenLaboratoryDarkestDepths
+      , SomeLocationCard hiddenLaboratoryShallowTunnels
+      , SomeLocationCard kitchenChildrenOfBlood
+      , SomeLocationCard loadingDockDay
+      , SomeLocationCard loadingDockNight
+      , SomeLocationCard lockedChamberDarkestDepths
+      , SomeLocationCard lockedChamberShallowTunnels
+      , SomeLocationCard mainStreetDawn
+      , SomeLocationCard mainStreetDusk
+      , SomeLocationCard managersOfficeDay
+      , SomeLocationCard managersOfficeNight
+      , SomeLocationCard masterBedroomChildrenOfBlood
+      , SomeLocationCard officeChildrenOfBlood
+      , SomeLocationCard riverDocksDawn
+      , SomeLocationCard riverDocksDusk
+      , SomeLocationCard secretChamberDarkestDepths
+      , SomeLocationCard secretChamberShallowTunnels
+      , SomeLocationCard storageDay
+      , SomeLocationCard storageNight
+      , SomeLocationCard studyChildrenOfBlood
+      , SomeLocationCard unvisitedIsleDawn
+      , SomeLocationCard unvisitedIsleDusk
+      , SomeLocationCard waterStreetDawn
+      , SomeLocationCard waterStreetDusk
+      , SomeLocationCard waterfrontWarehouseDawn
+      , SomeLocationCard waterfrontWarehouseDusk
       ]

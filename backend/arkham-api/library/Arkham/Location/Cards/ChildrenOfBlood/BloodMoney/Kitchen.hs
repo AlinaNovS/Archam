@@ -1,4 +1,4 @@
-module Arkham.Location.Cards.ChildrenOfBlood.BloodMoney.Kitchen (kitchen) where
+module Arkham.Location.Cards.ChildrenOfBlood.BloodMoney.Kitchen (kitchenChildrenOfBlood) where
 
 import Arkham.Ability
 import Arkham.Location.CardDefs.ChildrenOfBlood.BloodMoney qualified as Cards
@@ -9,8 +9,8 @@ newtype Kitchen = Kitchen LocationAttrs
   deriving anyclass (IsLocation, HasModifiersFor)
   deriving newtype (Show, Eq, ToJSON, FromJSON, Entity)
 
-kitchen :: LocationCard Kitchen
-kitchen = symbolLabel $ location Kitchen Cards.kitchen 4 (PerPlayer 1)
+kitchenChildrenOfBlood :: LocationCard Kitchen
+kitchenChildrenOfBlood = symbolLabel $ location Kitchen Cards.kitchenChildrenOfBlood 4 (PerPlayer 1)
 
 instance HasAbilities Kitchen where
   getAbilities (Kitchen a) =

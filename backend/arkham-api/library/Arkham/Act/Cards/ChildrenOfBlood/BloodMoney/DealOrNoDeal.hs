@@ -47,9 +47,9 @@ instance RunMessage DealOrNoDeal where
       advancedWithOther attrs
       pure a
     AdvanceAct (isSide B attrs -> True) _ _ -> do
-      placeSetAsideLocation_ Locations.masterBedroom
-      whenM (selectAny $ SetAsideCardMatch $ cardIs Locations.balcony)
-        $ placeSetAsideLocation_ Locations.balcony
+      placeSetAsideLocation_ Locations.masterBedroomChildrenOfBlood
+      whenM (selectAny $ SetAsideCardMatch $ cardIs Locations.balconyChildrenOfBlood)
+        $ placeSetAsideLocation_ Locations.balconyChildrenOfBlood
 
       perPlayer <- getPlayerCount
       selectEach (RevealedLocation <> not_ LocationWithVictory) \lid -> do
