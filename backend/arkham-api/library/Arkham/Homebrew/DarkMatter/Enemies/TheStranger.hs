@@ -12,8 +12,8 @@ absent from @dm-cards.json@. If it prints an ability beyond its keywords, it is
 not modelled here.
 -}
 newtype TheStranger = TheStranger EnemyAttrs
-  deriving anyclass (IsEnemy, HasModifiersFor, HasAbilities)
-  deriving newtype (Show, Eq, ToJSON, FromJSON, Entity)
+  deriving anyclass (IsEnemy, HasModifiersFor)
+  deriving newtype (Show, Eq, ToJSON, FromJSON, Entity, HasAbilities)
 
 theStranger :: EnemyCard TheStranger
 theStranger = enemy TheStranger Cards.theStranger

@@ -9,8 +9,8 @@ import Arkham.Location.Import.Lifted
 import Arkham.Matcher
 
 newtype DerelictShip = DerelictShip LocationAttrs
-  deriving anyclass (IsLocation, HasAbilities)
-  deriving newtype (Show, Eq, ToJSON, FromJSON, Entity)
+  deriving anyclass IsLocation
+  deriving newtype (Show, Eq, ToJSON, FromJSON, Entity, HasAbilities)
 
 derelictShip :: LocationCard DerelictShip
 derelictShip = location DerelictShip Cards.derelictShip 3 (PerPlayer 1)

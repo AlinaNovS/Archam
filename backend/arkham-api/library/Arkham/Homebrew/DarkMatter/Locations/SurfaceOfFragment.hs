@@ -5,8 +5,8 @@ import Arkham.Homebrew.DarkMatter.CardDefs.Locations qualified as Cards
 import Arkham.Location.Import.Lifted
 
 newtype SurfaceOfFragment = SurfaceOfFragment LocationAttrs
-  deriving anyclass (IsLocation, HasModifiersFor, HasAbilities)
-  deriving newtype (Show, Eq, ToJSON, FromJSON, Entity)
+  deriving anyclass (IsLocation, HasModifiersFor)
+  deriving newtype (Show, Eq, ToJSON, FromJSON, Entity, HasAbilities)
 
 {- | "Cannot be flipped." — modelled by having no other side; the resign action
 Shall Dry and Die grants it lives on that agenda.

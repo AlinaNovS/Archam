@@ -26,8 +26,8 @@ that actually prints it: both fired, removing the asset twice and adding 2
 Impending Doom instead of 1.
 -}
 newtype Haita = Haita EnemyAttrs
-  deriving anyclass (IsEnemy, HasModifiersFor, HasAbilities)
-  deriving newtype (Show, Eq, ToJSON, FromJSON, Entity)
+  deriving anyclass (IsEnemy, HasModifiersFor)
+  deriving newtype (Show, Eq, ToJSON, FromJSON, Entity, HasAbilities)
 
 haita :: EnemyCard Haita
 haita = enemy Haita Cards.haita

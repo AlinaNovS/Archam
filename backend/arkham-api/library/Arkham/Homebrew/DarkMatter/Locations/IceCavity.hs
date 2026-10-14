@@ -9,8 +9,8 @@ import Arkham.Matcher
 import Arkham.Trait (Trait (Cave))
 
 newtype IceCavity = IceCavity LocationAttrs
-  deriving anyclass (IsLocation, HasAbilities)
-  deriving newtype (Show, Eq, ToJSON, FromJSON, Entity)
+  deriving anyclass IsLocation
+  deriving newtype (Show, Eq, ToJSON, FromJSON, Entity, HasAbilities)
 
 iceCavity :: LocationCard IceCavity
 iceCavity = locationWith IceCavity Cards.iceCavity 6 (PerPlayer 1) (canBeFlippedL .~ True)

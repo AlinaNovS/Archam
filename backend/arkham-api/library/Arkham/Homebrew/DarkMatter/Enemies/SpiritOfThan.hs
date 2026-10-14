@@ -9,8 +9,8 @@ import Arkham.Keyword qualified as Keyword
 import Arkham.Matcher
 
 newtype SpiritOfThan = SpiritOfThan EnemyAttrs
-  deriving anyclass (IsEnemy, HasAbilities)
-  deriving newtype (Show, Eq, ToJSON, FromJSON, Entity)
+  deriving anyclass IsEnemy
+  deriving newtype (Show, Eq, ToJSON, FromJSON, Entity, HasAbilities)
 
 -- | "Prey - Least "Memories" only."
 spiritOfThan :: EnemyCard SpiritOfThan
