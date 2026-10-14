@@ -26,9 +26,14 @@ pattern.
 
 Ability 2 is the real "spend 1 clue to remove a barricade" half of the
 card's own text, adapted from the official In Too Deep scenario's identical
-mechanic (see 'Arkham.Homebrew.BloodborneCityOfTheUnseen.Helpers'). The "OR
-test agility (4)" alternative is NOT YET IMPLEMENTED -- only the clue-spend
-option is wired.
+mechanic (see 'Arkham.Homebrew.BloodborneCityOfTheUnseen.Helpers'). Ability 3
+is the "OR test agility (4)" alternative -- same target action
+('removeBarrierBetweenConnected'), mirrors the official In Too Deep
+scenario's own skill-test barrier-removal ability
+('Arkham.Location.Cards.SawboneAlleyInTooDeep') for the
+cost/trigger shape (Fast, no action cost, same as ability 2 by symmetry --
+not independently re-read off the raw card scan this session, just inferred
+from Helpers.hs's already-quoted card text and ability 2's own shape).
 -}
 instance HasAbilities MoonlitRevival where
   getAbilities (MoonlitRevival a) =
@@ -40,11 +45,21 @@ instance HasAbilities MoonlitRevival where
           $ GroupClueCost (PerPlayer 2) "Hospital Courtyard"
       , restrictedAbility a 2 (exists $ YourLocation <> LocationWithAdjacentBarrier)
           $ FastAbility (GroupClueCost (StaticWithPerPlayer 1 1) Anywhere)
+      , skillTestAbility
+          $ restrictedAbility a 3 (exists $ YourLocation <> LocationWithAdjacentBarrier)
+          $ FastAbility Free
       ]
 
 instance RunMessage MoonlitRevival where
   runMessage msg a@(MoonlitRevival attrs) = runQueueT $ case msg of
     UseThisAbility iid (isSource attrs -> True) 2 -> do
+      withLocationOf iid (removeBarrierBetweenConnected iid)
+      pure a
+    UseThisAbility iid (isSource attrs -> True) 3 -> do
+      sid <- getRandom
+      beginSkillTest sid iid (attrs.ability 3) iid #agility (Fixed 4)
+      pure a
+    PassedThisSkillTest iid (isAbilitySource attrs 3 -> True) -> do
       withLocationOf iid (removeBarrierBetweenConnected iid)
       pure a
     AdvanceAct (isSide B attrs -> True) _ _ -> do

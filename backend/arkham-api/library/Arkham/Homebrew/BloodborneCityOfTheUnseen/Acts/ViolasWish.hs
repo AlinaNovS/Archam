@@ -16,7 +16,8 @@ instance HasModifiersFor ViolasWish
 {- | The "Viola Gascoigne in victory display: advance" objective is NOT YET
 IMPLEMENTED -- Viola Gascoigne doesn't have a CardDef yet. The "remove a
 barricade for 1 clue" half IS real, same mechanism as
-'Arkham.Homebrew.BloodborneCityOfTheUnseen.Acts.MoonlitRevival'.
+'Arkham.Homebrew.BloodborneCityOfTheUnseen.Acts.MoonlitRevival', and so is
+ability 2's "OR test agility (4)" alternative.
 -}
 violasWish :: ActCard ViolasWish
 violasWish = act (3, A) ViolasWish Cards.violasWish Nothing
@@ -27,11 +28,21 @@ instance HasAbilities ViolasWish where
       a
       [ restrictedAbility a 1 (exists $ YourLocation <> LocationWithAdjacentBarrier)
           $ FastAbility (GroupClueCost (StaticWithPerPlayer 1 1) Anywhere)
+      , skillTestAbility
+          $ restrictedAbility a 2 (exists $ YourLocation <> LocationWithAdjacentBarrier)
+          $ FastAbility Free
       ]
 
 instance RunMessage ViolasWish where
   runMessage msg a@(ViolasWish attrs) = runQueueT $ case msg of
     UseThisAbility iid (isSource attrs -> True) 1 -> do
+      withLocationOf iid (removeBarrierBetweenConnected iid)
+      pure a
+    UseThisAbility iid (isSource attrs -> True) 2 -> do
+      sid <- getRandom
+      beginSkillTest sid iid (attrs.ability 2) iid #agility (Fixed 4)
+      pure a
+    PassedThisSkillTest iid (isAbilitySource attrs 2 -> True) -> do
       withLocationOf iid (removeBarrierBetweenConnected iid)
       pure a
     _ -> ViolasWish <$> liftRunMessage msg attrs
