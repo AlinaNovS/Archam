@@ -15,6 +15,8 @@ import redTideRising from '@/locales/ru/standalone/redTideRising.json'
 import carnevaleOfHorrors from '@/locales/ru/standalone/carnevaleOfHorrors.json'
 import fortuneAndFolly from '@/locales/ru/standalone/fortuneAndFolly.json'
 import theBlobThatAteEverything from '@/locales/ru/standalone/theBlobThatAteEverything.json'
+import filmFatale from '@/locales/ru/standalone/filmFatale.json'
+import theMidwinterGala from '@/locales/ru/standalone/theMidwinterGala.json'
 
 export default {
   curseOfTheRougarou,
@@ -33,5 +35,7 @@ export default {
   redTideRising,
   carnevaleOfHorrors,
   fortuneAndFolly,
-  theBlobThatAteEverything
+  theBlobThatAteEverything,
+  filmFatale,
+  theMidwinterGala
 }
