@@ -9,8 +9,8 @@ import Arkham.Matcher
 import Arkham.Projection
 
 newtype HoundOfTindalos = HoundOfTindalos EnemyAttrs
-  deriving anyclass (IsEnemy, HasAbilities)
-  deriving newtype (Show, Eq, ToJSON, FromJSON, Entity)
+  deriving anyclass IsEnemy
+  deriving newtype (Show, Eq, ToJSON, FromJSON, Entity, HasAbilities)
 
 {- | "Spawn - Put Hound of Tindalos into play next to the act deck, at no specific
 location."

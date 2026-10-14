@@ -9,8 +9,8 @@ import Arkham.Message.Lifted.Choose
 import Arkham.Message.Lifted.Move
 
 newtype SpiralStaircase = SpiralStaircase LocationAttrs
-  deriving anyclass (IsLocation, HasModifiersFor, HasAbilities)
-  deriving newtype (Show, Eq, ToJSON, FromJSON, Entity)
+  deriving anyclass (IsLocation, HasModifiersFor)
+  deriving newtype (Show, Eq, ToJSON, FromJSON, Entity, HasAbilities)
 
 -- | The [[Carcosa]] face of Bottomless Pit.
 spiralStaircase :: LocationCard SpiralStaircase

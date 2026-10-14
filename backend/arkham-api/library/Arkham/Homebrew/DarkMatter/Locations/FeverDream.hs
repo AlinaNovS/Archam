@@ -13,8 +13,8 @@ import Arkham.Message.Lifted.Log
 import Arkham.Projection
 
 newtype FeverDream = FeverDream LocationAttrs
-  deriving anyclass (IsLocation, HasAbilities)
-  deriving newtype (Show, Eq, ToJSON, FromJSON, Entity)
+  deriving anyclass IsLocation
+  deriving newtype (Show, Eq, ToJSON, FromJSON, Entity, HasAbilities)
 
 feverDream :: LocationCard FeverDream
 feverDream = location FeverDream Cards.feverDream 3 (PerPlayer 2)

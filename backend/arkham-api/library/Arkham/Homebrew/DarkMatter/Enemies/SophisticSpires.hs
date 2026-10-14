@@ -8,8 +8,8 @@ import Arkham.Keyword qualified as Keyword
 import Arkham.Matcher
 
 newtype SophisticSpires = SophisticSpires EnemyAttrs
-  deriving anyclass (IsEnemy, HasAbilities)
-  deriving newtype (Show, Eq, ToJSON, FromJSON, Entity)
+  deriving anyclass IsEnemy
+  deriving newtype (Show, Eq, ToJSON, FromJSON, Entity, HasAbilities)
 
 -- | "Spawn - Nearest [[Carcosa]] location."
 sophisticSpires :: EnemyCard SophisticSpires

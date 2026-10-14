@@ -6,8 +6,8 @@ import Arkham.Homebrew.DarkMatter.Helpers (flipToOtherSide)
 import Arkham.Location.Import.Lifted
 
 newtype HiddenPassage = HiddenPassage LocationAttrs
-  deriving anyclass (IsLocation, HasModifiersFor, HasAbilities)
-  deriving newtype (Show, Eq, ToJSON, FromJSON, Entity)
+  deriving anyclass (IsLocation, HasModifiersFor)
+  deriving newtype (Show, Eq, ToJSON, FromJSON, Entity, HasAbilities)
 
 -- | No printed ability; it is the [[Surface]]/[[Cave]] junction of the map.
 hiddenPassage :: LocationCard HiddenPassage
