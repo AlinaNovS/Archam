@@ -54,19 +54,33 @@ const homebrewCampaigns = computed(() =>
   props.campaigns.filter((c) => c.homebrew && WORKING_HOMEBREW_IDS.has(c.id))
 )
 
-// Which homebrew campaigns have real, sourced Russian narrative text (not
-// just RU card art) -- circus-ex-mortis/dark-matter via
-// frontend/homebrew/<id>/locales/ru/, Bloodborne via the backend's own
-// scenarioI18n for its one implemented scenario. Anything homebrew NOT
-// listed here shows the "not yet translated" ribbon -- keeps the badge
-// honest as more Tier-B campaigns get added to WORKING_HOMEBREW_IDS ahead
-// of their own translation work.
-const TRANSLATED_HOMEBREW_IDS = new Set([
-  ':circus-ex-mortis',
-  ':dark-matter',
-  ':bloodborne-city-of-the-unseen',
-])
-const isUntranslated = (c: Campaign) => c.homebrew && !TRANSLATED_HOMEBREW_IDS.has(c.id)
+// Per-campaign localization/completeness status, shown as a badge on the
+// campaign tile. Three states:
+//   'full'    -- real, sourced RU text AND the implemented portion covers
+//                the whole campaign (no known missing scenarios/mechanics).
+//   'partial' -- real, sourced RU text exists for what IS built, but the
+//                campaign itself is a known-incomplete slice (missing
+//                scenarios, encounter cards, or mechanics) -- see the
+//                per-campaign gap notes in [[project-arkham-homebrew-campaigns]].
+//   'none'    -- no real translated narrative text at all yet (card art only,
+//                or pure placeholder). Not currently reachable via the picker
+//                since WORKING_HOMEBREW_IDS hides anything not at least
+//                partially done, but kept so a campaign added ahead of its
+//                translation work still shows the right badge.
+type LocalizationStatus = 'full' | 'partial' | 'none'
+const HOMEBREW_LOCALIZATION_STATUS: Record<string, LocalizationStatus> = {
+  ':circus-ex-mortis': 'full',
+  ':dark-matter': 'full',
+  // Only Scenario 1 of 8 ("The Hunt Begins") is implemented; the Insight
+  // chaos-bag token, the agility(4) barrier-removal alternative, the 8
+  // unique encounter treacheries, and the Scourge Beast enemy are all
+  // deliberately not yet built (see HuntBegins.hs's own doc comment).
+  ':bloodborne-city-of-the-unseen': 'partial',
+}
+const localizationStatus = (c: Campaign): LocalizationStatus =>
+  c.homebrew ? (HOMEBREW_LOCALIZATION_STATUS[c.id] ?? 'none') : 'full'
+const isUntranslated = (c: Campaign) => localizationStatus(c) === 'none'
+const isPartiallyLocalized = (c: Campaign) => localizationStatus(c) === 'partial'
 const chapter1SideStories = computed(() =>
   props.sideStories.filter((s) => !isChapter2(s.id) && !isHomebrew(s.id))
 )
@@ -229,6 +243,9 @@ function selectGameMode(mode: 'Campaign' | 'SideStory') {
     </div>
   </template>
   <template v-else>
+    <div v-if="campaignGroup === 'homebrew'" class="homebrew-warning">
+      {{ $t('create.homebrewWarning') }}
+    </div>
     <div class="campaigns">
       <template v-for="c in activeCampaigns" :key="c.id">
         <div class="campaign">
@@ -261,6 +278,9 @@ function selectGameMode(mode: 'Campaign' | 'SideStory') {
           </span>
           <span v-if="isUntranslated(c)" class="untranslated-note">
             {{ $t('create.notYetTranslated') }}
+          </span>
+          <span v-if="isPartiallyLocalized(c)" class="partial-note">
+            {{ $t('create.partiallyLocalized') }}
           </span>
         </div>
       </template>
@@ -624,10 +644,21 @@ input[type='radio']:checked + label {
 .untranslated-note {
   display: block;
   margin-top: 4px;
+  line-height: 1.3;
   font-size: 11px;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: rgba(140, 164, 206, 0.85);
+}
+
+.partial-note {
+  display: block;
+  margin-top: 4px;
+  line-height: 1.3;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(218, 165, 32, 0.9);
 }
 
 .beta-warning,
