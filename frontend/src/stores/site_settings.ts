@@ -27,7 +27,14 @@ export const useSiteSettingsStore = defineStore("site_settings", {
       // } else {
         const result = await api.get('/site-settings')
         if (result.status === 200) {
-          this.assetHost = result.data.assetHost ?? baseUrl
+          // Backend returns assetHost: null to explicitly mean "serve images
+          // locally" (see web-entrypoint.sh's ASSET_HOST auto-detection) --
+          // `?? baseUrl` was wrongly treating that null the same as "no
+          // opinion" and substituting the CDN anyway, so any locally-added
+          // image not yet synced to assets.arkhamhorror.app (e.g. a new
+          // homebrew campaign's box art) silently failed to load even though
+          // it existed on disk and the backend said not to use the CDN.
+          this.assetHost = result.data.assetHost ?? ''
           //localStorage.setItem('asset-host', this.assetHost)
         } else {
           this.assetHost = baseUrl

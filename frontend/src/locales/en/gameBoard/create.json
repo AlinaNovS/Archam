@@ -85,6 +85,8 @@
     "homebrewHeading": "Homebrew",
     "designedBy": "designed by {name}",
     "notYetTranslated": "Not yet translated into Russian",
+    "partiallyLocalized": "Partially translated — campaign is incomplete",
+    "homebrewWarning": "Fan-made campaigns: unofficial, still in testing. Some scenarios or mechanics may not be implemented yet, or may be only partially translated — check the badges on each tile.",
     "sideStoriesHeading": "Side Stories",
     "challengeScenariosHeading": "Challenge Scenarios",
 
