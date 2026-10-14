@@ -29,17 +29,25 @@ layout is set at Setup -- unlike In Too Deep, nothing in the Bloodborne
 source material found so far specifies one; barriers are purely
 chaos-token/agenda-triggered here, starting at zero.
 -}
-newtype Meta = Meta {barriers :: Map (SortedPair LocationId) Int}
+{- | 'insightDisplay' tracks the "Insight Display" from the Campaign Guide:
+how many insight tokens have left the chaos bag (via a test reveal) and not
+yet been returned, this scenario. Capped at 3 by the ruleset itself (only 3
+insight tokens exist) -- see
+'Arkham.Homebrew.BloodborneCityOfTheUnseen.Scenarios.HuntBegins' for the
+reveal hook that increments it and resets it to 0 (returning all 3 tokens to
+the bag, incrementing campaign-wide Recognition) once it hits 3.
+-}
+data Meta = Meta {barriers :: Map (SortedPair LocationId) Int, insightDisplay :: Int}
   deriving stock (Show, Eq, Generic)
   deriving anyclass (ToJSON, FromJSON)
 
 incrementBarriers :: Int -> LocationId -> LocationId -> Meta -> Meta
-incrementBarriers n a b (Meta barriers) =
-  Meta $ Map.insertWith (+) (sortedPair a b) n barriers
+incrementBarriers n a b meta =
+  meta {barriers = Map.insertWith (+) (sortedPair a b) n meta.barriers}
 
 decrementBarriers :: Int -> LocationId -> LocationId -> Meta -> Meta
-decrementBarriers n a b (Meta barriers) =
-  Meta $ Map.insertWith ((max 0 .) . subtract) (sortedPair a b) n barriers
+decrementBarriers n a b meta =
+  meta {barriers = Map.insertWith ((max 0 .) . subtract) (sortedPair a b) n meta.barriers}
 
 -- | Lets the given investigator pick one of their location's barricaded
 -- connections to clear -- the "remove a barricade" half of every act's own

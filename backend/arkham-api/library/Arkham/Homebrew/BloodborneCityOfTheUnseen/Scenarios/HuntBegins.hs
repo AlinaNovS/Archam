@@ -1,5 +1,6 @@
 module Arkham.Homebrew.BloodborneCityOfTheUnseen.Scenarios.HuntBegins (huntBegins) where
 
+import Arkham.CampaignLogKey (toCampaignLogKey)
 import Arkham.Helpers.FlavorText
 import Arkham.Helpers.Location (getConnectedLocations, getLocationOf, withLocationOf)
 import Arkham.Helpers.Modifiers (ModifierType (..), modifySelectMaybe)
@@ -7,7 +8,9 @@ import Arkham.Homebrew.BloodborneCityOfTheUnseen.CardDefs.Acts qualified as Acts
 import Arkham.Homebrew.BloodborneCityOfTheUnseen.CardDefs.Agendas qualified as Agendas
 import Arkham.Homebrew.BloodborneCityOfTheUnseen.CardDefs.Locations qualified as Locations
 import Arkham.Homebrew.BloodborneCityOfTheUnseen.Import
+import Arkham.Homebrew.BloodborneCityOfTheUnseen.Key (BloodborneKey (Recognition))
 import Arkham.Homebrew.BloodborneCityOfTheUnseen.Sets qualified as EncounterSets
+import Arkham.Homebrew.BloodborneCityOfTheUnseen.Tokens (pattern InsightToken)
 import Arkham.Matcher
 import Arkham.Message.Lifted.Choose
 import Arkham.Scenario.Import.Lifted
@@ -32,9 +35,9 @@ instance HasModifiersFor HuntBegins where
   getModifiersFor (HuntBegins a) = do
     investigators <- modifySelectMaybe a Anyone \iid -> do
       lid <- MaybeT $ getLocationOf iid
-      Meta meta <- hoistMaybe $ maybeResult @Meta a.meta
+      meta <- hoistMaybe $ maybeResult @Meta a.meta
       let
-        unblocked x y = Map.findWithDefault 0 (sortedPair y x) meta == 0
+        unblocked x y = Map.findWithDefault 0 (sortedPair y x) meta.barriers == 0
         bfs visited [] = pure $ toList visited
         bfs visited (current : queue)
           | current `Set.member` visited = bfs visited queue
@@ -45,13 +48,13 @@ instance HasModifiersFor HuntBegins where
       blocked <- lift $ select $ not_ $ beOneOf @_ @LocationMatcher reachable
       pure $ CannotEnter <$> blocked
     locations <- modifySelectMaybe a Anywhere \lid -> do
-      Meta meta <- hoistMaybe $ maybeResult @Meta a.meta
+      meta <- hoistMaybe $ maybeResult @Meta a.meta
       let
         barricaded (pair, n) = case unSortedPair pair of
           (l1, l2) | l1 == lid -> guard (n > 0) $> l2
           (l1, l2) | l2 == lid -> guard (n > 0) $> l1
           _ -> Nothing
-      let barriers = mapMaybe barricaded $ Map.toList meta
+      let barriers = mapMaybe barricaded $ Map.toList meta.barriers
       pure [Barricades barriers | notNull barriers]
     pure $ investigators <> locations
 
@@ -78,6 +81,11 @@ instance HasChaosTokenValue HuntBegins where
     Cultist -> pure $ toChaosTokenValue attrs Cultist 2 4
     Tablet -> pure $ toChaosTokenValue attrs Tablet 2 3
     ElderThing -> pure $ toChaosTokenValue attrs ElderThing 2 3
+    -- | Campaign Guide p.1: "its modifier is treated as +1 and draw another
+    -- chaos token." The draw-another half is handled engine-wide by
+    -- 'Arkham.Homebrew.BloodborneCityOfTheUnseen.Tokens''s 'RevealAnother'
+    -- registration; this is just the +1.
+    InsightToken -> pure $ ChaosTokenValue InsightToken (PositiveModifier 1)
     otherFace -> getChaosTokenValue iid otherFace attrs
 
 {- | Grid layout was previously an empty list, which left every location's
@@ -106,12 +114,16 @@ see 'Arkham.Homebrew.BloodborneCityOfTheUnseen.Campaign' for why the earlier
 18-standalone-scenario-chain approach was replaced. Real locations, real
 3-stage agenda deck (doom 8/6/5), the real 4-act chain in correct play
 order, real chaos token values, and the real barricade mechanic (place via
-failed Tablet tokens, remove via each act's own 1-clue ability) are all
-wired below. Deliberately NOT in this slice: the "OR test agility (4)"
-alternative to the clue-spend barrier removal (only the clue-spend option is
-wired; the skill-test option needs its own ability variant, not added yet),
-the encounter deck's 8 unique treachery cards, the Scourge Beast enemy, and
-the Insight chaos-bag token.
+failed Tablet tokens, remove via each act's own 1-clue ability or the agility
+(4) alternative, see the Acts modules) are all wired below. The encounter
+deck's unique treachery cards and the Scourge Beast enemy have real text now
+too (see their own modules). The Insight chaos-bag token's full lifecycle
+(bag -> +1/draw-another on reveal -> Insight Display -> back to the bag +1
+Recognition at 3) is wired below and in
+'Arkham.Homebrew.BloodborneCityOfTheUnseen.Tokens'/'.Key'/'.ChaosBag'. NOT
+implemented: the per-Recognition-level effects described in the Campaign
+Guide (additional Mythos sets at setup, unlocked story choices) -- those
+span scenarios 2-8 and later guide pages, out of this pilot's scope.
 -}
 instance RunMessage HuntBegins where
   runMessage msg s@(HuntBegins attrs) = runQueueT $ scenarioI18n "huntBegins" $ case msg of
@@ -137,14 +149,28 @@ instance RunMessage HuntBegins where
       push $ SetLocationLabel plaza "cityCenterPlaza"
       startAt courtyard
     ScenarioCountIncrementBy (Barriers l1 l2) n -> do
-      let meta' = incrementBarriers n l1 l2 $ toResultDefault (Meta mempty) attrs.meta
+      let meta' = incrementBarriers n l1 l2 $ toResultDefault (Meta mempty 0) attrs.meta
       pure $ HuntBegins $ attrs & metaL .~ toJSON meta'
     ScenarioCountDecrementBy (Barriers l1 l2) n -> do
-      let meta' = decrementBarriers n l1 l2 $ toResultDefault (Meta mempty) attrs.meta
+      let meta' = decrementBarriers n l1 l2 $ toResultDefault (Meta mempty 0) attrs.meta
       pure $ HuntBegins $ attrs & metaL .~ toJSON meta'
     FailedSkillTest iid _ _ (ChaosTokenTarget token) _ _ | token.face == Tablet -> do
       withLocationOf iid \lid -> do
         connected <- getConnectedLocations lid
         chooseTargetM iid connected \l -> push $ ScenarioCountIncrementBy (Barriers lid l) 1
       pure s
+    -- | Campaign Guide p.1-2: after an insight token's test effect resolves,
+    -- it leaves the bag for the Insight Display rather than returning to the
+    -- pool; once 3 are in the Display, all 3 return to the bag and
+    -- Recognition goes up by 1.
+    ResolveChaosToken _ token _ | token == InsightToken -> do
+      push $ RemoveChaosToken InsightToken
+      let meta = toResultDefault (Meta mempty 0) attrs.meta
+          displayed = meta.insightDisplay + 1
+      if displayed >= 3
+        then do
+          push $ IncrementRecordCount (toCampaignLogKey Recognition) 1
+          pushAll $ replicate 3 (AddChaosToken InsightToken)
+          pure $ HuntBegins $ attrs & metaL .~ toJSON (meta {insightDisplay = 0})
+        else pure $ HuntBegins $ attrs & metaL .~ toJSON (meta {insightDisplay = displayed})
     _ -> HuntBegins <$> liftRunMessage msg attrs

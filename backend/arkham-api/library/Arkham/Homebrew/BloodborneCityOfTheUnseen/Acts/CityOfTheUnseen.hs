@@ -25,7 +25,9 @@ City Center Plaza is now placed at Setup (see Scenarios/HuntBegins.hs) and
 connected to Hospital Courtyard via explicit card-text connection (see
 Locations/CityCenterPlaza.hs/HospitalCourtyard.hs) -- no "Act 2 locations"
 set-aside pile was ever found on the actual cards; that was an earlier
-session's unverified guess. Both abilities here are reachable now.
+session's unverified guess. All three abilities here are reachable now;
+ability 3 is the "OR test agility (4)" alternative to ability 2's clue spend,
+same mechanism as 'Arkham.Homebrew.BloodborneCityOfTheUnseen.Acts.MoonlitRevival'.
 -}
 instance HasAbilities CityOfTheUnseen where
   getAbilities (CityOfTheUnseen a) =
@@ -37,11 +39,21 @@ instance HasAbilities CityOfTheUnseen where
           $ GroupClueCost (PerPlayer 3) "City Center Plaza"
       , restrictedAbility a 2 (exists $ YourLocation <> LocationWithAdjacentBarrier)
           $ FastAbility (GroupClueCost (StaticWithPerPlayer 1 1) Anywhere)
+      , skillTestAbility
+          $ restrictedAbility a 3 (exists $ YourLocation <> LocationWithAdjacentBarrier)
+          $ FastAbility Free
       ]
 
 instance RunMessage CityOfTheUnseen where
   runMessage msg a@(CityOfTheUnseen attrs) = runQueueT $ case msg of
     UseThisAbility iid (isSource attrs -> True) 2 -> do
+      withLocationOf iid (removeBarrierBetweenConnected iid)
+      pure a
+    UseThisAbility iid (isSource attrs -> True) 3 -> do
+      sid <- getRandom
+      beginSkillTest sid iid (attrs.ability 3) iid #agility (Fixed 4)
+      pure a
+    PassedThisSkillTest iid (isAbilitySource attrs 3 -> True) -> do
       withLocationOf iid (removeBarrierBetweenConnected iid)
       pure a
     AdvanceAct (isSide B attrs -> True) _ _ -> do
