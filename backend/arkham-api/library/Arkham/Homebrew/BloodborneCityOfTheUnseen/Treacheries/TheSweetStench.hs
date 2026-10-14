@@ -4,6 +4,7 @@ import Arkham.Ability
 import Arkham.Helpers.Modifiers (ModifierType (..), modifySelect, modifySelf)
 import Arkham.Homebrew.BloodborneCityOfTheUnseen.CardDefs.Treacheries qualified as Cards
 import Arkham.Matcher
+import Arkham.Placement
 import Arkham.Trait (Trait (Humanoid))
 import Arkham.Treachery.Import.Lifted
 

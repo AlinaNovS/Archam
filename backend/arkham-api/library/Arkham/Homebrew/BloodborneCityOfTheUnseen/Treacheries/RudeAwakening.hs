@@ -24,7 +24,7 @@ identical "additional cost to move: pay X" idiom.
 -}
 instance HasModifiersFor RudeAwakening where
   getModifiersFor (RudeAwakening a) =
-    inThreatAreaGets a [AdditionalCostToPerformAction (IsAction #move) (HandDiscardCost 1 AnyCard)]
+    inThreatAreaGets a [AdditionalCostToPerformAction (IsAction #move) (HandDiscardCost 1 #any)]
 
 instance HasAbilities RudeAwakening where
   getAbilities (RudeAwakening a) = [skillTestAbility $ restricted a 1 (InThreatAreaOf You) $ forced $ TurnEnds #when You]

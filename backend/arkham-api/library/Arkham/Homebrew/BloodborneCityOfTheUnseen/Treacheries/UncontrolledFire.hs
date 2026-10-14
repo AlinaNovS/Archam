@@ -4,6 +4,7 @@ import Arkham.Ability
 import Arkham.Helpers.Location (withLocationOf)
 import Arkham.Homebrew.BloodborneCityOfTheUnseen.CardDefs.Treacheries qualified as Cards
 import Arkham.Matcher
+import Arkham.Placement
 import Arkham.Treachery.Import.Lifted
 
 newtype UncontrolledFire = UncontrolledFire TreacheryAttrs

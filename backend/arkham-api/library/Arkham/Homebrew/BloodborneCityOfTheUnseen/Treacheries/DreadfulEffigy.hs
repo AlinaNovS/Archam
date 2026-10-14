@@ -5,6 +5,7 @@ import Arkham.Helpers.Location (withLocationOf)
 import Arkham.Helpers.Modifiers (ModifierType (..), modified_)
 import Arkham.Homebrew.BloodborneCityOfTheUnseen.CardDefs.Treacheries qualified as Cards
 import Arkham.Matcher
+import Arkham.Placement
 import Arkham.Treachery.Import.Lifted
 
 newtype DreadfulEffigy = DreadfulEffigy TreacheryAttrs

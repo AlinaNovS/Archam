@@ -40,9 +40,9 @@ instance RunMessage ViewHalloo where
       pure t
     FailedThisSkillTest _iid (isSource attrs -> True) -> do
       bloodDrunkEnemies <- select $ EnemyWithTrait (HomebrewTrait "Blood-Drunk")
-      before <- traverse (\eid -> (eid,) <$> field EnemyLocation eid) bloodDrunkEnemies
+      before <- traverse (\eid -> (eid,) <$> field EnemyLocationId eid) bloodDrunkEnemies
       for_ bloodDrunkEnemies resolveHunterKeyword
-      after <- traverse (\eid -> (eid,) <$> field EnemyLocation eid) bloodDrunkEnemies
+      after <- traverse (\eid -> (eid,) <$> field EnemyLocationId eid) bloodDrunkEnemies
       when (before == after) do
         -- TODO: "discard the encounter deck until an enemy, spawn it at a
         -- connected location" is NOT YET IMPLEMENTED, see doc comment above.
