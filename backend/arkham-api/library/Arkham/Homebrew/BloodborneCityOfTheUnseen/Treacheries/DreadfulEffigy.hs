@@ -1,6 +1,7 @@
 module Arkham.Homebrew.BloodborneCityOfTheUnseen.Treacheries.DreadfulEffigy (dreadfulEffigy) where
 
 import Arkham.Ability
+import Arkham.GameValue
 import Arkham.Helpers.Location (withLocationOf)
 import Arkham.Helpers.Modifiers (ModifierType (..), modified_)
 import Arkham.Homebrew.BloodborneCityOfTheUnseen.CardDefs.Treacheries qualified as Cards
@@ -40,7 +41,7 @@ instance HasAbilities DreadfulEffigy where
 instance RunMessage DreadfulEffigy where
   runMessage msg t@(DreadfulEffigy attrs) = runQueueT $ case msg of
     Revelation iid (isSource attrs -> True) -> do
-      withLocationOf iid (place attrs . AttachedToLocation)
+      withLocationOf iid (attachTreachery attrs)
       pure t
     UseThisAbility _iid (isSource attrs -> True) 1 -> do
       toDiscard (attrs.ability 1) attrs

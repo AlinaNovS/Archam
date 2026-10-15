@@ -1,5 +1,6 @@
 module Arkham.Homebrew.BloodborneCityOfTheUnseen.Treacheries.ViewHalloo (viewHalloo) where
 
+import Arkham.Enemy.Types (Field (EnemyLocation))
 import Arkham.Homebrew.BloodborneCityOfTheUnseen.CardDefs.Treacheries qualified as Cards
 import Arkham.Matcher
 import Arkham.Message.Lifted (resolveHunterKeyword)
@@ -40,9 +41,9 @@ instance RunMessage ViewHalloo where
       pure t
     FailedThisSkillTest _iid (isSource attrs -> True) -> do
       bloodDrunkEnemies <- select $ EnemyWithTrait (HomebrewTrait "Blood-Drunk")
-      before <- traverse (\eid -> (eid,) <$> field EnemyLocationId eid) bloodDrunkEnemies
+      before <- traverse (\eid -> (eid,) <$> field EnemyLocation eid) bloodDrunkEnemies
       for_ bloodDrunkEnemies resolveHunterKeyword
-      after <- traverse (\eid -> (eid,) <$> field EnemyLocationId eid) bloodDrunkEnemies
+      after <- traverse (\eid -> (eid,) <$> field EnemyLocation eid) bloodDrunkEnemies
       when (before == after) do
         -- TODO: "discard the encounter deck until an enemy, spawn it at a
         -- connected location" is NOT YET IMPLEMENTED, see doc comment above.

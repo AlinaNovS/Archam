@@ -32,7 +32,7 @@ instance HasAbilities UncontrolledFire where
 instance RunMessage UncontrolledFire where
   runMessage msg t@(UncontrolledFire attrs) = runQueueT $ case msg of
     Revelation iid (isSource attrs -> True) -> do
-      withLocationOf iid (place attrs . AttachedToLocation)
+      withLocationOf iid (attachTreachery attrs)
       pure t
     UseThisAbility iid (isSource attrs -> True) 1 -> do
       assignDamage iid attrs 1
