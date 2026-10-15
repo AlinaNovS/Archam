@@ -8,6 +8,7 @@ import Arkham.Placement
 import Arkham.Treachery.Import.Lifted
 
 newtype BloodDrunkTreachery = BloodDrunkTreachery TreacheryAttrs
+  deriving anyclass IsTreachery
   deriving newtype (Show, Eq, ToJSON, FromJSON, Entity)
 
 bloodDrunkTreachery :: TreacheryCard BloodDrunkTreachery
