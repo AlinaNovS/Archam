@@ -24,6 +24,9 @@ default skill for each action (combat for Fight, intellect for Investigate)
 further. 'meta' tracks the accumulated difficulty reduction (capped at 2,
 since the test is Fixed 3 and the real minimum is 1), reset each round.
 -}
+instance HasAbilities BloodDrunkTreachery where
+  getAbilities (BloodDrunkTreachery a) = [restricted a 1 (InThreatAreaOf You) actionAbility]
+
 instance HasModifiersFor BloodDrunkTreachery where
   getModifiersFor (BloodDrunkTreachery a) = case a.placement of
     InThreatArea iid ->
